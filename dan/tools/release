@@ -1,0 +1,46 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+
+use MYDan;
+
+use File::Basename;
+use MYDan::Util::OptConf;
+
+=head1 SYNOPSIS
+
+ $0 
+     show pack list
+
+ $0 --pack v1.0 
+
+     package 
+
+ $0 --pack v1.0 --so Linux --arch x86
+
+     release
+
+=cut
+
+my $option = MYDan::Util::OptConf->load();
+my %o = $option->get( qw( pack=s os=s arch=s) )->dump();
+
+my $mydan = $MYDan::PATH;
+my $tmp = "$mydan/tmp/release";
+system "mkdir -p '$tmp'" unless -d $tmp;
+unless( $o{pack} )
+{
+    map{ printf "%s\n", basename $_ ;}glob "$tmp/*";
+    exit;
+}
+
+system( "tar -zcvf $tmp/$o{pack} $mydan/perl $mydan/dan" ) unless -f "$tmp/$o{pack}";
+
+if( $o{os} && $o{arch} )
+{
+    my $to = "$mydan/dashboard/public/download/$o{os}_$o{arch}";
+    system( "mkdir -p '$to'" ) unless -e $to;
+    system "cp '$tmp/$o{pack}' '$to/mydan.$o{pack}.tar.gz'";
+    system "ln -fsn 'mydan.$o{pack}.tar.gz' '$to/mydan.latest.tar.gz'";
+}
+

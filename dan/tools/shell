@@ -1,0 +1,80 @@
+#!/usr/bin/env perl
+use warnings;  
+use strict;  
+  
+use File::Spec;
+use MYDan::Util::OptConf;
+use MYDan::Agent::Client;
+
+use Time::HiRes qw(time);  
+use AnyEvent;  
+use AnyEvent::Impl::Perl;  
+use AnyEvent::Socket;  
+use AnyEvent::Handle;  
+use Digest::MD5;
+  
+use MYDan::Agent::Query;
+use Fcntl qw(:flock SEEK_END);
+use Data::Dumper;
+ 
+$| ++;
+
+=head1 SYNOPSIS
+
+ $0 -host host
+
+=cut
+
+$MYDan::Util::OptConf::THIS = 'agent';
+my $option = MYDan::Util::OptConf->load();
+my %o = $option->get( qw( range=s ) )->dump();
+
+$option->assert( 'range' );
+
+
+my $cv = AE::cv;  
+
+my $scan = `nc -z localhost 65111-65333`;
+my %open = map{ $_ => 1 }my @open = $scan =~ / (\d+) /g;
+
+my ( $listen ) = grep{ ! $open{$_} }65111 .. 65333 ;
+
+if( fork ) { exec "nc -l $listen"; }
+
+print "listen shell on:$listen\n";
+my $query = MYDan::Agent::Query->dump(+{ 
+    code => 'shell',
+    logname => operator(),
+    argv => [ undef, $listen ]
+});
+
+tcp_connect $o{range}, $o{port}, sub {  
+   my ( $fh ) = @_  or die "tcp_connect: $!";  
+   my $hdl; $hdl = new AnyEvent::Handle( 
+           fh => $fh,
+           on_read => sub {
+               my $self = shift;
+               $self->unshift_read (
+                   chunk => length $self->{rbuf},
+                   sub { }
+               );
+            },
+
+            on_eof => sub{
+                undef $hdl;
+                 $cv->send;  
+             }
+   );  
+
+   $hdl->push_write($query);  
+   $hdl->push_shutdown;
+};  
+
+$cv->recv;  
+
+exit;
+
+sub operator
+{
+    my $name = `logname`; chop $name; return $name;
+}

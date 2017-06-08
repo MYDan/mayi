@@ -1,0 +1,4 @@
+
+Net::SSH::Perl -> Math::GMP -> yum install gmp-devel
+
+/home/work/mydan/perl/bin/cpan install DBD::mysql yum remove perl-DBD-mysql yum install perl-DBD-mysql

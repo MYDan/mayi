@@ -1,0 +1,105 @@
+#!# perl: agent/code/download
+use strict;
+use warnings;
+use YAML::XS;
+use MYDan::Agent::Query;
+use Time::HiRes qw(time);
+use AnyEvent;
+use AnyEvent::Impl::Perl;
+use AnyEvent::Socket;
+use AnyEvent::Handle;
+ 
+use Digest::MD5;
+
+return sub
+{
+    my (  %param, $i ) = @_;
+    use Data::Dumper;
+    my ( $param ) = @{$param{argv}};
+    unless( $param && ref $param eq 'HASH' )
+    {
+        print "agent/code/download argv no hash";
+        return 1;
+    }
+
+    map{ 
+        unless( $param->{$_})
+            { print "agent/code/download$_ undef";return 1;}
+    }qw( load src port sp dp );
+
+    eval{
+        open my $TMP, '+>', "$param->{dp}.$$.tmp" or die "Can't open '$param->{dp}.$$.tmp': $!";
+        my ( $cv, $len, %keepalive ) = ( AE::cv, 0, cont => '', skip => 0, first => 1 );
+        tcp_connect $param->{src}, $param->{port}, sub {
+           my ( $fh ) = @_  or die "tcp_connect: $!";
+           my $hdl; $hdl = new AnyEvent::Handle(
+                   fh => $fh,
+                   on_read => sub {
+                       my $self = shift;
+                       $self->unshift_read (
+                           chunk => length $self->{rbuf},
+                           sub {
+     
+                                if( $keepalive{first} && $_[1] !~ /^\*/ )
+                                {
+                                     $keepalive{first} = 0;
+                                     $keepalive{skip} = 1;
+                                }
+
+                                if( $keepalive{skip} )
+                                {
+                                    $len += length $_[1];
+                                    print $TMP $_[1];
+                                }
+                                else
+                                {
+                                    $keepalive{cont} .= $_[1];
+                                    $keepalive{cont} =~ s/^\*+//g;
+                                    if( $keepalive{cont} =~ s/^#\*keepalive\*#// )
+                                    {
+                                        $keepalive{skip} = 1;
+                                        $len += length $keepalive{cont};
+                                        print $TMP $keepalive{cont};
+                                    }
+                                }
+                            }
+
+                       );
+                    },
+                    on_eof => sub{
+                        undef $hdl;
+                         $cv->send;
+                     }
+           );
+           $hdl->push_write($param->{load});
+           $hdl->push_shutdown;
+        };
+        $cv->recv;
+
+
+        seek( $TMP, -38, SEEK_END );
+        my $end = ''; while( <$TMP> ) { $end .= $_; }
+        my @end = $end =~ /^([0-9a-z]{32})--- (\d+)\n/;
+        unless( defined $end[1] && $end[1] == 0 )
+        {
+            unlink  "$param->{dp}.$$.tmp";
+            die "call agent fail: end=$end\n";
+        }
+        truncate $TMP, $len - 38;
+        seek $TMP, 0, 0;
+        my $md5 = Digest::MD5->new()->addfile( $TMP )->hexdigest();
+        unless( defined $end[0] && $end[0] eq $md5 )
+        {
+            unlink  "$param->{dp}.$$.tmp";
+            die "md5 nomatch\n";
+        }
+        rename "$param->{dp}.$$.tmp", $param->{dp};
+    };
+    if($@)
+    {
+        print "load fail $@";return 1;
+    }
+
+    return 0;
+};
+

@@ -1,0 +1,22 @@
+#!# perl: agent/code/load
+use strict;
+use warnings;
+use YAML::XS;
+use Digest::MD5;
+
+return sub
+{
+    my (  %param, $i ) = @_;
+
+    my ( $file ) = @{$param{argv}};
+    unless( $file ) { print "file undef"; return 1; }
+    my $fh;
+    unless ( open $fh, '+<', $file ) { print "Can't open '$file': $!"; return 1; }
+
+    while(<$fh>) { print $_; }
+
+    seek $fh, 0, 0;
+    print Digest::MD5->new()->addfile( $fh )->hexdigest();
+    return 0;
+};
+

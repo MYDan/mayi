@@ -1,0 +1,23 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use MYDan::Node;
+use MYDan::Util::OptConf;
+
+use MYDan::VSSH;
+
+=head1 SYNOPSIS
+
+ $0 [--range host]
+    
+=cut
+
+my $option = MYDan::Util::OptConf->load();
+my %o = $option->get( qw( range=s ) )->dump( 'vssh' );
+my $range = MYDan::Node->new( $option->dump( 'range' ) );
+ 
+$option->assert( 'range' );
+
+exit unless my @node = $range->load( delete $o{range} )->list;
+
+MYDan::VSSH->new( node => \@node )->run();
