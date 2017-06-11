@@ -172,6 +172,8 @@ MAN3PODS = lib/MYDan.pm \
 	lib/MYDan/Agent/Client.pm \
 	lib/MYDan/Agent/Path.pm \
 	lib/MYDan/Agent/Query.pm \
+	lib/MYDan/Deploy/Conf.pm \
+	lib/MYDan/Deploy/Ctrl.pm \
 	lib/MYDan/MIO.pm \
 	lib/MYDan/MIO/CMD.pm \
 	lib/MYDan/MIO/TCP.pm \
@@ -188,6 +190,7 @@ MAN3PODS = lib/MYDan.pm \
 	lib/MYDan/Util/OptConf.pm \
 	lib/MYDan/Util/ProcLock.pm \
 	lib/MYDan/Util/SQLiteDB.pm \
+	lib/MYDan/Util/Screen.pm \
 	lib/MYDan/Util/Sudo.pm
 
 # Where is the Config information that we are using/depend on
@@ -222,6 +225,12 @@ TO_INST_PM = build.pl \
 	lib/MYDan/Agent/Path.pm \
 	lib/MYDan/Agent/Query.pm \
 	lib/MYDan/Bootstrap.pm \
+	lib/MYDan/Deploy.pm \
+	lib/MYDan/Deploy/Cache.pm \
+	lib/MYDan/Deploy/Code.pm \
+	lib/MYDan/Deploy/Conf.pm \
+	lib/MYDan/Deploy/Ctrl.pm \
+	lib/MYDan/Deploy/Jobs.pm \
 	lib/MYDan/MIO.pm \
 	lib/MYDan/MIO/CMD.pm \
 	lib/MYDan/MIO/TCP.pm \
@@ -238,6 +247,7 @@ TO_INST_PM = build.pl \
 	lib/MYDan/Util/OptConf.pm \
 	lib/MYDan/Util/ProcLock.pm \
 	lib/MYDan/Util/SQLiteDB.pm \
+	lib/MYDan/Util/Screen.pm \
 	lib/MYDan/Util/Sudo.pm \
 	lib/MYDan/Util/TcpServer.pm \
 	lib/MYDan/Util/XTar.pm \
@@ -269,6 +279,18 @@ PM_TO_BLIB = build.pl \
 	blib/lib/MYDan/Agent/Query.pm \
 	lib/MYDan/Bootstrap.pm \
 	blib/lib/MYDan/Bootstrap.pm \
+	lib/MYDan/Deploy.pm \
+	blib/lib/MYDan/Deploy.pm \
+	lib/MYDan/Deploy/Cache.pm \
+	blib/lib/MYDan/Deploy/Cache.pm \
+	lib/MYDan/Deploy/Code.pm \
+	blib/lib/MYDan/Deploy/Code.pm \
+	lib/MYDan/Deploy/Conf.pm \
+	blib/lib/MYDan/Deploy/Conf.pm \
+	lib/MYDan/Deploy/Ctrl.pm \
+	blib/lib/MYDan/Deploy/Ctrl.pm \
+	lib/MYDan/Deploy/Jobs.pm \
+	blib/lib/MYDan/Deploy/Jobs.pm \
 	lib/MYDan/MIO.pm \
 	blib/lib/MYDan/MIO.pm \
 	lib/MYDan/MIO/CMD.pm \
@@ -301,6 +323,8 @@ PM_TO_BLIB = build.pl \
 	blib/lib/MYDan/Util/ProcLock.pm \
 	lib/MYDan/Util/SQLiteDB.pm \
 	blib/lib/MYDan/Util/SQLiteDB.pm \
+	lib/MYDan/Util/Screen.pm \
+	blib/lib/MYDan/Util/Screen.pm \
 	lib/MYDan/Util/Sudo.pm \
 	blib/lib/MYDan/Util/Sudo.pm \
 	lib/MYDan/Util/TcpServer.pm \
@@ -545,6 +569,8 @@ manifypods : pure_all  \
 	lib/MYDan/Agent/Client.pm \
 	lib/MYDan/Agent/Path.pm \
 	lib/MYDan/Agent/Query.pm \
+	lib/MYDan/Deploy/Conf.pm \
+	lib/MYDan/Deploy/Ctrl.pm \
 	lib/MYDan/MIO.pm \
 	lib/MYDan/MIO/CMD.pm \
 	lib/MYDan/MIO/TCP.pm \
@@ -561,6 +587,7 @@ manifypods : pure_all  \
 	lib/MYDan/Util/OptConf.pm \
 	lib/MYDan/Util/ProcLock.pm \
 	lib/MYDan/Util/SQLiteDB.pm \
+	lib/MYDan/Util/Screen.pm \
 	lib/MYDan/Util/Sudo.pm
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) -u \
 	  lib/MYDan.pm $(INST_MAN3DIR)/MYDan.$(MAN3EXT) \
@@ -569,6 +596,8 @@ manifypods : pure_all  \
 	  lib/MYDan/Agent/Client.pm $(INST_MAN3DIR)/MYDan::Agent::Client.$(MAN3EXT) \
 	  lib/MYDan/Agent/Path.pm $(INST_MAN3DIR)/MYDan::Agent::Path.$(MAN3EXT) \
 	  lib/MYDan/Agent/Query.pm $(INST_MAN3DIR)/MYDan::Agent::Query.$(MAN3EXT) \
+	  lib/MYDan/Deploy/Conf.pm $(INST_MAN3DIR)/MYDan::Deploy::Conf.$(MAN3EXT) \
+	  lib/MYDan/Deploy/Ctrl.pm $(INST_MAN3DIR)/MYDan::Deploy::Ctrl.$(MAN3EXT) \
 	  lib/MYDan/MIO.pm $(INST_MAN3DIR)/MYDan::MIO.$(MAN3EXT) \
 	  lib/MYDan/MIO/CMD.pm $(INST_MAN3DIR)/MYDan::MIO::CMD.$(MAN3EXT) \
 	  lib/MYDan/MIO/TCP.pm $(INST_MAN3DIR)/MYDan::MIO::TCP.$(MAN3EXT) \
@@ -585,6 +614,7 @@ manifypods : pure_all  \
 	  lib/MYDan/Util/OptConf.pm $(INST_MAN3DIR)/MYDan::Util::OptConf.$(MAN3EXT) \
 	  lib/MYDan/Util/ProcLock.pm $(INST_MAN3DIR)/MYDan::Util::ProcLock.$(MAN3EXT) \
 	  lib/MYDan/Util/SQLiteDB.pm $(INST_MAN3DIR)/MYDan::Util::SQLiteDB.$(MAN3EXT) \
+	  lib/MYDan/Util/Screen.pm $(INST_MAN3DIR)/MYDan::Util::Screen.$(MAN3EXT) \
 	  lib/MYDan/Util/Sudo.pm $(INST_MAN3DIR)/MYDan::Util::Sudo.$(MAN3EXT) 
 
 
@@ -1114,6 +1144,12 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/MYDan/Agent/Path.pm blib/lib/MYDan/Agent/Path.pm \
 	  lib/MYDan/Agent/Query.pm blib/lib/MYDan/Agent/Query.pm \
 	  lib/MYDan/Bootstrap.pm blib/lib/MYDan/Bootstrap.pm \
+	  lib/MYDan/Deploy.pm blib/lib/MYDan/Deploy.pm \
+	  lib/MYDan/Deploy/Cache.pm blib/lib/MYDan/Deploy/Cache.pm \
+	  lib/MYDan/Deploy/Code.pm blib/lib/MYDan/Deploy/Code.pm \
+	  lib/MYDan/Deploy/Conf.pm blib/lib/MYDan/Deploy/Conf.pm \
+	  lib/MYDan/Deploy/Ctrl.pm blib/lib/MYDan/Deploy/Ctrl.pm \
+	  lib/MYDan/Deploy/Jobs.pm blib/lib/MYDan/Deploy/Jobs.pm \
 	  lib/MYDan/MIO.pm blib/lib/MYDan/MIO.pm \
 	  lib/MYDan/MIO/CMD.pm blib/lib/MYDan/MIO/CMD.pm \
 	  lib/MYDan/MIO/TCP.pm blib/lib/MYDan/MIO/TCP.pm \
@@ -1130,6 +1166,7 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/MYDan/Util/OptConf.pm blib/lib/MYDan/Util/OptConf.pm \
 	  lib/MYDan/Util/ProcLock.pm blib/lib/MYDan/Util/ProcLock.pm \
 	  lib/MYDan/Util/SQLiteDB.pm blib/lib/MYDan/Util/SQLiteDB.pm \
+	  lib/MYDan/Util/Screen.pm blib/lib/MYDan/Util/Screen.pm \
 	  lib/MYDan/Util/Sudo.pm blib/lib/MYDan/Util/Sudo.pm \
 	  lib/MYDan/Util/TcpServer.pm blib/lib/MYDan/Util/TcpServer.pm \
 	  lib/MYDan/Util/XTar.pm blib/lib/MYDan/Util/XTar.pm \

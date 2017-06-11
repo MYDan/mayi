@@ -61,9 +61,9 @@ sub dump
     
     $conf = $s_conf;
 
-    map{ $conf =~ s/\$env{$_}/$macro->{$_}/g; }keys %$macro if $macro;
+    map{ $conf =~ s/\$env\{$_\}/$macro->{$_}/g; }keys %$macro if $macro;
 
-    my @env = $conf =~ /(\$env{.*})/g;
+    my @env = $conf =~ /(\$env\{.*\})/g;
 
     exit 0 if @env && printf "env no replace on conf: %s\n", join ' ', @env;
 
@@ -82,8 +82,8 @@ sub dump
     my $maint = join "\n", @maint;
 
     my $m = $conf->{maint}{macro};
-    map{ $maint =~ s/\$env{$_}/$m->{$_}/g; }keys %$m if $m;
-    my @e = $maint =~ /(\$env{.*})/g;
+    map{ $maint =~ s/\$env\{$_\}/$m->{$_}/g; }keys %$m if $m;
+    my @e = $maint =~ /(\$env\{.*\})/g;
 
     confess sprintf "env no replace on maint: %s\n", join ' ', @e if @e;
 

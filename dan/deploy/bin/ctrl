@@ -9,7 +9,6 @@ use MYDan::Node;
 use MYDan::Util::Sudo;
 use MYDan::Util::Screen;
 use MYDan::Util::OptConf;
-use MYDan::Util::Debug;
 use MYDan::Util::ProcLock;
 
 MYDan::Util::Sudo->sudo();
