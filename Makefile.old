@@ -177,6 +177,7 @@ MAN3PODS = lib/MYDan.pm \
 	lib/MYDan/MIO.pm \
 	lib/MYDan/MIO/CMD.pm \
 	lib/MYDan/MIO/TCP.pm \
+	lib/MYDan/Multicast.pm \
 	lib/MYDan/Node.pm \
 	lib/MYDan/Node/Cache.pm \
 	lib/MYDan/Node/Call.pm \
@@ -234,6 +235,7 @@ TO_INST_PM = build.pl \
 	lib/MYDan/MIO.pm \
 	lib/MYDan/MIO/CMD.pm \
 	lib/MYDan/MIO/TCP.pm \
+	lib/MYDan/Multicast.pm \
 	lib/MYDan/Node.pm \
 	lib/MYDan/Node/Cache.pm \
 	lib/MYDan/Node/Call.pm \
@@ -298,6 +300,8 @@ PM_TO_BLIB = build.pl \
 	blib/lib/MYDan/MIO/CMD.pm \
 	lib/MYDan/MIO/TCP.pm \
 	blib/lib/MYDan/MIO/TCP.pm \
+	lib/MYDan/Multicast.pm \
+	blib/lib/MYDan/Multicast.pm \
 	lib/MYDan/Node.pm \
 	blib/lib/MYDan/Node.pm \
 	lib/MYDan/Node/Cache.pm \
@@ -577,6 +581,7 @@ manifypods : pure_all  \
 	lib/MYDan/MIO.pm \
 	lib/MYDan/MIO/CMD.pm \
 	lib/MYDan/MIO/TCP.pm \
+	lib/MYDan/Multicast.pm \
 	lib/MYDan/Node.pm \
 	lib/MYDan/Node/Cache.pm \
 	lib/MYDan/Node/Call.pm \
@@ -604,6 +609,7 @@ manifypods : pure_all  \
 	  lib/MYDan/MIO.pm $(INST_MAN3DIR)/MYDan::MIO.$(MAN3EXT) \
 	  lib/MYDan/MIO/CMD.pm $(INST_MAN3DIR)/MYDan::MIO::CMD.$(MAN3EXT) \
 	  lib/MYDan/MIO/TCP.pm $(INST_MAN3DIR)/MYDan::MIO::TCP.$(MAN3EXT) \
+	  lib/MYDan/Multicast.pm $(INST_MAN3DIR)/MYDan::Multicast.$(MAN3EXT) \
 	  lib/MYDan/Node.pm $(INST_MAN3DIR)/MYDan::Node.$(MAN3EXT) \
 	  lib/MYDan/Node/Cache.pm $(INST_MAN3DIR)/MYDan::Node::Cache.$(MAN3EXT) \
 	  lib/MYDan/Node/Call.pm $(INST_MAN3DIR)/MYDan::Node::Call.$(MAN3EXT) \
@@ -684,7 +690,7 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) 
+	  $(FIRST_MAKEFILE) $(MAKEFILE_OLD) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 
@@ -1156,6 +1162,7 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/MYDan/MIO.pm blib/lib/MYDan/MIO.pm \
 	  lib/MYDan/MIO/CMD.pm blib/lib/MYDan/MIO/CMD.pm \
 	  lib/MYDan/MIO/TCP.pm blib/lib/MYDan/MIO/TCP.pm \
+	  lib/MYDan/Multicast.pm blib/lib/MYDan/Multicast.pm \
 	  lib/MYDan/Node.pm blib/lib/MYDan/Node.pm \
 	  lib/MYDan/Node/Cache.pm blib/lib/MYDan/Node/Cache.pm \
 	  lib/MYDan/Node/Call.pm blib/lib/MYDan/Node/Call.pm \
