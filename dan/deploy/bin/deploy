@@ -1,0 +1,53 @@
+#!/home/s/ops/perl/bin/perl
+use strict;
+use warnings;
+use File::Spec;
+use Data::Dumper;
+
+use MYDan::Deploy;
+use MYDan::Util::Sudo;
+use MYDan::Util::Screen;
+use MYDan::Util::OptConf;
+use MYDan::Util::Debug;
+
+MYDan::Util::Sudo->sudo();
+
+#unless ( MYDan::Util::Screen->check() )
+#{
+#    warn "deploy need in screen\n";
+#    exit 1;
+#}
+
+$| ++;
+
+$MYDan::Util::OptConf::THIS = 'deploy';
+
+my @argv = @ARGV;
+my %o = MYDan::Util::OptConf->load()->get( qw( check unlog ) )->dump();
+
+exit 0 unless my $name = shift;
+
+if( $o{unlog} || $o{check} )
+{
+    my %macro;
+    map{ $_ =~ /^([^=]+)=(.*)/ ? ( $macro{$1} = $2 ) : ( $macro{$_} = 1 ); }@ARGV;
+    MYDan::Util::Debug->dump( 'macro', \%macro );
+
+    my $deploy = MYDan::Deploy->new( 
+        macro => \%macro, 
+        name => $name,
+        map{ $_ => $o{$_} }qw( mould cache ctrl conf code lock )
+    );
+
+    exit 0 if $o{check};
+
+    $deploy->run( );
+}
+else
+{
+    my $log = POSIX::strftime( "$name.%Y-%m-%d_%H:%M:%S", localtime );
+
+    system sprintf "ln -fsn '%s' '%s'" , $log, File::Spec->join( $o{logs}, $name );
+    exec sprintf "$0 --unlog '%s' %s %s",
+        join( "' '", @argv ), $ENV{TERM}? '|tee' : '>', File::Spec->join( $o{logs}, $log );
+}

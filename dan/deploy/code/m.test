@@ -1,0 +1,24 @@
+#!# perl: deploy/code/b.node
+use strict;
+use File::Spec;
+use Sys::Hostname;
+
+use Data::Dumper;
+use MYDan::Agent::Client;
+use MYDan::Node;
+
+my ( %porxy, $port );
+BEGIN{
+    %porxy = MYDan::Util::OptConf->load()->dump('porxy');
+    $port = '12345';
+};
+return sub
+{
+    my ( %param, @batch ) = @_;
+
+    die "no path" unless -d "/tmp/path";
+      
+
+    print "=" x 30,"\n";
+    return map{ $_ => 1 }@{$param{batch}};
+};

@@ -1,0 +1,64 @@
+#!# perl: deploy/code/b.node
+use strict;
+use File::Spec;
+use Sys::Hostname;
+
+use Data::Dumper;
+use MYDan::Agent::Client;
+use MYDan::Node;
+
+my ( $conf, $port );
+BEGIN{
+    my %agent = MYDan::Util::OptConf->load()->dump('agent');
+    ( $conf, $port ) = @agent{qw( conf port )};
+};
+
+my %run = ( timeout => 86400, max => 500, user => 'root' );
+return sub
+{
+    my %param = @_;
+
+    my ( $batch, $param ) = @param{qw( batch param )};
+    
+    return unless my $bin = $param->{bin};
+    $bin = [ $bin ] unless ref $bin;
+
+    my $range = MYDan::Node->new();
+
+    print "=" x 30,"\n";
+    my %succ;
+    my %query = ( 
+        code => 'exec',
+        user => $param->{user}||'root', 
+        argv => $bin );
+
+    my $client = MYDan::Agent::Client->new( 
+        map { join ':', $_, $port }@$batch
+    );
+
+    $client->proxy( "$conf/proxy/$param->{proxy}" ) if $param->{proxy};
+
+    my %result = $client->run(  
+        input => \%query, map{ $_ => $param->{$_} ||$run{$_} }qw( timeout user max ) );
+
+    my $cont = $param->{cont};
+    while ( my ( $type, $mesg ) = each %result )
+    {
+        while ( my ( $mesg, $node ) = each %$mesg )
+        {
+            map { $_ =~ s/:$port$// } @$node;
+            my $stat = $1 if $mesg =~ s/--- (\d+)\n$//;
+           
+            printf "[%s]:%s\n", scalar @$node,  $range->load( $node )->dump();
+
+            print "[$type]:$mesg\nstat:$stat\n";
+            my @m;
+            my $content = ( $cont && ( @m = $mesg =~ /$cont/) ) ? join '|', @m : 1;
+
+            map{ $succ{$_} = $content }@$node if $type eq 'mesg' && defined $stat && $stat == 0;
+        }
+    }
+
+    print "=" x 30,"\n";
+    return %succ;
+};

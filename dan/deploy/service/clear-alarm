@@ -1,0 +1,32 @@
+#!/home/s/ops/perl/bin/perl
+use strict;
+use warnings;
+
+use Data::Dumper;
+use MYDan::Util::Sudo;
+use MYDan::Util::OptConf;
+
+MYDan::Util::Sudo->sudo();
+
+$| ++;
+
+$MYDan::Util::OptConf::THIS = 'deploy';
+
+my %o = MYDan::Util::OptConf->load()->set(  interval => 3 )->get( qw(  interval=i ) )->dump();
+
+die "no path to alarm" unless ( my $path = $o{alarm} ) && -d $o{alarm};
+
+do
+{
+    print "check...\n";
+    my %file;
+    map{ push @{$file{$1}}, $_ if $_ =~ /(\d+)_\w{3}$/ }glob "$path/*";
+
+    for my $pid ( keys %file )
+    {
+        next if kill 0, $pid;
+        print Dumper 'unlink', $file{$pid};
+        unlink @{$file{$pid}};
+    }
+}while( sleep $o{interval} );
+

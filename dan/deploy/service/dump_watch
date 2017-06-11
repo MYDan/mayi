@@ -1,0 +1,78 @@
+#!/home/s/ops/perl/bin/perl
+use strict;
+use warnings;
+
+use MYDan::Deploy::Ctrl;
+use MYDan::Util::Sudo;
+use MYDan::Util::OptConf;
+use File::Basename;
+use MIME::Base64;
+
+use Tie::File;
+use Data::Dumper;
+
+use MYDan::Util::NSStat;
+
+MYDan::Util::Sudo->sudo();
+
+$| ++;
+
+$MYDan::Util::OptConf::THIS = 'deploy';
+
+my %deploy = MYDan::Util::OptConf->load()->dump( 'deploy' );
+my %notify = MYDan::Util::OptConf->load()->dump( 'notify' );
+my %util = MYDan::Util::OptConf->load()->dump( 'util' );
+
+my $notify = $deploy{notify} || $util{notify};
+$notify = [ $notify ] unless ref $notify;
+
+
+my %o = MYDan::Util::OptConf->load()
+    ->set(  interval => 5, dump => '1m' )->get( qw(  interval=i dump=s ) )->dump();
+
+my $stat =  MYDan::Util::NSStat->new( name => 'deploy.service.dump_watch' );
+
+do
+{
+    my @data;
+    system 'clear';
+    for my $name ( map{ basename $_ }glob "$o{conf}/*" )
+    {
+        next unless -f "$o{ctrl}/$name";
+
+        my ( $ctrl, @stuck, $exc, %data ) = MYDan::Deploy::Ctrl->new( $name => $o{ctrl} );
+
+        @stuck = $ctrl->stuck();
+
+        next unless @stuck;
+
+        map{
+            $data{$_->[1]}{$_->[2]} = $_->[0].":".decode_base64( $_->[3] );
+        }@stuck if @stuck;
+
+        print "-" x 75, "\nname: $name\n";
+        YAML::XS::DumpFile \*STDOUT, \%data;
+        push @data, sprintf "$name:%s", YAML::XS::Dump %data;
+        
+    }
+
+
+    if( @data )
+    {
+        my $d = join '|', @data;
+        $d =~ s/\n//g;
+        my @n;
+        map { print "$_ $d\n"; push @n, "$_ $d"; }@$notify;
+        die "tie fail: $!" unless tie my @d,
+            'Tie::File', "$notify{cache}/$o{dump}/dan.deploy.stuck";
+        @d = @n;
+        $stat->write( 'error' => join '\n', @n );
+    }
+    else
+    {
+        unlink "$notify{cache}/$o{dump}/dan.deploy.stuck";
+    }
+
+    $stat->write( 'stat' => '0' );
+}while( sleep $o{interval} );
+

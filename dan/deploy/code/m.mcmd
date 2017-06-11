@@ -1,0 +1,52 @@
+#!# perl: deploy/code/b.node
+use strict;
+use File::Spec;
+use Sys::Hostname;
+
+use Data::Dumper;
+use MYDan::Agent::Client;
+use MYDan::Node;
+use MYDan::Util::MCMD;
+
+my $conf;
+BEGIN{
+    $conf = MYDan::Util::OptConf->load()->dump('agent')->{conf};
+};
+
+return sub
+{
+    my %param = @_;
+
+    my ( $batch, $param ) = @param{qw( batch param )};
+    
+    return unless my $bin = $param->{bin};
+    $bin = [ $bin ] unless ref $bin;
+
+    my $range = MYDan::Node->new();
+
+    print "=" x 30,"\n";
+    my %fail;
+
+    my $mcmd = MYDan::Util::MCMD->new( @$batch );
+    
+    $mcmd->proxy( "$conf/proxy/$param->{proxy}" ) if $param->{proxy};
+    
+    my %result = $mcmd->run( cmd => $bin, 
+        map{ $_ => $param->{$_} }grep{ $param->{$_} }qw( timeout max )
+    );
+
+    my %mesg;
+    while ( my ( $type, $mesg ) = each %result )
+    {
+        while ( my ( $mesg, $node ) = each %$mesg )
+        {
+            chomp $mesg;
+            map{$mesg{$type}{$_} = $mesg}@$node;
+            map{ $fail{$_} = 1 }@$node if $type eq 'stderr';
+        }
+    }
+
+    YAML::XS::DumpFile \*STDOUT, \%mesg;
+    print "=" x 30,"\n";
+    return map{ $_ => 1 }grep{ ! $fail{$_} } @$batch;
+};

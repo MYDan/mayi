@@ -1,0 +1,35 @@
+#!# perl: deploy/code/b.node
+use strict;
+use File::Spec;
+use Sys::Hostname;
+
+use Data::Dumper;
+use MYDan::Agent::Client;
+use MYDan::Node;
+
+my %deploy;
+BEGIN{ %deploy = MYDan::Util::OptConf->load()->dump('deploy'); };
+
+return sub
+{
+    my ( %param, @batch ) = @_;
+
+#    my ( $name, $title, $step ) = @param{qw( name title step )}; 
+    print "lock OK\n";
+    die "lock OK\n";
+#    my $ctrl = MYDan::Deploy::Ctrl->new( $name => "$deploy{ctrl}" );
+#
+#    $ctrl->pause( 'pause', $title, $step, 'locked' );
+#
+#    if( $ctrl->stuck( $title, $step ) )
+#    {
+#        print "lock OK\n";
+#    }
+#    else
+#    {
+#        print "lock FAIL\n";
+#        die "lock error";
+#    }
+#    print "=" x 30,"\n";
+    return map{ $_ => 1 }@{$param{batch}};
+};
