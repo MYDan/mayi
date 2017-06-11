@@ -243,6 +243,7 @@ TO_INST_PM = build.pl \
 	lib/MYDan/Node/KeySet.pm \
 	lib/MYDan/Node/Object.pm \
 	lib/MYDan/Node/Range.pm \
+	lib/MYDan/Sync.pm \
 	lib/MYDan/Util/DirConf.pm \
 	lib/MYDan/Util/OptConf.pm \
 	lib/MYDan/Util/ProcLock.pm \
@@ -315,6 +316,8 @@ PM_TO_BLIB = build.pl \
 	blib/lib/MYDan/Node/Object.pm \
 	lib/MYDan/Node/Range.pm \
 	blib/lib/MYDan/Node/Range.pm \
+	lib/MYDan/Sync.pm \
+	blib/lib/MYDan/Sync.pm \
 	lib/MYDan/Util/DirConf.pm \
 	blib/lib/MYDan/Util/DirConf.pm \
 	lib/MYDan/Util/OptConf.pm \
@@ -681,7 +684,7 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(FIRST_MAKEFILE) $(MAKEFILE_OLD) 
+	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 
@@ -1162,6 +1165,7 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/MYDan/Node/KeySet.pm blib/lib/MYDan/Node/KeySet.pm \
 	  lib/MYDan/Node/Object.pm blib/lib/MYDan/Node/Object.pm \
 	  lib/MYDan/Node/Range.pm blib/lib/MYDan/Node/Range.pm \
+	  lib/MYDan/Sync.pm blib/lib/MYDan/Sync.pm \
 	  lib/MYDan/Util/DirConf.pm blib/lib/MYDan/Util/DirConf.pm \
 	  lib/MYDan/Util/OptConf.pm blib/lib/MYDan/Util/OptConf.pm \
 	  lib/MYDan/Util/ProcLock.pm blib/lib/MYDan/Util/ProcLock.pm \
