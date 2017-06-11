@@ -34,5 +34,5 @@ if( my $pid = fork )
 }
 else
 {
-    exec join ' ', ' ', @ARGV;
+    exec join ' ', @ARGV;
 }
