@@ -187,6 +187,10 @@ MAN3PODS = lib/MYDan.pm \
 	lib/MYDan/Node/KeySet.pm \
 	lib/MYDan/Node/Object.pm \
 	lib/MYDan/Node/Range.pm \
+	lib/MYDan/Oncall.pm \
+	lib/MYDan/Oncall/Calendar.pm \
+	lib/MYDan/Oncall/Period.pm \
+	lib/MYDan/Oncall/Policy.pm \
 	lib/MYDan/Util/DirConf.pm \
 	lib/MYDan/Util/OptConf.pm \
 	lib/MYDan/Util/ProcLock.pm \
@@ -245,6 +249,10 @@ TO_INST_PM = build.pl \
 	lib/MYDan/Node/KeySet.pm \
 	lib/MYDan/Node/Object.pm \
 	lib/MYDan/Node/Range.pm \
+	lib/MYDan/Oncall.pm \
+	lib/MYDan/Oncall/Calendar.pm \
+	lib/MYDan/Oncall/Period.pm \
+	lib/MYDan/Oncall/Policy.pm \
 	lib/MYDan/Sync.pm \
 	lib/MYDan/Util/DirConf.pm \
 	lib/MYDan/Util/OptConf.pm \
@@ -320,6 +328,14 @@ PM_TO_BLIB = build.pl \
 	blib/lib/MYDan/Node/Object.pm \
 	lib/MYDan/Node/Range.pm \
 	blib/lib/MYDan/Node/Range.pm \
+	lib/MYDan/Oncall.pm \
+	blib/lib/MYDan/Oncall.pm \
+	lib/MYDan/Oncall/Calendar.pm \
+	blib/lib/MYDan/Oncall/Calendar.pm \
+	lib/MYDan/Oncall/Period.pm \
+	blib/lib/MYDan/Oncall/Period.pm \
+	lib/MYDan/Oncall/Policy.pm \
+	blib/lib/MYDan/Oncall/Policy.pm \
 	lib/MYDan/Sync.pm \
 	blib/lib/MYDan/Sync.pm \
 	lib/MYDan/Util/DirConf.pm \
@@ -591,6 +607,10 @@ manifypods : pure_all  \
 	lib/MYDan/Node/KeySet.pm \
 	lib/MYDan/Node/Object.pm \
 	lib/MYDan/Node/Range.pm \
+	lib/MYDan/Oncall.pm \
+	lib/MYDan/Oncall/Calendar.pm \
+	lib/MYDan/Oncall/Period.pm \
+	lib/MYDan/Oncall/Policy.pm \
 	lib/MYDan/Util/DirConf.pm \
 	lib/MYDan/Util/OptConf.pm \
 	lib/MYDan/Util/ProcLock.pm \
@@ -619,6 +639,10 @@ manifypods : pure_all  \
 	  lib/MYDan/Node/KeySet.pm $(INST_MAN3DIR)/MYDan::Node::KeySet.$(MAN3EXT) \
 	  lib/MYDan/Node/Object.pm $(INST_MAN3DIR)/MYDan::Node::Object.$(MAN3EXT) \
 	  lib/MYDan/Node/Range.pm $(INST_MAN3DIR)/MYDan::Node::Range.$(MAN3EXT) \
+	  lib/MYDan/Oncall.pm $(INST_MAN3DIR)/MYDan::Oncall.$(MAN3EXT) \
+	  lib/MYDan/Oncall/Calendar.pm $(INST_MAN3DIR)/MYDan::Oncall::Calendar.$(MAN3EXT) \
+	  lib/MYDan/Oncall/Period.pm $(INST_MAN3DIR)/MYDan::Oncall::Period.$(MAN3EXT) \
+	  lib/MYDan/Oncall/Policy.pm $(INST_MAN3DIR)/MYDan::Oncall::Policy.$(MAN3EXT) \
 	  lib/MYDan/Util/DirConf.pm $(INST_MAN3DIR)/MYDan::Util::DirConf.$(MAN3EXT) \
 	  lib/MYDan/Util/OptConf.pm $(INST_MAN3DIR)/MYDan::Util::OptConf.$(MAN3EXT) \
 	  lib/MYDan/Util/ProcLock.pm $(INST_MAN3DIR)/MYDan::Util::ProcLock.$(MAN3EXT) \
@@ -690,7 +714,7 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(FIRST_MAKEFILE) $(MAKEFILE_OLD) 
+	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 
@@ -1172,6 +1196,10 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/MYDan/Node/KeySet.pm blib/lib/MYDan/Node/KeySet.pm \
 	  lib/MYDan/Node/Object.pm blib/lib/MYDan/Node/Object.pm \
 	  lib/MYDan/Node/Range.pm blib/lib/MYDan/Node/Range.pm \
+	  lib/MYDan/Oncall.pm blib/lib/MYDan/Oncall.pm \
+	  lib/MYDan/Oncall/Calendar.pm blib/lib/MYDan/Oncall/Calendar.pm \
+	  lib/MYDan/Oncall/Period.pm blib/lib/MYDan/Oncall/Period.pm \
+	  lib/MYDan/Oncall/Policy.pm blib/lib/MYDan/Oncall/Policy.pm \
 	  lib/MYDan/Sync.pm blib/lib/MYDan/Sync.pm \
 	  lib/MYDan/Util/DirConf.pm blib/lib/MYDan/Util/DirConf.pm \
 	  lib/MYDan/Util/OptConf.pm blib/lib/MYDan/Util/OptConf.pm \

@@ -55,15 +55,22 @@ sub run
     $logH->autoflush;
 
 
+    $SIG{'CHLD'} = sub {
+        while((my $pid = waitpid(-1, WNOHANG)) >0)
+        {
+            map{ delete $proc{$_} if $proc{$_}{pid} == $pid }keys %proc;
+        }
+    };
+
 
     my $t = AnyEvent->timer(
         after => 2,
         interval => 3,
         cb => sub {
             print "check\n";
-            my @name = map{ basename $_ }glob "$exec/*";
-            print Dumper \@name,\%proc;
-            for my $name ( @name )
+            my %name = map{ basename( $_ ) => 1  }glob "$exec/*";
+            print Dumper \%name,\%proc;
+            for my $name ( keys %name )
             {
                 next if $proc{$name};
                 my ( $err, $wtr, $rdr ) = gensym;
@@ -89,6 +96,12 @@ sub run
                         print $logH unixtai64n(time), " [$name] [STDERR] $input\n"; 
                     }
                 );
+            }
+
+            for my $proc ( keys %proc )
+            {
+                next if $name{$proc};
+                kill 'KILL', $proc{$proc}{pid}; 
             }
         }
     );
