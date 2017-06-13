@@ -27,7 +27,7 @@ $option->assert( qw( to file ) );
 $MYDan::Multicast::VERBOSE = $o{verbose};
 
 my $name = $o{name} || basename $o{file};
-#my $cluster = Hermes->new( $option->dump( 'range' ) );
+#my $cluster = Node->new( $option->dump( 'range' ) );
 
 #for( $o{group} =~ /:/ ? $o{group} : $cluster->load( "{==multicast==$o{group}??==*}" )->list )
 for( $o{to} )
