@@ -20,7 +20,7 @@ return sub
         unless my $ARRAY = ref $batch ? scalar @$batch : 0;
 
 
-    my %exclued = map{ $_ => 1 } $range->load( '{==janus==exclude??==*}' )->list;
+    my %exclued = map{ $_ => 1 } $range->load( '{==deploy==exclude??==*}' )->list;
 
     my ( $bindex, $group, $gindex ) = ( 0, 0, 0 );
 
