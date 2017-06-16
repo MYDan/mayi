@@ -1,138 +1,88 @@
-package MYDan::Bootstrap;
+package MYDan::Monitor::Make;
 use strict;
 use warnings;
 use Carp;
 use YAML::XS;
 
 use File::Basename;
-use MYDan::Util::ProcLock;
 use POSIX qw( :sys_wait_h );
-use AnyEvent::Loop;
-use AnyEvent;
-
-use IPC::Open3;
-use Symbol 'gensym';
-use Time::TAI64 qw/unixtai64n/;
 use Data::Dumper;
+use MYDan::Node;
+use MYDan::Subscribe::Input;
 
-my %RUN =( size => 10000000, keep => 5 );
-our %time;
+our %c = ( code => 'stat', timeout => 60, interval => 60 );
 
-our %proc;
 sub new
 {
     my ( $class, %this ) = @_;
     map{ 
-        confess "$_ undef" unless $this{$_};
-        system "mkdir -p '$this{$_}'" unless -d $this{$_};
-    }qw( logs exec lock );
+        die "$_ undef." unless $this{$_};
+        system( "mkdir -p '$this{$_}'" ) unless -e $this{$_};
+    }qw( make conf );
+
+    $this{subscribe} = MYDan::Subscribe::Input->new();
+
     bless \%this, ref $class || $class;
 }
 
-sub run
+sub make
 {
-    my ( $this, %run ) = @_;
+    my ( $this, %skip, %node, %collect ) = shift;
+    my ( $make, $conf, $subscribe, $option ) = @$this{qw( make conf subscribe option )};
 
-    our ( $logs, $exec, $lock ) = @$this{qw( logs exec lock )};
-    my $proclock = MYDan::Util::ProcLock->new( "$lock/lock" );
-   
-    if ( my $pid = $proclock->check() )
+    
+    for my $file ( glob "$conf/collect/*" )
     {
-        print "master locked by $pid.\n" if $ENV{MYDan_DEBUG};
-        exit;
+       my $name = basename $file;
+
+       $collect{$name} = eval{ YAML::XS::LoadFile $file };
+
+       if( $@ )
+       {
+           my $project = ( $name =~ /:(.+)$/ ) ? $1 : $name;
+           $skip{$project} = 1;
+           $subscribe->push( $project, 'error', "laod $name error" );
+       }
     }
-   
-    $proclock->lock();
-    $0 = 'mydan.bootstrap.master';
-
-    
-    my ( $i, $cv ) = ( 0, AnyEvent->condvar );
-
-    our ( $logf, $logH ) = ( "$logs/current" );
-    
-    print "log $logs/current\n";
-    confess "open log: $!" unless open $logH, ">>$logf"; 
-    $logH->autoflush;
 
 
-    $SIG{'CHLD'} = sub {
-        while((my $pid = waitpid(-1, WNOHANG)) >0)
+     for ( MYDan::Node->new( $option->dump( 'range' ) )->db()->select( 'name,attr,node,info' ) )
+     {
+         my ( $name, $attr, $node, $info ) = @$_;
+         $node{$node}{$name}{$attr} = 1
+     }
+
+    for my $node ( keys %node )
+    {
+        my @name = sort keys %{$node{$node}};
+        next if grep{ $skip{$_} }@name;
+
+        my %config;
+        for my $name ( @name )
         {
-            map{ delete $proc{$_} if $proc{$_}{pid} == $pid }keys %proc;
+            %config = ( %config, %{$collect{$name}} ) if $collect{$name};
+            map{  %config = ( %config, %{$collect{"$name:$_"}} )  if $collect{"$name:$_"}  }
+                sort keys %{$node{$node}{$name}}
         }
-    };
-
-
-    my $t = AnyEvent->timer(
-        after => 2,
-        interval => 3,
-        cb => sub {
-            print "check\n";
-            my %name = map{ basename( $_ ) => 1  }glob "$exec/*";
-            print Dumper \%name,\%proc;
-            for my $name ( keys %name )
-            {
-                next if $proc{$name};
-                my ( $err, $wtr, $rdr ) = gensym;
-                my $pid = IPC::Open3::open3( undef, $rdr, $err, "$exec/$name" );
-           
-		$proc{$name}{pid} = $pid;
-                $proc{$name}{rdr} = AnyEvent->io (
-                    fh => $rdr, poll => "r",
-                    cb => sub {
-                        my $input = <$rdr>; 
-                        delete $proc{$name}{rdr} and return unless $input;
-                        chomp $input;
-                        print $logH unixtai64n(time), " [$name] [STDOUT] $input\n";
-                    }
-                );
-                $proc{$name}{err} = AnyEvent->io (
-                    fh => $err, poll => "r", 
-                    cb => sub {
-                        my $input = <$err>;
-                        delete $proc{$name}{err} and return unless $input;
-
-                        chomp $input;
-                        print $logH unixtai64n(time), " [$name] [STDERR] $input\n"; 
-                    }
-                );
-            }
-
-            for my $proc ( keys %proc )
-            {
-                next if $name{$proc};
-                kill 'KILL', $proc{$proc}{pid}; 
-            }
+        eval{ YAML::XS::DumpFile "$make/$node", 
+            +{ 
+                conf => +{ 
+                    stat => +{ 
+                        code => 'stat', 
+                        timeout => 60, 
+                        interval=> 60, 
+                        param =>+{ test => \%config }
+                    } 
+                }, 
+                target => $node 
+            } 
+        };
+        if( $@ )
+        {
+            map{ $subscribe->push( $_, 'error', "dump $node error" ); }@name;
         }
-    );
-    my $tt = AnyEvent->timer(
-        after => 30,
-        interval => 60,
-        cb => sub {
-            print "cut log\n";
-            my $size= ( stat "$logs/current" )[7];
-            return unless $size > $RUN{size};
-            my $num = $this->_num();
-            system "mv '$logs/current' '$logs/log.$num'";
-            
-	    confess "open log: $!" unless open $logH, ">>$logf"; 
-	    $logH->autoflush;
-             
-        }
-    );
-
-    $cv->recv;
-    return $this;
-}
-
-sub _num
-{
-    my ( $logs, %time ) = shift->{logs};
-    for my $num ( 1 .. $RUN{keep} )
-    {
-       return $num unless $time{$num} = ( stat "$logs/log.$num" )[10];
     }
-    return ( sort{ $time{$a} <=> $time{$b} } keys %time )[0];
+
 }
 
 1;

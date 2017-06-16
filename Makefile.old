@@ -289,6 +289,7 @@ TO_INST_PM = build.pl \
 	lib/MYDan/Oncall/Calendar.pm \
 	lib/MYDan/Oncall/Period.pm \
 	lib/MYDan/Oncall/Policy.pm \
+	lib/MYDan/Subscribe/Input.pm \
 	lib/MYDan/Sync.pm \
 	lib/MYDan/Util/Contact.pm \
 	lib/MYDan/Util/DirConf.pm \
@@ -438,6 +439,8 @@ PM_TO_BLIB = build.pl \
 	blib/lib/MYDan/Oncall/Period.pm \
 	lib/MYDan/Oncall/Policy.pm \
 	blib/lib/MYDan/Oncall/Policy.pm \
+	lib/MYDan/Subscribe/Input.pm \
+	blib/lib/MYDan/Subscribe/Input.pm \
 	lib/MYDan/Sync.pm \
 	blib/lib/MYDan/Sync.pm \
 	lib/MYDan/Util/Contact.pm \
@@ -834,7 +837,7 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(FIRST_MAKEFILE) $(MAKEFILE_OLD) 
+	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 
@@ -1352,6 +1355,7 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/MYDan/Oncall/Calendar.pm blib/lib/MYDan/Oncall/Calendar.pm \
 	  lib/MYDan/Oncall/Period.pm blib/lib/MYDan/Oncall/Period.pm \
 	  lib/MYDan/Oncall/Policy.pm blib/lib/MYDan/Oncall/Policy.pm \
+	  lib/MYDan/Subscribe/Input.pm blib/lib/MYDan/Subscribe/Input.pm \
 	  lib/MYDan/Sync.pm blib/lib/MYDan/Sync.pm \
 	  lib/MYDan/Util/Contact.pm blib/lib/MYDan/Util/Contact.pm \
 	  lib/MYDan/Util/DirConf.pm blib/lib/MYDan/Util/DirConf.pm \
