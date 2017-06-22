@@ -30,7 +30,6 @@ my %o = $option->get(
 $option->assert( 'range' );
 
 my $code = shift;
-my $port = delete $o{port};
 my %query = ( code => $code, logname => operator(), argv => argv( $code ) );
 
 if( $o{env} )
@@ -46,7 +45,7 @@ my $range = MYDan::Node->new( $option->dump( 'range' ) );
 
 
 my $client = MYDan::Agent::Client->new( 
-    map { join ':', $_, $port } $range->load( delete $o{range} )->list
+    $range->load( delete $o{range} )->list
 );
 
 my %result = $client->run( %o, query => \%query ); 

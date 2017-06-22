@@ -30,6 +30,7 @@ our %PREREQ_PM =
     'Dancer::Plugin::Database' => 0,
 #    'DBD::mysql' => 0,
     'Mail::Sendmail' => 0,
+    'Data::UUID' => 0,
 );
 
 our $PKG_NAME = 'mydan';

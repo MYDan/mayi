@@ -25,12 +25,14 @@ use FindBin qw( $RealBin );
 
 sub new
 {
-    my ( $class, $type, $auth, %self ) = splice @_, 0, 3;
+    my ( $class, $type, $auth, %self ) = @_;
     confess "invalid auth dir" unless $auth && -d $auth;
 
-    for my $file ( glob "$auth/*" )
+    $self{data} = +{};
+    for my $file ( ( $self{user} && $type eq 'pub' ) ? ( "$auth/$self{user}.pub" ) : glob "$auth/*" )
     {
-        $self{ basename $file} = "$file.$type" if $file =~ s/\.$type$//;;
+        next unless -f $file;
+        $self{data}{ basename $file} = "$file.$type" if $file =~ s/\.$type$//;
     }
 
     bless \%self, ref $class || $class;
@@ -43,19 +45,29 @@ sub sign
 
     map 
     { 
-        $sig{$_} = Crypt::PK::RSA->new( $this->{$_} )->sign_message( $mesg );
-    }keys %{$this};
+        $sig{$_} = Crypt::PK::RSA->new( $this->{data}{$_} )->sign_message( $mesg );
+    }keys %{$this->{data}};
     return wantarray ? %sig : \%sig;
 }
 
 sub verify
 {
     my ( $this, $sig, $mesg ) = @_;
-    map
-    { 
-        next unless $sig->{$_};
-        return 1 if Crypt::PK::RSA->new( $this->{$_} )->verify_message( $sig->{$_}, $mesg );
-    }keys %$this;
+    if( my $user = $this->{user} )
+    {
+        return 0 unless $this->{data}{$user};
+        map{
+            return 1 if Crypt::PK::RSA->new( $this->{data}{$user} )->verify_message( $sig->{$_}, $mesg );
+        }keys %$sig;
+    } 
+    else
+    {
+        for( keys %{$this->{data}} )
+        { 
+            next unless $sig->{$_};
+            return 1 if Crypt::PK::RSA->new( $this->{data}{$_} )->verify_message( $sig->{$_}, $mesg );
+        }
+    }
     return 0;
 }
 

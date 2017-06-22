@@ -41,8 +41,11 @@ Returns a scalar dumped from input HASH.
 
 =cut
 
-our %o;
-BEGIN{ %o = MYDan::Util::OptConf->load()->dump( 'agent' ) };
+our ( %o, @myip );
+BEGIN{ 
+    %o = MYDan::Util::OptConf->load()->dump( 'agent' );
+    @myip = grep{ /\d/ }split /\s+/, `hostname -I;hostname`;
+};
 
 sub dump
 {
@@ -54,11 +57,13 @@ sub dump
     if( $o{'auth'} && $query->{code} !~ /^free\./ )
     {
         my ( $time, $logname ) = ( time, $query->{logname} );
+        die "logname unkown" unless $logname && $logname =~ /^\w+$/;
         $query->{peri} = join '#', $time - $CA, $time + $CA;
+
         $query->{auth} = MYDan::Agent::Auth->new( 
-            key => ( $logname && $logname =~ /^\w+$/ ) 
+            key => ( $o{role} && $o{role} eq 'client' ) 
                 ? $logname eq 'root' ? "/root/.ssh": "/home/$logname/.ssh"
-                : $o{'auth'}
+                : $o{'auth'},
         )->sign( YAML::XS::Dump $query );
     }
     
@@ -83,18 +88,17 @@ sub load
 
     if( $o{'auth'} && $query->{code} !~ /^free\./ )
     {
-        my ( $auth, $peri ) = map{ delete $query->{$_} }qw( auth peri );
-        my $logname = $query->{logname};
+        my $auth = delete $query->{auth};
 
         die "auth fail\n" unless MYDan::Agent::Auth->new(
-            pub => ( $logname && $logname =~ /^\w+$/ ) 
-                ? $logname eq 'root' ? "/root/.ssh": "/home/$logname/.ssh"
-                : $o{'auth'}
+            pub => $o{'auth'}
         )->verify( $auth, YAML::XS::Dump $query );
-        die "peri undef\n" unless $peri = delete $query->{peri};
+        die "peri undef\n" unless my $peri = delete $query->{peri};
         my @peri = split '#', $peri;
         die "peri fail\n" unless $peri[0] < time && time < $peri[1];
     }
+
+    die "auth fail.access" if $query->{node} && 0 == grep { $query->{node}{$_} } @myip;
 
     bless { yaml => $yaml, query => $query }, ref $class || $class;
 }

@@ -3,35 +3,20 @@ use strict;
 use warnings;
 use Carp;
 
-use JSON;
-use LWP::UserAgent;
+
+use  Compress::Zlib;
 
 use base qw( MYDan::API );
 
-our $URI = "/api/agent";
+our $URI = "/api/v1/agent";
 
-sub list
+sub encryption
 {
-    my ( $self, $query ) = @_;
-    $self->get( sprintf "$URI/list%s", $user ? "?user=$user" : '' );
-}
-
-sub create
-{
-    my ( $self, $name ) = @_;
-    $self->get( sprintf "$URI/create?name=%s", $name || $self->{name} );
-}
-
-sub myid
-{
-    my ( $self, $myid ) = splice @_, 0, 2;
-    $self->_api( "myid/$myid", @_ );
-}
-
-sub _api
-{
-    my ( $self, $type, $data ) = @_;
-    $self->post( sprintf( "$URI/%s/$type", $self->{name}), $data ? ( data => $data ) :() );
+    my ( $self, $data ) = @_;
+    my $raw = $self->_stream( "$URI/encryption", $data );
+    my $d = Compress::Zlib::uncompress( $raw );
+    die "$URI/encryption fail:$raw" unless $d; 
+    return $raw;
 }
 
 1;

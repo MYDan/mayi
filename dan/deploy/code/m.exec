@@ -7,10 +7,10 @@ use Data::Dumper;
 use MYDan::Agent::Client;
 use MYDan::Node;
 
-my ( $conf, $port );
+my $conf;
 BEGIN{
     my %agent = MYDan::Util::OptConf->load()->dump('agent');
-    ( $conf, $port ) = @agent{qw( conf port )};
+    $conf = $agent{conf};
 };
 
 my %run = ( timeout => 86400, max => 500, user => 'root' );
@@ -32,9 +32,7 @@ return sub
         user => $param->{user}||'root', 
         argv => $bin );
 
-    my $client = MYDan::Agent::Client->new( 
-        map { join ':', $_, $port }@$batch
-    );
+    my $client = MYDan::Agent::Client->new( @$batch );
 
     $client->proxy( "$conf/proxy/$param->{proxy}" ) if $param->{proxy};
 
@@ -46,7 +44,6 @@ return sub
     {
         while ( my ( $mesg, $node ) = each %$mesg )
         {
-            map { $_ =~ s/:$port$// } @$node;
             my $stat = $1 if $mesg =~ s/--- (\d+)\n$//;
            
             printf "[%s]:%s\n", scalar @$node,  $range->load( $node )->dump();

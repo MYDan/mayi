@@ -5,6 +5,11 @@ use Carp;
 use YAML::XS;
 
 use Data::Dumper;
+use POSIX;
+
+use MYDan::Util::OptConf;
+my %o; BEGIN{ %o = MYDan::Util::OptConf->load()->dump('subscribe');};
+use MYDan::Subscribe::Input::Mesg;
 
 sub new
 {
@@ -14,9 +19,17 @@ sub new
 
 sub push
 {
-    my ( $this, @in ) = @_;
+    my ( $this, $mesg, $name, $attr ) = @_;
 
-    print Dumper \@in;
+    $name = 'unkown' if $name && $name =~ /^[a-zA-Z0-9_\-]+$/;
+    $attr = 'unkown' if $attr && $attr =~ /^[a-zA-Z0-9_\-]+$/;
+
+    
+    my $db = MYDan::Subscribe::Input::Mesg->new( 
+        sprintf( "$o{input}/%s",  POSIX::strftime( "%Y-%m-%d_%H", localtime ) ),
+        $MYDan::Subscribe::Input::Mesg::TABLE
+    );
+    $db->insert( $name, $attr, $mesg );
 }
 
 1;

@@ -1,17 +1,7 @@
-#!# perl: deploy/code/b.node
+#!# perl: deploy/code/m.test
 use strict;
-use File::Spec;
-use Sys::Hostname;
+use warnings;
 
-use Data::Dumper;
-use MYDan::Agent::Client;
-use MYDan::Node;
-
-my ( %porxy, $port );
-BEGIN{
-    %porxy = MYDan::Util::OptConf->load()->dump('porxy');
-    $port = '12345';
-};
 return sub
 {
     my ( %param, @batch ) = @_;

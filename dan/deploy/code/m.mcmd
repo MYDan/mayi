@@ -1,4 +1,4 @@
-#!# perl: deploy/code/b.node
+#!# perl: deploy/code/m.mcmd
 use strict;
 use File::Spec;
 use Sys::Hostname;

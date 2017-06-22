@@ -6,7 +6,7 @@ use Sys::Hostname;
 use Data::Dumper;
 use MYDan::Agent::Client;
 use MYDan::Node;
-use MYDan::Util::Mrsync;
+use MYDan::Agent::Mrsync;
 
 my ( $conf, $port );
 BEGIN{
@@ -29,7 +29,7 @@ return sub
     $sp = $dp unless $sp;
     $dp = $sp unless $dp;
 
-    my $mrsync = MYDan::Util::Mrsync->new ( sp => $sp, dp => $dp, dst => $batch,
+    my $mrsync = MYDan::Agent::Mrsync->new ( sp => $sp, dp => $dp, dst => $batch,
         src => [ $range->load( $param->{src} || hostname() )->list ]
     );
     

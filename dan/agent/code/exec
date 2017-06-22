@@ -7,3 +7,4 @@ local $/ = undef;
 
 my %param = %{ YAML::XS::Load( <STDIN> ) };
 exec $param{argv}->[0];
+exit 1;

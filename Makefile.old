@@ -17,7 +17,7 @@
 #     CONFIGURE_REQUIRES => {  }
 #     LICENSE => q[perl]
 #     NAME => q[mydan]
-#     PREREQ_PM => { AnyEvent=>q[0], Crypt::PK::RSA=>q[0], DBD::SQLite=>q[1.37], DBI=>q[1.625], Dancer=>q[1.31], Dancer::Plugin::Database=>q[0], DateTime=>q[1.03], Expect=>q[1.21], Getopt::Long=>q[2.38], IO::Socket::Multicast=>q[1.12], IO::Stty=>q[0.03], JSON=>q[2.9], Mail::Sendmail=>q[0], Net::SSH::Perl=>q[0], Template=>q[0], Term::ANSIColor=>q[3], Term::Completion=>q[0], Term::ReadPassword=>q[0.11], Thread::Queue=>q[2.12], Time::TAI64=>q[0], YAML::XS=>q[0.65], threads=>q[1.8] }
+#     PREREQ_PM => { AnyEvent=>q[0], Crypt::PK::RSA=>q[0], DBD::SQLite=>q[1.37], DBI=>q[1.625], Dancer=>q[1.31], Dancer::Plugin::Database=>q[0], Data::UUID=>q[0], DateTime=>q[1.03], Expect=>q[1.21], Getopt::Long=>q[2.38], IO::Socket::Multicast=>q[1.12], IO::Stty=>q[0.03], JSON=>q[2.9], Mail::Sendmail=>q[0], Net::SSH::Perl=>q[0], Template=>q[0], Term::ANSIColor=>q[3], Term::Completion=>q[0], Term::ReadPassword=>q[0.11], Thread::Queue=>q[2.12], Time::TAI64=>q[0], YAML::XS=>q[0.65], threads=>q[1.8] }
 #     TEST_REQUIRES => {  }
 #     VERSION_FROM => q[lib/MYDan.pm]
 #     clean => { FILES=>[q[mydan-*], q[dan.i], q[Makefile.old], q[*.in], q[*.ex]] }
@@ -193,6 +193,8 @@ MAN3PODS = lib/MYDan.pm \
 	lib/MYDan/Oncall/Calendar.pm \
 	lib/MYDan/Oncall/Period.pm \
 	lib/MYDan/Oncall/Policy.pm \
+	lib/MYDan/Subscribe/Input/Mesg.pm \
+	lib/MYDan/Subscribe/Input/User.pm \
 	lib/MYDan/Util/Contact.pm \
 	lib/MYDan/Util/DirConf.pm \
 	lib/MYDan/Util/OptConf.pm \
@@ -289,7 +291,12 @@ TO_INST_PM = build.pl \
 	lib/MYDan/Oncall/Calendar.pm \
 	lib/MYDan/Oncall/Period.pm \
 	lib/MYDan/Oncall/Policy.pm \
+	lib/MYDan/Project/Apps.pm \
+	lib/MYDan/Project/Deploy.pm \
+	lib/MYDan/Project/Deploy/Ctrl.pm \
 	lib/MYDan/Subscribe/Input.pm \
+	lib/MYDan/Subscribe/Input/Mesg.pm \
+	lib/MYDan/Subscribe/Input/User.pm \
 	lib/MYDan/Sync.pm \
 	lib/MYDan/Util/Contact.pm \
 	lib/MYDan/Util/DirConf.pm \
@@ -439,8 +446,18 @@ PM_TO_BLIB = build.pl \
 	blib/lib/MYDan/Oncall/Period.pm \
 	lib/MYDan/Oncall/Policy.pm \
 	blib/lib/MYDan/Oncall/Policy.pm \
+	lib/MYDan/Project/Apps.pm \
+	blib/lib/MYDan/Project/Apps.pm \
+	lib/MYDan/Project/Deploy.pm \
+	blib/lib/MYDan/Project/Deploy.pm \
+	lib/MYDan/Project/Deploy/Ctrl.pm \
+	blib/lib/MYDan/Project/Deploy/Ctrl.pm \
 	lib/MYDan/Subscribe/Input.pm \
 	blib/lib/MYDan/Subscribe/Input.pm \
+	lib/MYDan/Subscribe/Input/Mesg.pm \
+	blib/lib/MYDan/Subscribe/Input/Mesg.pm \
+	lib/MYDan/Subscribe/Input/User.pm \
+	blib/lib/MYDan/Subscribe/Input/User.pm \
 	lib/MYDan/Sync.pm \
 	blib/lib/MYDan/Sync.pm \
 	lib/MYDan/Util/Contact.pm \
@@ -726,6 +743,8 @@ manifypods : pure_all  \
 	lib/MYDan/Oncall/Calendar.pm \
 	lib/MYDan/Oncall/Period.pm \
 	lib/MYDan/Oncall/Policy.pm \
+	lib/MYDan/Subscribe/Input/Mesg.pm \
+	lib/MYDan/Subscribe/Input/User.pm \
 	lib/MYDan/Util/Contact.pm \
 	lib/MYDan/Util/DirConf.pm \
 	lib/MYDan/Util/OptConf.pm \
@@ -763,6 +782,8 @@ manifypods : pure_all  \
 	  lib/MYDan/Oncall/Calendar.pm $(INST_MAN3DIR)/MYDan::Oncall::Calendar.$(MAN3EXT) \
 	  lib/MYDan/Oncall/Period.pm $(INST_MAN3DIR)/MYDan::Oncall::Period.$(MAN3EXT) \
 	  lib/MYDan/Oncall/Policy.pm $(INST_MAN3DIR)/MYDan::Oncall::Policy.$(MAN3EXT) \
+	  lib/MYDan/Subscribe/Input/Mesg.pm $(INST_MAN3DIR)/MYDan::Subscribe::Input::Mesg.$(MAN3EXT) \
+	  lib/MYDan/Subscribe/Input/User.pm $(INST_MAN3DIR)/MYDan::Subscribe::Input::User.$(MAN3EXT) \
 	  lib/MYDan/Util/Contact.pm $(INST_MAN3DIR)/MYDan::Util::Contact.$(MAN3EXT) \
 	  lib/MYDan/Util/DirConf.pm $(INST_MAN3DIR)/MYDan::Util::DirConf.$(MAN3EXT) \
 	  lib/MYDan/Util/OptConf.pm $(INST_MAN3DIR)/MYDan::Util::OptConf.$(MAN3EXT) \
@@ -770,7 +791,8 @@ manifypods : pure_all  \
 	  lib/MYDan/Util/ProcLock.pm $(INST_MAN3DIR)/MYDan::Util::ProcLock.$(MAN3EXT) \
 	  lib/MYDan/Util/SQLiteDB.pm $(INST_MAN3DIR)/MYDan::Util::SQLiteDB.$(MAN3EXT) \
 	  lib/MYDan/Util/Say.pm $(INST_MAN3DIR)/MYDan::Util::Say.$(MAN3EXT) \
-	  lib/MYDan/Util/Screen.pm $(INST_MAN3DIR)/MYDan::Util::Screen.$(MAN3EXT) \
+	  lib/MYDan/Util/Screen.pm $(INST_MAN3DIR)/MYDan::Util::Screen.$(MAN3EXT) 
+	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) -u \
 	  lib/MYDan/Util/Sudo.pm $(INST_MAN3DIR)/MYDan::Util::Sudo.$(MAN3EXT) 
 
 
@@ -837,7 +859,7 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) 
+	  $(FIRST_MAKEFILE) $(MAKEFILE_OLD) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 
@@ -871,6 +893,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '  DBI: '\''1.625'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Dancer: '\''1.31'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Dancer::Plugin::Database: '\''0'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Data::UUID: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  DateTime: '\''1.03'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Expect: '\''1.21'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Getopt::Long: '\''2.38'\''' >> META_new.yml
@@ -931,6 +954,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '            "DBI" : "1.625",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Dancer" : "1.31",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Dancer::Plugin::Database" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Data::UUID" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "DateTime" : "1.03",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Expect" : "1.21",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Getopt::Long" : "2.38",' >> META_new.json
@@ -1263,6 +1287,7 @@ ppd :
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DBI::" VERSION="1.625" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Dancer::" VERSION="1.31" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Dancer::Plugin::Database" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Data::UUID" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="DateTime::" VERSION="1.03" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Expect::" VERSION="1.21" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Getopt::Long" VERSION="2.38" />' >> $(DISTNAME).ppd
@@ -1355,7 +1380,12 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/MYDan/Oncall/Calendar.pm blib/lib/MYDan/Oncall/Calendar.pm \
 	  lib/MYDan/Oncall/Period.pm blib/lib/MYDan/Oncall/Period.pm \
 	  lib/MYDan/Oncall/Policy.pm blib/lib/MYDan/Oncall/Policy.pm \
+	  lib/MYDan/Project/Apps.pm blib/lib/MYDan/Project/Apps.pm \
+	  lib/MYDan/Project/Deploy.pm blib/lib/MYDan/Project/Deploy.pm \
+	  lib/MYDan/Project/Deploy/Ctrl.pm blib/lib/MYDan/Project/Deploy/Ctrl.pm \
 	  lib/MYDan/Subscribe/Input.pm blib/lib/MYDan/Subscribe/Input.pm \
+	  lib/MYDan/Subscribe/Input/Mesg.pm blib/lib/MYDan/Subscribe/Input/Mesg.pm \
+	  lib/MYDan/Subscribe/Input/User.pm blib/lib/MYDan/Subscribe/Input/User.pm \
 	  lib/MYDan/Sync.pm blib/lib/MYDan/Sync.pm \
 	  lib/MYDan/Util/Contact.pm blib/lib/MYDan/Util/Contact.pm \
 	  lib/MYDan/Util/DirConf.pm blib/lib/MYDan/Util/DirConf.pm \
@@ -1372,7 +1402,8 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/MYDan/VSSH.pm blib/lib/MYDan/VSSH.pm \
 	  lib/MYDan/VSSH/Comp.pm blib/lib/MYDan/VSSH/Comp.pm \
 	  lib/MYDan/VSSH/Execute.pm blib/lib/MYDan/VSSH/Execute.pm \
-	  lib/MYDan/VSSH/History.pm blib/lib/MYDan/VSSH/History.pm \
+	  lib/MYDan/VSSH/History.pm blib/lib/MYDan/VSSH/History.pm 
+	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
 	  lib/MYDan/VSSH/Print.pm blib/lib/MYDan/VSSH/Print.pm 
 	$(NOECHO) $(TOUCH) pm_to_blib
 

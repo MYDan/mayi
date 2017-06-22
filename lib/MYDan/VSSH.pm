@@ -32,7 +32,7 @@ sub run
 	next unless my $cmd = $this->_comp();
         exit if $cmd eq 'exit' || $cmd eq 'quit' ||  $cmd eq 'logout';
    
-        my %result = $execute->run( cmd => $cmd );
+        my %result = $execute->run( cmd => $cmd, map{ $_ => $this->{$_}}qw( logname user ) );
         $print->result( %result );
 
         $history->push( $cmd );

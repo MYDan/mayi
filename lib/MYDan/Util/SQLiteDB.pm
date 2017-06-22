@@ -33,7 +33,7 @@ sub new
     $self->{column} = [ map { $define[ $_ << 1 ] } 0 .. @define / 2 - 1 ];
 
     my %exist = $self->exist();
-    map { $self->create( $_ ) } @_, keys %exist;
+    map { $self->create( $_ ) } @_;#, keys %exist;
     return $self;
 }
 
@@ -96,7 +96,7 @@ Inserts @record into $table.
     $stmt->{insert} = $db->prepare
     (
         sprintf "INSERT OR REPLACE INTO $neat ( %s ) VALUES ( %s )",
-        join( ',', @column ), join( ',', map { '?' } @column )
+        join( ',', grep{$_ ne 'id'}@column ), join( ',', map { '?' } grep{$_ ne 'id'}@column )
     );
 
 =head3 dump( $table )

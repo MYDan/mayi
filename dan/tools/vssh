@@ -8,7 +8,7 @@ use MYDan::VSSH;
 
 =head1 SYNOPSIS
 
- $0 [--range host]
+ $0 [--range host] [--logname foo] [--user root]
     
 =cut
 
@@ -20,4 +20,11 @@ $option->assert( 'range' );
 
 exit unless my @node = $range->load( delete $o{range} )->list;
 
-MYDan::VSSH->new( node => \@node )->run();
+MYDan::VSSH->new( node => \@node, logname => operator(), %o )->run();
+
+exit 0;
+
+sub operator
+{
+    my $name = `logname`; chop $name; return $name;
+}

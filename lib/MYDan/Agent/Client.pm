@@ -28,6 +28,8 @@ use AnyEvent::Handle;
 use AnyEvent::Socket;
 use Time::HiRes qw(time);
 
+use MYDan::API::Agent;
+
 our %RUN = ( user => 'root', max => 128, timeout => 300 );
 
 sub new
@@ -43,17 +45,27 @@ sub run
 
     return unless my @node = @{$this->{node}};
 
+    my $isc = $run{role} && $run{role} eq 'client' ? 1 : 0;
+    $run{query}{node} = \@node if $isc;
+
     my $query = MYDan::Agent::Query->dump($run{query});
+
+    eval{ $query = MYDan::API::Agent->new()->encryption( $query ) if $isc };
+    if( $@ )
+    {
+        warn "ERROR:$@\n";
+        return map{ $_ => "norun --- 1\n" }@node;
+    }
+ 
 
     my $cv = AE::cv;
 
     my $work;$work = sub{
         return unless my $node = shift @node;
         $result{$node} = '';
-        my ( $host, $port ) = split /:/, $node;
         
         $cv->begin;
-        tcp_connect $host, $port, sub {
+        tcp_connect $node, $run{port}, sub {
              my ( $fh ) = @_;
              unless( $fh ){
                  $cv->end;
