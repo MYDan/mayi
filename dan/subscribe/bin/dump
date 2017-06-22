@@ -1,0 +1,17 @@
+#!/bin/usr/env perl
+use strict;
+use warnings;
+
+$| ++;
+
+use  MYDan::Subscribe::Input;
+my $input = MYDan::Subscribe::Input->new();
+
+if( @ARGV )
+{
+    my @data = $input->dump( shift );
+    map{ printf "%s\n", join '|', @$_ }@data;
+    exit;
+}
+
+map{ print "$_\n"; }$input->list();

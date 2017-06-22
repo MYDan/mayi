@@ -1,12 +1,12 @@
-package MYDan::Subscribe::Input::User;
+package MYDan::Subscribe::DBI::Mesg;
 
 =head1 NAME
 
 =head1 SYNOPSIS
 
- use MYDan::Subscribe::Input::DB;
+ use MYDan::Subscribe::DBI::DB;
 
- my $db = MYDan::Subscribe::Input::DB->new( '/database/file' );
+ my $db = MYDan::Subscribe::DBI::DB->new( '/database/file' );
 
  $db->select( 'node', name => [ 1, 'foo' ] );
 
@@ -25,16 +25,20 @@ use base qw( MYDan::Util::SQLiteDB );
 
 A SQLITE db has a I<node> table of I<four> columns:
 
- name : user name
- mark : id
+ name : cluster name
+ attr : table name
+ node : node name
 
 =cut
-our $TABLE  = 'user';
+our $TABLE  = 'mesg';
 
 sub define
 {
-    name => 'TEXT NOT NULL UNIQUE',
-    mark => 'TEXT NOT NULL',
+    id => 'integer PRIMARY KEY autoincrement',
+    name => 'TEXT NOT NULL',
+    attr => 'TEXT NOT NULL',
+    mesg => 'TEXT NOT NULL',
+    time => 'TEXT NOT NULL',
 };
 
 

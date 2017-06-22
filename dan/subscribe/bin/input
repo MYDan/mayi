@@ -1,0 +1,10 @@
+#!/bin/usr/env perl
+use strict;
+use warnings;
+
+$| ++;
+
+use  MYDan::Subscribe::Input;
+my $input = MYDan::Subscribe::Input->new();
+
+$input->push( @ARGV );

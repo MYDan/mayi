@@ -193,8 +193,8 @@ MAN3PODS = lib/MYDan.pm \
 	lib/MYDan/Oncall/Calendar.pm \
 	lib/MYDan/Oncall/Period.pm \
 	lib/MYDan/Oncall/Policy.pm \
-	lib/MYDan/Subscribe/Input/Mesg.pm \
-	lib/MYDan/Subscribe/Input/User.pm \
+	lib/MYDan/Subscribe/DBI/Mesg.pm \
+	lib/MYDan/Subscribe/DBI/User.pm \
 	lib/MYDan/Util/Contact.pm \
 	lib/MYDan/Util/DirConf.pm \
 	lib/MYDan/Util/OptConf.pm \
@@ -294,9 +294,9 @@ TO_INST_PM = build.pl \
 	lib/MYDan/Project/Apps.pm \
 	lib/MYDan/Project/Deploy.pm \
 	lib/MYDan/Project/Deploy/Ctrl.pm \
+	lib/MYDan/Subscribe/DBI/Mesg.pm \
+	lib/MYDan/Subscribe/DBI/User.pm \
 	lib/MYDan/Subscribe/Input.pm \
-	lib/MYDan/Subscribe/Input/Mesg.pm \
-	lib/MYDan/Subscribe/Input/User.pm \
 	lib/MYDan/Sync.pm \
 	lib/MYDan/Util/Contact.pm \
 	lib/MYDan/Util/DirConf.pm \
@@ -452,12 +452,12 @@ PM_TO_BLIB = build.pl \
 	blib/lib/MYDan/Project/Deploy.pm \
 	lib/MYDan/Project/Deploy/Ctrl.pm \
 	blib/lib/MYDan/Project/Deploy/Ctrl.pm \
+	lib/MYDan/Subscribe/DBI/Mesg.pm \
+	blib/lib/MYDan/Subscribe/DBI/Mesg.pm \
+	lib/MYDan/Subscribe/DBI/User.pm \
+	blib/lib/MYDan/Subscribe/DBI/User.pm \
 	lib/MYDan/Subscribe/Input.pm \
 	blib/lib/MYDan/Subscribe/Input.pm \
-	lib/MYDan/Subscribe/Input/Mesg.pm \
-	blib/lib/MYDan/Subscribe/Input/Mesg.pm \
-	lib/MYDan/Subscribe/Input/User.pm \
-	blib/lib/MYDan/Subscribe/Input/User.pm \
 	lib/MYDan/Sync.pm \
 	blib/lib/MYDan/Sync.pm \
 	lib/MYDan/Util/Contact.pm \
@@ -743,8 +743,8 @@ manifypods : pure_all  \
 	lib/MYDan/Oncall/Calendar.pm \
 	lib/MYDan/Oncall/Period.pm \
 	lib/MYDan/Oncall/Policy.pm \
-	lib/MYDan/Subscribe/Input/Mesg.pm \
-	lib/MYDan/Subscribe/Input/User.pm \
+	lib/MYDan/Subscribe/DBI/Mesg.pm \
+	lib/MYDan/Subscribe/DBI/User.pm \
 	lib/MYDan/Util/Contact.pm \
 	lib/MYDan/Util/DirConf.pm \
 	lib/MYDan/Util/OptConf.pm \
@@ -782,8 +782,8 @@ manifypods : pure_all  \
 	  lib/MYDan/Oncall/Calendar.pm $(INST_MAN3DIR)/MYDan::Oncall::Calendar.$(MAN3EXT) \
 	  lib/MYDan/Oncall/Period.pm $(INST_MAN3DIR)/MYDan::Oncall::Period.$(MAN3EXT) \
 	  lib/MYDan/Oncall/Policy.pm $(INST_MAN3DIR)/MYDan::Oncall::Policy.$(MAN3EXT) \
-	  lib/MYDan/Subscribe/Input/Mesg.pm $(INST_MAN3DIR)/MYDan::Subscribe::Input::Mesg.$(MAN3EXT) \
-	  lib/MYDan/Subscribe/Input/User.pm $(INST_MAN3DIR)/MYDan::Subscribe::Input::User.$(MAN3EXT) \
+	  lib/MYDan/Subscribe/DBI/Mesg.pm $(INST_MAN3DIR)/MYDan::Subscribe::DBI::Mesg.$(MAN3EXT) \
+	  lib/MYDan/Subscribe/DBI/User.pm $(INST_MAN3DIR)/MYDan::Subscribe::DBI::User.$(MAN3EXT) \
 	  lib/MYDan/Util/Contact.pm $(INST_MAN3DIR)/MYDan::Util::Contact.$(MAN3EXT) \
 	  lib/MYDan/Util/DirConf.pm $(INST_MAN3DIR)/MYDan::Util::DirConf.$(MAN3EXT) \
 	  lib/MYDan/Util/OptConf.pm $(INST_MAN3DIR)/MYDan::Util::OptConf.$(MAN3EXT) \
@@ -1383,9 +1383,9 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/MYDan/Project/Apps.pm blib/lib/MYDan/Project/Apps.pm \
 	  lib/MYDan/Project/Deploy.pm blib/lib/MYDan/Project/Deploy.pm \
 	  lib/MYDan/Project/Deploy/Ctrl.pm blib/lib/MYDan/Project/Deploy/Ctrl.pm \
+	  lib/MYDan/Subscribe/DBI/Mesg.pm blib/lib/MYDan/Subscribe/DBI/Mesg.pm \
+	  lib/MYDan/Subscribe/DBI/User.pm blib/lib/MYDan/Subscribe/DBI/User.pm \
 	  lib/MYDan/Subscribe/Input.pm blib/lib/MYDan/Subscribe/Input.pm \
-	  lib/MYDan/Subscribe/Input/Mesg.pm blib/lib/MYDan/Subscribe/Input/Mesg.pm \
-	  lib/MYDan/Subscribe/Input/User.pm blib/lib/MYDan/Subscribe/Input/User.pm \
 	  lib/MYDan/Sync.pm blib/lib/MYDan/Sync.pm \
 	  lib/MYDan/Util/Contact.pm blib/lib/MYDan/Util/Contact.pm \
 	  lib/MYDan/Util/DirConf.pm blib/lib/MYDan/Util/DirConf.pm \
