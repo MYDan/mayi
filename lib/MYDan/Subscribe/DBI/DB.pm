@@ -1,4 +1,4 @@
-package MYDan::Subscribe::DBI::User;
+package MYDan::Subscribe::DBI::DB;
 
 =head1 NAME
 
@@ -25,16 +25,20 @@ use base qw( MYDan::Util::SQLiteDB );
 
 A SQLITE db has a I<node> table of I<four> columns:
 
- name : user name
- mark : id
+ name : cluster name
+ attr : table name
+ user : node name
+ level : node name
 
 =cut
-our $TABLE  = 'user';
+our $TABLE  = 'subscribe';
 
 sub define
 {
-    name => 'TEXT NOT NULL UNIQUE',
-    mark => 'TEXT NOT NULL',
+    name => 'TEXT NOT NULL',
+    attr => 'TEXT NOT NULL',
+    user => 'TEXT NOT NULL',
+    level => 'TEXT NOT NULL',
 };
 
 

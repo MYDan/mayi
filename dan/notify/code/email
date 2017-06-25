@@ -1,4 +1,4 @@
-#!# perl: notify/code/sms
+#!# perl: notify/code/email
 use warnings;
 use strict;
 
@@ -14,7 +14,7 @@ return sub
 {
     my %param = @_;
 
-    $param{t} = 'sms';
+    $param{t} = 'email';
     print Dumper \%param;
 
     return;

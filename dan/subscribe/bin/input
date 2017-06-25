@@ -4,7 +4,5 @@ use warnings;
 
 $| ++;
 
-use  MYDan::Subscribe::Input;
-my $input = MYDan::Subscribe::Input->new();
-
-$input->push( @ARGV );
+use  MYDan::Subscribe;
+MYDan::Subscribe->new()->input( @ARGV );

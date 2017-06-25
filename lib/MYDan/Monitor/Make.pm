@@ -8,7 +8,7 @@ use File::Basename;
 use POSIX qw( :sys_wait_h );
 use Data::Dumper;
 use MYDan::Node;
-use MYDan::Subscribe::Input;
+use MYDan::Subscribe;
 
 our %c = ( code => 'stat', timeout => 60, interval => 60 );
 
@@ -20,17 +20,18 @@ sub new
         system( "mkdir -p '$this{$_}'" ) unless -e $this{$_};
     }qw( make conf );
 
-    $this{subscribe} = MYDan::Subscribe::Input->new();
+    $this{subscribe} = MYDan::Subscribe->new();
 
     bless \%this, ref $class || $class;
 }
 
 sub make
 {
-    my ( $this, %skip, %node, %collect ) = shift;
+    my ( $this, @node, %skip, %node, %collect ) = @_;
     my ( $make, $conf, $subscribe, $option ) = @$this{qw( make conf subscribe option )};
 
     
+    my %n = map{ $_ => 1 }@node;
     for my $file ( glob "$conf/collect/*" )
     {
        my $name = basename $file;
@@ -41,7 +42,7 @@ sub make
        {
            my $project = ( $name =~ /:(.+)$/ ) ? $1 : $name;
            $skip{$project} = 1;
-           $subscribe->push( $project, 'error', "laod $name error" );
+           $subscribe->input( $project, 'error', "laod $name error" );
        }
     }
 
@@ -54,6 +55,7 @@ sub make
 
     for my $node ( keys %node )
     {
+        next unless $n{$node};
         my @name = sort keys %{$node{$node}};
         next if grep{ $skip{$_} }@name;
 
@@ -79,7 +81,7 @@ sub make
         };
         if( $@ )
         {
-            map{ $subscribe->push( $_, 'error', "dump $node error" ); }@name;
+            map{ $subscribe->input( $_, 'error', "dump $node error" ); }@name;
         }
     }
 

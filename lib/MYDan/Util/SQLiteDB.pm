@@ -33,7 +33,7 @@ sub new
     $self->{column} = [ map { $define[ $_ << 1 ] } 0 .. @define / 2 - 1 ];
 
     my %exist = $self->exist();
-    map { $self->create( $_ ) } @_;#, keys %exist;
+    map { $self->create( $_ ) } @_, keys %exist;
     return $self;
 }
 
@@ -96,7 +96,7 @@ Inserts @record into $table.
     $stmt->{insert} = $db->prepare
     (
         sprintf "INSERT OR REPLACE INTO $neat ( %s ) VALUES ( %s )",
-        join( ',', grep{$_ ne 'id'}@column ), join( ',', map { '?' } grep{$_ ne 'id'}@column )
+        join( ',', @column ), join( ',', map { '?' } @column )
     );
 
 =head3 dump( $table )
@@ -180,7 +180,7 @@ sub query
 
     while ( my ( $col, $cond ) = each %cond )
     {
-        my $in = $cond->[0] ? 'IN' : 'NOT IN';
+        my $in = $cond->[0] eq '1' ? 'IN' : $cond->[0] eq '0' ?'NOT IN' : $cond->[0];
         push @cond, sprintf "$col $in ( %s )",
             join ',', map { DBI::neat( $cond->[$_] ) } 1 .. @$cond - 1;
     }
