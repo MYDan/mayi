@@ -44,7 +44,7 @@ sub stage
     $limit = $limit ? "--limit-rate=${limit}k" : '';
 
     my( $old_md5, $old_file_md5 );
-    my @try = `cat '$currpath/pack.try'` if -f "$currpath/pack.try";
+    my @try = ( split /\s+/, join " ",`cat '$currpath/pack.try'` ) if -f "$currpath/pack.try";
     if( @try > 3 ) { map{ unlink "$currpath/pack$_" if -f "$currpath/pack$_" }( '', '.md5', '.try' ); }
 
     if( -f "$currpath/pack.md5" )

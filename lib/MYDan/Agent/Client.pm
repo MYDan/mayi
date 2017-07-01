@@ -21,7 +21,6 @@ use File::Basename;
 use FindBin qw( $RealBin );
 use YAML::XS;
 
-use MYDan::MIO::TCP;
 use MYDan::Agent::Query;
 use AnyEvent;
 use AnyEvent::Handle;

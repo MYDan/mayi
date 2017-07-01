@@ -1,17 +1,17 @@
-package MYDan::MIO::CMD;
+package MYDan::Util::MIO::CMD;
 
 =head1 NAME
 
-MYDan::MIO::CMD - Run multiple commands in parallel.
+MYDan::Util::MIO::CMD - Run multiple commands in parallel.
 
 =head1 SYNOPSIS
  
- use MYDan::MIO::CMD;
+ use MYDan::Util::MIO::CMD;
 
  my @node = qw( host1 host2 ... );
  my @cmd = qw( ssh {} wc );
 
- my $cmd = MYDan::MIO::CMD->new( map { $_ => \@cmd } @node );
+ my $cmd = MYDan::Util::MIO::CMD->new( map { $_ => \@cmd } @node );
  my $result = $cmd->run( max => 32, log => \*STDERR, timeout => 300 );
 
  my $stdout = $result->{stdout};
@@ -28,10 +28,10 @@ use Time::HiRes qw( time );
 use POSIX qw( :sys_wait_h );
 use IO::Poll qw( POLLIN POLLHUP POLLOUT );
 
-use base qw( MYDan::MIO );
+use base qw( MYDan::Util::MIO );
 
-our %RUN = %MYDan::MIO::RUN;
-our %MAX = %MYDan::MIO::MAX;
+our %RUN = %MYDan::Util::MIO::RUN;
+our %MAX = %MYDan::Util::MIO::MAX;
 
 sub new
 {

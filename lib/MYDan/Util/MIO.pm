@@ -1,8 +1,8 @@
-package MYDan::MIO;
+package MYDan::Util::MIO;
 
 =head1 NAME
 
-MIO - Interface for MIO modules
+MYDan::Util::MIO - Interface for MYDan::Util::MIO modules
 
 =cut
 use strict;

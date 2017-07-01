@@ -1,14 +1,14 @@
-package MYDan::MIO::TCP;
+package MYDan::Util::MIO::TCP;
 
 =head1 NAME
 
-MYDan::MIO::TCP - Make multiple TCP connections in parallel.
+MYDan::Util::MIO::TCP - Make multiple TCP connections in parallel.
 
 =head1 SYNOPSIS
  
- use MYDan::MIO::TCP;
+ use MYDan::Util::MIO::TCP;
 
- my $tcp = MYDan::MIO::TCP->new( qw( host1:port1 host1:port2 ... ) );
+ my $tcp = MYDan::Util::MIO::TCP->new( qw( host1:port1 host1:port2 ... ) );
  my $result = $tcp->run( max => 128, log => \*STDERR, timeout => 300 );
 
  my $mesg = $result->{mesg};
@@ -23,10 +23,10 @@ use IO::Socket;
 use Time::HiRes qw( time );
 use IO::Poll qw( POLLIN POLLHUP POLLOUT );
 
-use base qw( MYDan::MIO );
+use base qw( MYDan::Util::MIO );
 
-our %RUN = %MYDan::MIO::RUN;
-our %MAX = %MYDan::MIO::MAX;
+our %RUN = %MYDan::Util::MIO::RUN;
+our %MAX = %MYDan::Util::MIO::MAX;
 
 sub new
 {
@@ -62,9 +62,7 @@ sub run
     my ( %run, %result, %buffer, %busy ) = ( %RUN, @_ );
     my ( $log, $max, $timeout, $input ) = @run{ qw( log max timeout input ) };
 
-    $input ||= -t STDIN ? '' : <STDIN> unless defined $input;
-
-    my $verbose = $run{verbose} ? $run{verbose} eq '1' ? '' :  $run{verbose} : undef;
+    $input ||= -t STDIN ? '' : <STDIN>;
 
     for ( my $time = time; @node || $poll->handles; )
     {
@@ -102,7 +100,7 @@ sub run
 
             $poll->mask( $sock => POLLIN | POLLOUT );
             $busy{$sock} = $node;
-            print $log "$node started.$verbose\n" if defined $verbose;
+            print $log "$node started.\n" if $run{verbose};
         }
 
         $poll->poll( $MAX{period} );
@@ -115,9 +113,7 @@ sub run
 
         for my $sock ( $poll->handles( POLLOUT ) ) ## write
         {
-            $sock->send( 
-                ref $input eq 'HASH' ? $input->{$busy{$sock}} : $input
-            ) if defined $input;
+            $sock->send( $input ) if defined $input;
             $poll->mask( $sock, $poll->mask( $sock ) & ~POLLOUT );
             eval { $sock->shutdown( 1 ) };
         }
@@ -129,7 +125,7 @@ sub run
             push @{ $result{mesg}{ delete $buffer{$sock} } }, $node;
             $poll->remove( $sock );
             eval { $sock->shutdown( 0 ) };
-            print $log "$node done.$verbose\n" if defined $verbose;
+            print $log "$node done.\n" if $run{verbose};
         }
     }
 
