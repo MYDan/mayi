@@ -17,7 +17,7 @@ die "rsync dan/node to tmp fail.\n" if system "rsync -a dan/node/ 'box.i/node/'"
 map{
     die "rsync dan/tools/$_ to tmp fail.\n"
         if system "rsync -a dan/tools/$_ 'box.i/tools/$_'";
-}qw( range mcmd mssh expect );
+}qw( range mcmd mssh expect vssh );
 
 map{
     die "rsync dan/util/conf/$_ to tmp fail.\n"
@@ -36,6 +36,7 @@ for my $file ( `find box.i -type f` )
     untie @file;
 }
 
+die "sed fail" if system "sed -i 's/MYDan::VSSH::Execute::dan=1/MYDan::VSSH::Execute::dan=0/' box.i/tools/vssh";
 
 die "rsync dan to '$mydan/dan/' fail.\n" if system "rsync -a box.i/ '$mydan/box/'";
 

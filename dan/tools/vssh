@@ -5,6 +5,9 @@ use MYDan::Node;
 use MYDan::Util::OptConf;
 
 use MYDan::VSSH;
+use MYDan::VSSH::Execute;
+
+$MYDan::VSSH::Execute::dan=1;
 
 =head1 SYNOPSIS
 
@@ -13,7 +16,7 @@ use MYDan::VSSH;
 =cut
 
 my $option = MYDan::Util::OptConf->load();
-my %o = $option->get( qw( range=s ) )->dump( 'vssh' );
+my %o = $option->get( qw( range=s logname=s user=s) )->dump( 'vssh' );
 my $range = MYDan::Node->new( $option->dump( 'range' ) );
  
 $option->assert( 'range' );

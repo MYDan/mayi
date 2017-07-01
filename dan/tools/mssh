@@ -3,8 +3,6 @@
 use strict;
 use warnings;
 
-use Tie::File;
-
 use YAML::XS;
 use MYDan::Node;
 use MYDan::Util::MIO::SSH;
@@ -12,6 +10,7 @@ use MYDan::Util::OptConf;
 
 $| ++;
 
+$MYDan::Util::OptConf::ARGC = -1;
 @MYDan::Util::OptConf::CONF = qw( pass_through ignore_case );
 $MYDan::Util::OptConf::THIS = 'util';
 
@@ -43,17 +42,6 @@ unless ( $o{noop} )
         map{ $pass{$_} = $pass }$range->load( $node )->list();
     }
     $o{lock} = "/tmp/mssh.$$" if $o{order};
-}
-
-unless( @ARGV )
-{
-    print "cmd:";
-    my $cmd = <STDIN>;
-    die "no get cmd from STDIN" unless $cmd;
-    
-    tie my @input, 'Tie::File', $o{input} = "/tmp/mssh.".time.".$$";
-    @input = ( $cmd );
-    
 }
 
 my %result = MYDan::Util::MIO::SSH->new( %cmd )->run( %o, pass => \%pass );

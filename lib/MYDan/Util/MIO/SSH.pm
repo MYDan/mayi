@@ -88,17 +88,14 @@ sub run
             my $cmd = $self->{$node};
             my @cmd = map { my $t = $_; $t =~ s/{}/$node/g; $t } @$cmd;
             my $log = "/tmp/$node.$ext";
-            my $ssh = $user : "$SSH -l $user $node " : "$SSH ";
+            my $ssh = $user ? "$SSH -l $user $node " : "$SSH $node ";
 
             if( @cmd )
             {
                 $ssh .= join ' ',
                     $sudo ? map { "sudo -p '$prompt' -u $sudo $_" } @cmd : @cmd;
             }
-            else
-            {
-                $ssh .= " < $input"
-            }
+            else { $ssh .= " < $input"; }
 
             if ( $run{noop} ) { warn "$ssh\n"; next }
             if ( my $pid = fork() ) { $busy{$pid} = [ $log, $node ]; next }
