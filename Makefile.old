@@ -176,9 +176,6 @@ MAN3PODS = lib/MYDan.pm \
 	lib/MYDan/Collector.pm \
 	lib/MYDan/Deploy/Conf.pm \
 	lib/MYDan/Deploy/Ctrl.pm \
-	lib/MYDan/MIO.pm \
-	lib/MYDan/MIO/CMD.pm \
-	lib/MYDan/MIO/TCP.pm \
 	lib/MYDan/Monitor/Collector.pm \
 	lib/MYDan/Multicast.pm \
 	lib/MYDan/Node.pm \
@@ -198,6 +195,12 @@ MAN3PODS = lib/MYDan.pm \
 	lib/MYDan/Subscribe/DBI/DB.pm \
 	lib/MYDan/Util/Contact.pm \
 	lib/MYDan/Util/DirConf.pm \
+	lib/MYDan/Util/MCMD.pm \
+	lib/MYDan/Util/MIO.pm \
+	lib/MYDan/Util/MIO/CMD.pm \
+	lib/MYDan/Util/MIO/SSH.pm \
+	lib/MYDan/Util/MIO/TCP.pm \
+	lib/MYDan/Util/MIO/UDP.pm \
 	lib/MYDan/Util/OptConf.pm \
 	lib/MYDan/Util/Phasic.pm \
 	lib/MYDan/Util/ProcLock.pm \
@@ -227,7 +230,8 @@ PERL_ARCHIVEDEP    =
 PERL_ARCHIVE_AFTER = 
 
 
-TO_INST_PM = build.pl \
+TO_INST_PM = box.pl \
+	build.pl \
 	dan.pl \
 	lib/MYDan.pm \
 	lib/MYDan/API.pm \
@@ -273,9 +277,6 @@ TO_INST_PM = build.pl \
 	lib/MYDan/Deploy/Conf.pm \
 	lib/MYDan/Deploy/Ctrl.pm \
 	lib/MYDan/Deploy/Jobs.pm \
-	lib/MYDan/MIO.pm \
-	lib/MYDan/MIO/CMD.pm \
-	lib/MYDan/MIO/TCP.pm \
 	lib/MYDan/Monitor.pm \
 	lib/MYDan/Monitor/Collector.pm \
 	lib/MYDan/Monitor/Make.pm \
@@ -303,6 +304,12 @@ TO_INST_PM = build.pl \
 	lib/MYDan/Sync.pm \
 	lib/MYDan/Util/Contact.pm \
 	lib/MYDan/Util/DirConf.pm \
+	lib/MYDan/Util/MCMD.pm \
+	lib/MYDan/Util/MIO.pm \
+	lib/MYDan/Util/MIO/CMD.pm \
+	lib/MYDan/Util/MIO/SSH.pm \
+	lib/MYDan/Util/MIO/TCP.pm \
+	lib/MYDan/Util/MIO/UDP.pm \
 	lib/MYDan/Util/OptConf.pm \
 	lib/MYDan/Util/Phasic.pm \
 	lib/MYDan/Util/ProcLock.pm \
@@ -319,7 +326,9 @@ TO_INST_PM = build.pl \
 	lib/MYDan/VSSH/History.pm \
 	lib/MYDan/VSSH/Print.pm
 
-PM_TO_BLIB = build.pl \
+PM_TO_BLIB = box.pl \
+	$(INST_LIB)/box.pl \
+	build.pl \
 	$(INST_LIB)/build.pl \
 	dan.pl \
 	$(INST_LIB)/dan.pl \
@@ -411,12 +420,6 @@ PM_TO_BLIB = build.pl \
 	blib/lib/MYDan/Deploy/Ctrl.pm \
 	lib/MYDan/Deploy/Jobs.pm \
 	blib/lib/MYDan/Deploy/Jobs.pm \
-	lib/MYDan/MIO.pm \
-	blib/lib/MYDan/MIO.pm \
-	lib/MYDan/MIO/CMD.pm \
-	blib/lib/MYDan/MIO/CMD.pm \
-	lib/MYDan/MIO/TCP.pm \
-	blib/lib/MYDan/MIO/TCP.pm \
 	lib/MYDan/Monitor.pm \
 	blib/lib/MYDan/Monitor.pm \
 	lib/MYDan/Monitor/Collector.pm \
@@ -471,6 +474,18 @@ PM_TO_BLIB = build.pl \
 	blib/lib/MYDan/Util/Contact.pm \
 	lib/MYDan/Util/DirConf.pm \
 	blib/lib/MYDan/Util/DirConf.pm \
+	lib/MYDan/Util/MCMD.pm \
+	blib/lib/MYDan/Util/MCMD.pm \
+	lib/MYDan/Util/MIO.pm \
+	blib/lib/MYDan/Util/MIO.pm \
+	lib/MYDan/Util/MIO/CMD.pm \
+	blib/lib/MYDan/Util/MIO/CMD.pm \
+	lib/MYDan/Util/MIO/SSH.pm \
+	blib/lib/MYDan/Util/MIO/SSH.pm \
+	lib/MYDan/Util/MIO/TCP.pm \
+	blib/lib/MYDan/Util/MIO/TCP.pm \
+	lib/MYDan/Util/MIO/UDP.pm \
+	blib/lib/MYDan/Util/MIO/UDP.pm \
 	lib/MYDan/Util/OptConf.pm \
 	blib/lib/MYDan/Util/OptConf.pm \
 	lib/MYDan/Util/Phasic.pm \
@@ -733,9 +748,6 @@ manifypods : pure_all  \
 	lib/MYDan/Collector.pm \
 	lib/MYDan/Deploy/Conf.pm \
 	lib/MYDan/Deploy/Ctrl.pm \
-	lib/MYDan/MIO.pm \
-	lib/MYDan/MIO/CMD.pm \
-	lib/MYDan/MIO/TCP.pm \
 	lib/MYDan/Monitor/Collector.pm \
 	lib/MYDan/Multicast.pm \
 	lib/MYDan/Node.pm \
@@ -755,6 +767,12 @@ manifypods : pure_all  \
 	lib/MYDan/Subscribe/DBI/DB.pm \
 	lib/MYDan/Util/Contact.pm \
 	lib/MYDan/Util/DirConf.pm \
+	lib/MYDan/Util/MCMD.pm \
+	lib/MYDan/Util/MIO.pm \
+	lib/MYDan/Util/MIO/CMD.pm \
+	lib/MYDan/Util/MIO/SSH.pm \
+	lib/MYDan/Util/MIO/TCP.pm \
+	lib/MYDan/Util/MIO/UDP.pm \
 	lib/MYDan/Util/OptConf.pm \
 	lib/MYDan/Util/Phasic.pm \
 	lib/MYDan/Util/ProcLock.pm \
@@ -773,9 +791,6 @@ manifypods : pure_all  \
 	  lib/MYDan/Collector.pm $(INST_MAN3DIR)/MYDan::Collector.$(MAN3EXT) \
 	  lib/MYDan/Deploy/Conf.pm $(INST_MAN3DIR)/MYDan::Deploy::Conf.$(MAN3EXT) \
 	  lib/MYDan/Deploy/Ctrl.pm $(INST_MAN3DIR)/MYDan::Deploy::Ctrl.$(MAN3EXT) \
-	  lib/MYDan/MIO.pm $(INST_MAN3DIR)/MYDan::MIO.$(MAN3EXT) \
-	  lib/MYDan/MIO/CMD.pm $(INST_MAN3DIR)/MYDan::MIO::CMD.$(MAN3EXT) \
-	  lib/MYDan/MIO/TCP.pm $(INST_MAN3DIR)/MYDan::MIO::TCP.$(MAN3EXT) \
 	  lib/MYDan/Monitor/Collector.pm $(INST_MAN3DIR)/MYDan::Monitor::Collector.$(MAN3EXT) \
 	  lib/MYDan/Multicast.pm $(INST_MAN3DIR)/MYDan::Multicast.$(MAN3EXT) \
 	  lib/MYDan/Node.pm $(INST_MAN3DIR)/MYDan::Node.$(MAN3EXT) \
@@ -795,12 +810,18 @@ manifypods : pure_all  \
 	  lib/MYDan/Subscribe/DBI/DB.pm $(INST_MAN3DIR)/MYDan::Subscribe::DBI::DB.$(MAN3EXT) \
 	  lib/MYDan/Util/Contact.pm $(INST_MAN3DIR)/MYDan::Util::Contact.$(MAN3EXT) \
 	  lib/MYDan/Util/DirConf.pm $(INST_MAN3DIR)/MYDan::Util::DirConf.$(MAN3EXT) \
+	  lib/MYDan/Util/MCMD.pm $(INST_MAN3DIR)/MYDan::Util::MCMD.$(MAN3EXT) \
+	  lib/MYDan/Util/MIO.pm $(INST_MAN3DIR)/MYDan::Util::MIO.$(MAN3EXT) \
+	  lib/MYDan/Util/MIO/CMD.pm $(INST_MAN3DIR)/MYDan::Util::MIO::CMD.$(MAN3EXT) \
+	  lib/MYDan/Util/MIO/SSH.pm $(INST_MAN3DIR)/MYDan::Util::MIO::SSH.$(MAN3EXT) \
+	  lib/MYDan/Util/MIO/TCP.pm $(INST_MAN3DIR)/MYDan::Util::MIO::TCP.$(MAN3EXT) \
+	  lib/MYDan/Util/MIO/UDP.pm $(INST_MAN3DIR)/MYDan::Util::MIO::UDP.$(MAN3EXT) \
 	  lib/MYDan/Util/OptConf.pm $(INST_MAN3DIR)/MYDan::Util::OptConf.$(MAN3EXT) \
-	  lib/MYDan/Util/Phasic.pm $(INST_MAN3DIR)/MYDan::Util::Phasic.$(MAN3EXT) \
+	  lib/MYDan/Util/Phasic.pm $(INST_MAN3DIR)/MYDan::Util::Phasic.$(MAN3EXT) 
+	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) -u \
 	  lib/MYDan/Util/ProcLock.pm $(INST_MAN3DIR)/MYDan::Util::ProcLock.$(MAN3EXT) \
 	  lib/MYDan/Util/SQLiteDB.pm $(INST_MAN3DIR)/MYDan::Util::SQLiteDB.$(MAN3EXT) \
-	  lib/MYDan/Util/Say.pm $(INST_MAN3DIR)/MYDan::Util::Say.$(MAN3EXT) 
-	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) -u \
+	  lib/MYDan/Util/Say.pm $(INST_MAN3DIR)/MYDan::Util::Say.$(MAN3EXT) \
 	  lib/MYDan/Util/Screen.pm $(INST_MAN3DIR)/MYDan::Util::Screen.$(MAN3EXT) \
 	  lib/MYDan/Util/Sudo.pm $(INST_MAN3DIR)/MYDan::Util::Sudo.$(MAN3EXT) 
 
@@ -1323,6 +1344,7 @@ ppd :
 
 pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
+	  box.pl $(INST_LIB)/box.pl \
 	  build.pl $(INST_LIB)/build.pl \
 	  dan.pl $(INST_LIB)/dan.pl \
 	  lib/MYDan.pm blib/lib/MYDan.pm \
@@ -1363,16 +1385,13 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/MYDan/Collector/Stat/User.pm blib/lib/MYDan/Collector/Stat/User.pm \
 	  lib/MYDan/Collector/Stat/Watch.pm blib/lib/MYDan/Collector/Stat/Watch.pm \
 	  lib/MYDan/Collector/Util.pm blib/lib/MYDan/Collector/Util.pm \
-	  lib/MYDan/Deploy.pm blib/lib/MYDan/Deploy.pm \
-	  lib/MYDan/Deploy/Cache.pm blib/lib/MYDan/Deploy/Cache.pm 
+	  lib/MYDan/Deploy.pm blib/lib/MYDan/Deploy.pm 
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
+	  lib/MYDan/Deploy/Cache.pm blib/lib/MYDan/Deploy/Cache.pm \
 	  lib/MYDan/Deploy/Code.pm blib/lib/MYDan/Deploy/Code.pm \
 	  lib/MYDan/Deploy/Conf.pm blib/lib/MYDan/Deploy/Conf.pm \
 	  lib/MYDan/Deploy/Ctrl.pm blib/lib/MYDan/Deploy/Ctrl.pm \
 	  lib/MYDan/Deploy/Jobs.pm blib/lib/MYDan/Deploy/Jobs.pm \
-	  lib/MYDan/MIO.pm blib/lib/MYDan/MIO.pm \
-	  lib/MYDan/MIO/CMD.pm blib/lib/MYDan/MIO/CMD.pm \
-	  lib/MYDan/MIO/TCP.pm blib/lib/MYDan/MIO/TCP.pm \
 	  lib/MYDan/Monitor.pm blib/lib/MYDan/Monitor.pm \
 	  lib/MYDan/Monitor/Collector.pm blib/lib/MYDan/Monitor/Collector.pm \
 	  lib/MYDan/Monitor/Make.pm blib/lib/MYDan/Monitor/Make.pm \
@@ -1400,6 +1419,12 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/MYDan/Sync.pm blib/lib/MYDan/Sync.pm \
 	  lib/MYDan/Util/Contact.pm blib/lib/MYDan/Util/Contact.pm \
 	  lib/MYDan/Util/DirConf.pm blib/lib/MYDan/Util/DirConf.pm \
+	  lib/MYDan/Util/MCMD.pm blib/lib/MYDan/Util/MCMD.pm \
+	  lib/MYDan/Util/MIO.pm blib/lib/MYDan/Util/MIO.pm \
+	  lib/MYDan/Util/MIO/CMD.pm blib/lib/MYDan/Util/MIO/CMD.pm \
+	  lib/MYDan/Util/MIO/SSH.pm blib/lib/MYDan/Util/MIO/SSH.pm \
+	  lib/MYDan/Util/MIO/TCP.pm blib/lib/MYDan/Util/MIO/TCP.pm \
+	  lib/MYDan/Util/MIO/UDP.pm blib/lib/MYDan/Util/MIO/UDP.pm \
 	  lib/MYDan/Util/OptConf.pm blib/lib/MYDan/Util/OptConf.pm \
 	  lib/MYDan/Util/Phasic.pm blib/lib/MYDan/Util/Phasic.pm \
 	  lib/MYDan/Util/ProcLock.pm blib/lib/MYDan/Util/ProcLock.pm \
@@ -1407,13 +1432,13 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/MYDan/Util/Say.pm blib/lib/MYDan/Util/Say.pm \
 	  lib/MYDan/Util/Screen.pm blib/lib/MYDan/Util/Screen.pm \
 	  lib/MYDan/Util/Sudo.pm blib/lib/MYDan/Util/Sudo.pm \
-	  lib/MYDan/Util/Sysrw.pm blib/lib/MYDan/Util/Sysrw.pm \
+	  lib/MYDan/Util/Sysrw.pm blib/lib/MYDan/Util/Sysrw.pm 
+	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
 	  lib/MYDan/Util/TcpServer.pm blib/lib/MYDan/Util/TcpServer.pm \
 	  lib/MYDan/Util/XTar.pm blib/lib/MYDan/Util/XTar.pm \
 	  lib/MYDan/VSSH.pm blib/lib/MYDan/VSSH.pm \
 	  lib/MYDan/VSSH/Comp.pm blib/lib/MYDan/VSSH/Comp.pm \
-	  lib/MYDan/VSSH/Execute.pm blib/lib/MYDan/VSSH/Execute.pm 
-	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
+	  lib/MYDan/VSSH/Execute.pm blib/lib/MYDan/VSSH/Execute.pm \
 	  lib/MYDan/VSSH/History.pm blib/lib/MYDan/VSSH/History.pm \
 	  lib/MYDan/VSSH/Print.pm blib/lib/MYDan/VSSH/Print.pm 
 	$(NOECHO) $(TOUCH) pm_to_blib

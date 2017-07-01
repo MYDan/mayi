@@ -31,7 +31,7 @@ use FindBin qw( $Script );
 use base qw( MYDan::Util::MIO );
 
 our %RUN = %MYDan::Util::MIO::RUN;
-our $SSH = 'ssh -o StrictHostKeyChecking=no -c blowfish';
+our $SSH = 'ssh -tt -o StrictHostKeyChecking=no -c blowfish';
 
 local $| = 1;
 
@@ -63,8 +63,8 @@ sub run
     my @node = keys %$self;
     my ( %run, %result, %busy ) = ( %RUN, @_ );
     my ( $ext, $prompt ) = ( "$Script.$$", 'password:' );
-    my ( $max, $timeout, $user, $sudo, $pass, $lock ) =
-        @run{ qw( max timeout user sudo pass lock ) };
+    my ( $max, $timeout, $user, $sudo, $pass, $lock, $input ) =
+        @run{ qw( max timeout user sudo pass lock input ) };
 
     $user = `logname` unless defined $user; $user =~ s/\n*//g;
 
@@ -90,8 +90,15 @@ sub run
             my $log = "/tmp/$node.$ext";
             my $ssh = "$SSH -l $user $node ";
 
-            $ssh .= join ' ',
-                $sudo ? map { "sudo -p '$prompt' -u $sudo $_" } @cmd : @cmd;
+            if( @cmd )
+            {
+                $ssh .= join ' ',
+                    $sudo ? map { "sudo -p '$prompt' -u $sudo $_" } @cmd : @cmd;
+            }
+            else
+            {
+                $ssh .= " < $input"
+            }
 
             if ( $run{noop} ) { warn "$ssh\n"; next }
             if ( my $pid = fork() ) { $busy{$pid} = [ $log, $node ]; next }
