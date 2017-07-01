@@ -13,10 +13,16 @@ die "no find mydan path" unless $mydan =~ s/mydan\/mayi$/mydan/;
 die "rsync box to tmp fail.\n" if system "rsync -a box/ 'box.i/'";
 
 die "rsync dan/node to tmp fail.\n" if system "rsync -a dan/node/ 'box.i/node/'";
+
 map{
     die "rsync dan/tools/$_ to tmp fail.\n"
         if system "rsync -a dan/tools/$_ 'box.i/tools/$_'";
 }qw( range mcmd mssh expect );
+
+map{
+    die "rsync dan/util/conf/$_ to tmp fail.\n"
+        if system "rsync -a dan/util/conf/$_ 'box.i/util/conf/$_'";
+}qw( pass expect );
 
 my $perl = $ENV{PERL_PATH} || $^X;
 for my $file ( `find box.i -type f` )
