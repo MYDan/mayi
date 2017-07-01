@@ -31,7 +31,7 @@ use FindBin qw( $Script );
 use base qw( MYDan::Util::MIO );
 
 our %RUN = %MYDan::Util::MIO::RUN;
-our $SSH = 'ssh -tt -o StrictHostKeyChecking=no -c blowfish';
+our $SSH = 'ssh -o StrictHostKeyChecking=no -c blowfish';
 
 local $| = 1;
 
@@ -66,8 +66,6 @@ sub run
     my ( $max, $timeout, $user, $sudo, $pass, $lock, $input ) =
         @run{ qw( max timeout user sudo pass lock input ) };
 
-    $user = `logname` unless defined $user; $user =~ s/\n*//g;
-
     $SIG{INT} = $SIG{TERM} = sub
     {
         local $SIG{INT} = $SIG{INT};
@@ -75,6 +73,8 @@ sub run
         kill 9, keys %busy;
         unlink $lock if $lock;
         unlink glob "/tmp/*.$ext";
+
+        unlink $input if $input && -f $input;
 
         print STDERR "killed\n";
         exit 1;
@@ -88,7 +88,7 @@ sub run
             my $cmd = $self->{$node};
             my @cmd = map { my $t = $_; $t =~ s/{}/$node/g; $t } @$cmd;
             my $log = "/tmp/$node.$ext";
-            my $ssh = "$SSH -l $user $node ";
+            my $ssh = $user : "$SSH -l $user $node " : "$SSH ";
 
             if( @cmd )
             {
