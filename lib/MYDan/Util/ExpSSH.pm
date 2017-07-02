@@ -16,7 +16,10 @@ our $SSH = 'ssh -o StrictHostKeyChecking=no -t';
 
  my $ssh = MYDan::Util::ExpSSH->new( );
 
- $ssh->conn( host => 'foo', user => 'joe', pass = 'secret', sudo => 'john' );
+ $ssh->conn( host => 'foo', user => 'joe', 
+             pass = +{ node1 => 'secret', node2 => 'secret', default => 'secret' }, 
+             sudo => 'john' 
+           );
 
 =cut
 
@@ -47,7 +50,8 @@ sub conn
 
     exec $ssh unless $conn{pass};
 
-    my $pass = $conn{pass} || "\n"; $pass .= "\n" if $pass !~ /\n$/;
+    my $p = $conn{pass}->{$host[$i]} || $conn{pass}->{default};
+    my $pass = $p ? "$p\n" : "\n";
 
     my $exp = Expect->new();
 
