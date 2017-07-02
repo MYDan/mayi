@@ -34,7 +34,11 @@ my %cmd = map { $_ => \@ARGV } $range->load( delete $o{range} )->list();
 my %pass;
 unless ( $o{noop} )
 {
-    my $pass = eval{ YAML::XS::LoadFile "$o{conf}/pass" };
+    my $name;
+    $name = `logname` and chop $name unless $name = $o{user};
+    
+    my $pass = eval{ YAML::XS::LoadFile sprintf "$o{conf}/%s", 
+        -d "$o{conf}/pass" ? "pass/$name" : "pass" };
     die "load pass fail:$@" if $@;
 
     while ( my ( $node, $pass ) = each %$pass )

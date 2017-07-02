@@ -17,7 +17,7 @@ die "rsync dan/node to tmp fail.\n" if system "rsync -a dan/node/ 'box.i/node/'"
 map{
     die "rsync dan/tools/$_ to tmp fail.\n"
         if system "rsync -a dan/tools/$_ 'box.i/tools/$_'";
-}qw( range mcmd mssh expect vssh );
+}qw( range mcmd mssh expect vssh go );
 
 map{
     die "rsync dan/util/conf/$_ to tmp fail.\n"

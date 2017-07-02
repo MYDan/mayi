@@ -43,7 +43,13 @@ sub run
 
             my $range = MYDan::Node->new( $option->dump( 'range' ) );
 
-            my $conf = eval{ YAML::XS::LoadFile sprintf "%s/pass", $option->dump( 'util' )->{conf} };
+       
+            my ( $path, $name ) = $option->dump( 'util' )->{conf};
+            $name = `logname` and chop $name unless $name = $param{user};
+
+            my $conf = eval{ YAML::XS::LoadFile sprintf "$path/%s",
+                -d "$path/pass" ? "pass/$name" : "pass" };
+
             die "load pass fail:$@" if $@;
             my %pass;
             while ( my ( $node, $pass ) = each %$conf )
@@ -57,8 +63,9 @@ sub run
         tie my @input, 'Tie::File', my $input = "/tmp/mssh.".time.".$$";
         @input = ( $param{cmd} );
 
-        my %result = MYDan::Util::MIO::SSH->new( map{ $_ => [] }@{$this->{node}} )->run( user => $param{user}, pass => $pass, input => $input );
-        my %re;
+        my ( %result, %re )= MYDan::Util::MIO::SSH->new( map{ $_ => [] }@{$this->{node}} )
+            ->run( user => $param{user}, pass => $pass, input => $input );
+
         while( my ( $type, $result ) = each %result )
         {
             map{ my $t = $_; map{ $re{$_} .= $t } @{$result->{$t}};}keys %$result;

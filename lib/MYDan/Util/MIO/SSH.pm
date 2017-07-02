@@ -31,7 +31,7 @@ use FindBin qw( $Script );
 use base qw( MYDan::Util::MIO );
 
 our %RUN = %MYDan::Util::MIO::RUN;
-our $SSH = 'ssh -o StrictHostKeyChecking=no -c blowfish';
+our $SSH = 'ssh -o StrictHostKeyChecking=no';
 
 local $| = 1;
 
@@ -125,7 +125,7 @@ sub run
             my @i = grep { $log[$_] =~ /$prompt/ } 0 .. $#log;
             splice @log, 0, $i[-1] + 1 if @i;
 
-            push @{ $result{output}{ join "\n", @log, '' } }, $node if @log;
+            push @{ $result{output}{ join "\n", map{$_=~s/$node/{}/;$_}@log, '' } }, $node if @log;
             unlink $log;
         }
     }
