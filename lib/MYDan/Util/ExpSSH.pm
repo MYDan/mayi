@@ -6,6 +6,7 @@ use warnings;
 use Expect;
 use MYDan::Node;
 use MYDan::Util::OptConf;
+use MYDan::Util::Pass;
 
 our $TIMEOUT = 20;
 our $SSH = 'ssh -o StrictHostKeyChecking=no -t';
@@ -17,7 +18,7 @@ our $SSH = 'ssh -o StrictHostKeyChecking=no -t';
  my $ssh = MYDan::Util::ExpSSH->new( );
 
  $ssh->conn( host => 'foo', user => 'joe', 
-             pass = +{ node1 => 'secret', node2 => 'secret', default => 'secret' }, 
+             pass => '/conf/file', 
              sudo => 'john' 
            );
 
@@ -44,14 +45,39 @@ sub conn
         $i = $1 - 1 if <STDIN> =~ /(\d+)/ && $1 && $1 <= @host;
     }
 
+    my ( undef, $pass ) = MYDan::Util::Pass->new( conf => $conn{pass} )
+        ->pass( [ $host[$i] ] => $conn{user} );
+
+    if( $pass && ref $pass )
+    {
+
+        my $default = delete $pass->{default};
+        my ( $j, @user ) = ( 0, keys %$pass );
+
+        if( @user == 1 )
+        {
+            $conn{user} = $user[0];$pass = $pass->{$user[0]};
+        }
+        elsif ( @user  > 1 )
+        {
+            my @u = map { sprintf "[ %d ] %s", $_ + 1, $user[$_] } 0 .. $#user;
+            print STDERR join "\n", @u, "please select: [ 1 ] ";
+            $j = $1 - 1 if <STDIN> =~ /(\d+)/ && $1 && $1 <= @user;
+            $pass = $pass->{$user[$j]};
+        }elsif( $pass = $default )
+        {
+            $conn{user} = `logname`;chop $conn{user};
+               
+        }
+    }
+
+    $pass .= "\n" if defined $pass;
+
     my $ssh = sprintf "$SSH %s $host[$i]", $conn{user} ? "-l $conn{user}" : '';
     my $prompt = '::sudo::';
     if ( my $sudo = $conn{sudo} ) { $ssh .= " sudo -p '$prompt' su - $sudo" }
 
-    exec $ssh unless $conn{pass};
-
-    my $p = $conn{pass}->{$host[$i]} || $conn{pass}->{default};
-    my $pass = $p ? "$p\n" : "\n";
+    exec $ssh unless $pass;
 
     my $exp = Expect->new();
 

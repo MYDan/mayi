@@ -9,6 +9,7 @@ use MYDan::Util::OptConf;
 use MYDan::Node;
 use YAML::XS;
 use MYDan::Util::MIO::SSH;
+use MYDan::Util::Pass;
 
 our $dan = 1;
 our $pass;
@@ -36,30 +37,9 @@ sub run
     else
     {
 
-        unless( defined $pass )
-        {
+        $param{user} = `logname` and chop $param{user} unless $param{user};
 
-            my $option = MYDan::Util::OptConf->load();
-
-            my $range = MYDan::Node->new( $option->dump( 'range' ) );
-
-       
-            my ( $path, $name ) = $option->dump( 'util' )->{conf};
-            $name = `logname` and chop $name unless $name = $param{user};
-
-            my $conf = eval{ YAML::XS::LoadFile sprintf "$path/%s",
-                -d "$path/pass" ? "pass/$name" : "pass" };
-
-            die "load pass fail:$@" if $@;
-            my %pass;
-            while ( my ( $node, $pass ) = each %$conf )
-            {
-                map{ $pass{$_} = $pass }$range->load( $node )->list();
-            }
-            $pass = \%pass;
-
-        }
-
+        $pass = +{ MYDan::Util::Pass->new()->pass( $this->{node} => $param{user} )}unless defined $pass;
         tie my @input, 'Tie::File', my $input = "/tmp/mssh.".time.".$$";
         @input = ( $param{cmd} );
 

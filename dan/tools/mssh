@@ -7,6 +7,7 @@ use YAML::XS;
 use MYDan::Node;
 use MYDan::Util::MIO::SSH;
 use MYDan::Util::OptConf;
+use MYDan::Util::Pass;
 
 $| ++;
 
@@ -31,24 +32,16 @@ map { $_ .= '\;' if $_ !~ s/([&|]){2}\s*$/\\$1\\$1/ } @ARGV;
 my $range = MYDan::Node->new( $option->dump( 'range' ) );
 my %cmd = map { $_ => \@ARGV } $range->load( delete $o{range} )->list();
 
-my %pass;
+$o{user} = `logname` and chop $o{user} unless $o{user};
 unless ( $o{noop} )
 {
-    my $name;
-    $name = `logname` and chop $name unless $name = $o{user};
+    $o{pass} = MYDan::Util::Pass->new( conf => "$o{conf}/pass", range => $range )
+        ->pass( [ keys %cmd ] => $o{user} );
     
-    my $pass = eval{ YAML::XS::LoadFile sprintf "$o{conf}/%s", 
-        -d "$o{conf}/pass" ? "pass/$name" : "pass" };
-    die "load pass fail:$@" if $@;
-
-    while ( my ( $node, $pass ) = each %$pass )
-    {
-        map{ $pass{$_} = $pass }$range->load( $node )->list();
-    }
     $o{lock} = "/tmp/mssh.$$" if $o{order};
 }
 
-my %result = MYDan::Util::MIO::SSH->new( %cmd )->run( %o, pass => \%pass );
+my %result = MYDan::Util::MIO::SSH->new( %cmd )->run( %o );
 my %mesg;
 
 while ( my ( $io, $mesg ) = each %result )

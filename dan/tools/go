@@ -24,21 +24,5 @@ $MYDan::Util::OptConf::THIS = 'util';
 my $option = MYDan::Util::OptConf->load();
 my %o = $option->get( qw( user=s ) )->dump();
 
-my $user = `logname`; chomp $user;
-$user = $o{user} if $o{user};
-
-my $range = MYDan::Node->new( $option->dump( 'range' ) );
-
-my %pass;
-
-my $pass = eval{ YAML::XS::LoadFile sprintf "$o{conf}/%s",
-    -d "$o{conf}/pass" ? "pass/$user" : "pass" };
-die "load pass fail:$@" if $@;
-
-while ( my ( $node, $pass ) = each %$pass )
-{
-    map{ $pass{$_} = $pass }$range->load( $node )->list();
-}
-
 die "cannot resolve host\n" unless MYDan::Util::ExpSSH->new()
-    ->conn( pass => \%pass, user => $user, host => shift, sudo => shift );
+    ->conn( pass => "$o{conf}/pass", user => $o{user}, host => shift, sudo => shift );

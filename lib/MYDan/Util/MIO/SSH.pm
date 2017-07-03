@@ -100,9 +100,8 @@ sub run
             if ( $run{noop} ) { warn "$ssh\n"; next }
             if ( my $pid = fork() ) { $busy{$pid} = [ $log, $node ]; next }
             
-            my $p = $pass->{$node} || $pass->{default};
             my $exp = Expect->new();
-            my $login = sub { $exp->send( $p ? "$p\n" : "\n" ); exp_continue };
+            my $login = sub { $exp->send( $pass->{$node} ? "$$pass->{$node}\n" : "\n" ); exp_continue };
 
             $exp->log_file( $log, 'w' );
 
