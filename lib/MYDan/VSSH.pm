@@ -9,18 +9,20 @@ use MYDan::VSSH::Print;
 
 $|++;
 
+our %RUN = ( max => 128, timeout => 300 );
+
 sub new
 {
     my ( $class, %self ) =  @_;
 
-    $self{config} = +{ };
+    $self{config} = +{};
 
     bless \%self, ref $class || $class;
 }
 
 sub run
 {
-    my ( $this, %busy ) = shift;
+    my ( $this, %run, %busy ) = ( shift, %RUN, @_ );
  
     my $history = MYDan::VSSH::History->new();
     my $execute = MYDan::VSSH::Execute->new( node => $this->{node} );
@@ -29,10 +31,10 @@ sub run
 
     while ( 1 )
     {
-	next unless my $cmd = $this->_comp();
+	next unless my $cmd = $this->_comp( @run{qw( user sudo )} );
         exit if $cmd eq 'exit' || $cmd eq 'quit' ||  $cmd eq 'logout';
    
-        my %result = $execute->run( cmd => $cmd, map{ $_ => $this->{$_}}qw( logname user ) );
+        my %result = $execute->run( %run, cmd => $cmd );
         $print->result( %result );
 
         $history->push( $cmd );
@@ -46,7 +48,7 @@ sub _comp
         'clear'  => qr/\cl/,
         'reverse'  => qr/\cr/,
         'wipe'  => qr/\cw/,
-         prompt => "mydan sh#",
+         prompt => sprintf( "%s sh#", join( ':', @_)|| 'mydan' ),
          choices => [ ],
          up       => qr/\x1b\[[A]/,
          down     => qr/\x1b\[[B]/,

@@ -32,12 +32,10 @@ MYDan::Util::Pass
    host1: pass1
    host2: pass1
 
- Returns random selected data
  my %pass = $pass->pass( 'host1', 'host2' ); 
  %pass
    host1: [ user1, pass1 ]
    host2: [ user2, pass2 ]
-
 
 =cut
 
@@ -54,12 +52,10 @@ sub new
     my ( $class, %self ) = @_;
 
     $self{conf} ||= MYDan::Util::OptConf->load()->dump( 'util' )->{conf} .'/pass';
-    $self{pass} = eval{ YAML::XS::LoadFile $self{conf} };
-    die "load $self{conf} fail:$@" if $@;
+    $self{range} ||= MYDan::Node->new( MYDan::Util::OptConf->load()->dump( 'range' ) );
 
-    $self{range} ||= MYDan::Node->new( 
-        MYDan::Util::OptConf->load()->dump( 'range' ) 
-    );
+    $self{pass} = eval{ YAML::XS::LoadFile $self{conf} };
+    confess "error $self{conf}:$@" if $@;
 
     bless \%self, ref $class || $class;
 }
@@ -83,7 +79,6 @@ sub pass
 
     return %pass unless defined $user;
 
-
     return map{
         $_ => defined $pass{$_}{$user} ? $pass{$_}{$user} : $pass{$_}{default}
     }keys %pass if $user;
@@ -91,9 +86,9 @@ sub pass
     for my $node ( keys %pass )
     {
         my $default = delete $pass{$node}{default};
-        my ( $key ) = sort keys %{$pass{$node}};
-        $pass{$node} = $key ? [ $key, $pass{$node}{$key} ]
-            : $default ? [ 'root', $default ] : [];
+        my ( $u ) = sort keys %{$pass{$node}};
+        $pass{$node} = $u ? [ $u, $pass{$node}{$u} ]
+            : $default ? [ undef, $default ] : [];
     }
     
     return %pass;

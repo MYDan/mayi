@@ -20,22 +20,35 @@ $| ++;
 
 =head1 SYNOPSIS
 
- $0 -range host [--sp filename]
-     [--dp local_filename]
-     [--port number]
+ $0 -range host [--sp srcfile] [--verbose]
+
+     [--dp dstfile (default sp )]
+
+     [--sudo sudoer ]
+     [--user username (default `logname`)]
+     [--timeout seconds (default 500)]
 
 =cut
 
 $MYDan::Util::OptConf::THIS = 'agent';
 my $option = MYDan::Util::OptConf->load();
-my %o = $option->get( qw( range=s sp=s dp=s port=i verbose ) )->dump();
+my %o = $option->get( qw( range=s sp=s dp=s verbose user=s sudo=s timeout=i ) )->dump();
 
 $option->assert( 'range', 'sp' );
 $o{dp} ||= $o{sp};
 
-my $query = MYDan::Agent::Query->dump(+{ code => 'load', logname => operator(), argv => [ $o{sp} ] });
-open my $TMP, '+>', "$o{dp}.$$.tmp" or die "Can't open '$o{dp}.$$.tmp': $!";
-my ( $cv, $len, %keepalive ) = ( AE::cv, 0,  cont => '', skip => 0, first => 1 );  
+$o{user} = `logname` and chop $o{user} unless $o{user};
+
+my $query = MYDan::Agent::Query->dump(
+    +{ code => 'load', user => $o{user}, argv => [ $o{sp} ] }
+);
+
+my $
+open my $TMP, '+>', "$o{dp}.$$.tmp" 
+    or die "Can't open '$o{dp}.$$.tmp': $!";
+
+my ( $cv, $len, %keepalive ) 
+    = ( AE::cv, 0,  cont => '', skip => 0, first => 1 );  
 
 tcp_connect $o{range}, $o{port}, sub {  
    my ( $fh ) = @_  or die "tcp_connect: $!";  
@@ -43,11 +56,10 @@ tcp_connect $o{range}, $o{port}, sub {
            fh => $fh,
            on_read => sub {
                my $self = shift;
-               printf "read size: %s\n", length $self->{rbuf};
+               printf "load byte: %s\n", length $self->{rbuf} if $o{verbose};
                $self->unshift_read (
                    chunk => length $self->{rbuf},
                    sub { 
-
                        if( $keepalive{first} && $_[1] !~ /^\*/ )
                        {
                             $keepalive{first} = 0;
@@ -107,8 +119,3 @@ unless( defined $end[0] && $end[0] eq $md5 )
 }
 
 rename "$o{dp}.$$.tmp", $o{dp};
-
-sub operator
-{
-    my $name = `logname`; chop $name; return $name;
-}

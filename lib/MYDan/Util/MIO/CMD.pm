@@ -30,7 +30,7 @@ use IO::Poll qw( POLLIN POLLHUP POLLOUT );
 
 use base qw( MYDan::Util::MIO );
 
-our %RUN = %MYDan::Util::MIO::RUN;
+our %RUN = ( %MYDan::Util::MIO::RUN, interchange => '{}' );
 our %MAX = %MYDan::Util::MIO::MAX;
 
 sub new
@@ -65,7 +65,7 @@ sub run
     my $self = shift;
     my @node = keys %$self;
     my ( %run, %result, %buffer, %busy ) = ( %RUN, @_ );
-    my ( $log, $max, $timeout ) = @run{ qw( log max timeout ) };
+    my ( $log, $max, $timeout, $interchange ) = @run{ qw( log max timeout interchange ) };
     my %node = map { $_ => {} } qw( stdout stderr );
     my $input = defined $run{input} ? $run{input} : -t STDIN ? '' : <STDIN>;
 
@@ -89,7 +89,7 @@ sub run
         {
             my $node = shift @node;
             my $cmd = $self->{$node};
-            my @cmd = map { my $t = $_; $t =~ s/{}/$node/g; $t } @$cmd;
+            my @cmd = map { my $t = $_; $t =~ s/$interchange/$node/g; $t } @$cmd;
 
             if ( $run{noop} )
             {
@@ -138,7 +138,7 @@ sub run
 
             push @{ $result{$io}{ delete $buffer{$fh} } }, $node
                 if defined $buffer{$fh} && length $buffer{$fh} 
-                    && ( $buffer{$fh} =~ s/$node/{}/g || 1 );
+                    && ( $buffer{$fh} =~ s/$node/$interchange/g || 1 );
 
             unless ( -- $busy{$node}[1] )
             {

@@ -14,17 +14,20 @@ $MYDan::Util::OptConf::ARGC = -1;
 
 =head1 SYNOPSIS
 
- $0 cmd ... args
+ $0 cmd ..
 
 =cut
 my $option = MYDan::Util::OptConf->load();
 my %o = $option->dump('util');
 
 my $conf = eval{ YAML::XS::LoadFile "$o{conf}/expect" };
-die "load expect fail:$@" if $@;
+die "error $o{conf}/expect :$@" if $@;
 
 my $exp = Expect->new();
 $exp->spawn( join ' ', @ARGV );
 $exp->expect( 60, [ 
-    map{ my $t = $_;qr/$t/ =>  sub { $exp->send( $conf->{$t} ); exp_continue } }keys %$conf
+    map{ 
+        my $t = $_;
+        qr/$t/ =>  sub { $exp->send( $conf->{$t} ); exp_continue }
+    }keys %$conf
 ] );

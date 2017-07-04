@@ -63,15 +63,14 @@ sub run
     my @node = keys %$self;
     my ( %run, %result, %busy ) = ( %RUN, @_ );
     my ( $ext, $prompt ) = ( "$Script.$$", 'password:' );
-    my ( $max, $timeout, $user, $sudo, $pass, $lock, $input ) =
-        @run{ qw( max timeout user sudo pass lock input ) };
+    my ( $max, $timeout, $user, $sudo, $pass, $input ) =
+        @run{ qw( max timeout user sudo pass input ) };
 
     $SIG{INT} = $SIG{TERM} = sub
     {
         local $SIG{INT} = $SIG{INT};
 
         kill 9, keys %busy;
-        unlink $lock if $lock;
         unlink glob "/tmp/*.$ext";
 
         unlink $input if $input && -f $input;
@@ -86,14 +85,13 @@ sub run
         {
             my $node = shift @node;
             my $cmd = $self->{$node};
-            my @cmd = map { my $t = $_; $t =~ s/{}/$node/g; $t } @$cmd;
             my $log = "/tmp/$node.$ext";
             my $ssh = $user ? "$SSH -l $user $node " : "$SSH $node ";
 
-            if( @cmd )
+            if( @$cmd )
             {
                 $ssh .= join ' ',
-                    $sudo ? map { "sudo -p '$prompt' -u $sudo $_" } @cmd : @cmd;
+                    $sudo ? map { "sudo -p '$prompt' -u $sudo $_" } @$cmd : @$cmd;
             }
             else { $ssh .= " < $input"; }
 
@@ -107,7 +105,6 @@ sub run
 
             if ( $exp->spawn( $ssh ) )
             {
-                my $fh; flock $fh, LOCK_EX if $lock && open $fh, '>', $lock;
                 $exp->expect( $timeout, [ qr/$prompt\s*$/ => $login ] );
             }
             exit 0;
@@ -130,7 +127,6 @@ sub run
     }
     while @node || %busy;
 
-    unlink $lock if $lock;
     return wantarray ? %result : \%result;
 }
 

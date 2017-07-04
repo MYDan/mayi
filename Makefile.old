@@ -196,7 +196,6 @@ MAN3PODS = lib/MYDan.pm \
 	lib/MYDan/Util/Contact.pm \
 	lib/MYDan/Util/DirConf.pm \
 	lib/MYDan/Util/ExpSSH.pm \
-	lib/MYDan/Util/MCMD.pm \
 	lib/MYDan/Util/MIO.pm \
 	lib/MYDan/Util/MIO/CMD.pm \
 	lib/MYDan/Util/MIO/SSH.pm \
@@ -307,7 +306,6 @@ TO_INST_PM = box.pl \
 	lib/MYDan/Util/Contact.pm \
 	lib/MYDan/Util/DirConf.pm \
 	lib/MYDan/Util/ExpSSH.pm \
-	lib/MYDan/Util/MCMD.pm \
 	lib/MYDan/Util/MIO.pm \
 	lib/MYDan/Util/MIO/CMD.pm \
 	lib/MYDan/Util/MIO/SSH.pm \
@@ -480,8 +478,6 @@ PM_TO_BLIB = box.pl \
 	blib/lib/MYDan/Util/DirConf.pm \
 	lib/MYDan/Util/ExpSSH.pm \
 	blib/lib/MYDan/Util/ExpSSH.pm \
-	lib/MYDan/Util/MCMD.pm \
-	blib/lib/MYDan/Util/MCMD.pm \
 	lib/MYDan/Util/MIO.pm \
 	blib/lib/MYDan/Util/MIO.pm \
 	lib/MYDan/Util/MIO/CMD.pm \
@@ -776,7 +772,6 @@ manifypods : pure_all  \
 	lib/MYDan/Util/Contact.pm \
 	lib/MYDan/Util/DirConf.pm \
 	lib/MYDan/Util/ExpSSH.pm \
-	lib/MYDan/Util/MCMD.pm \
 	lib/MYDan/Util/MIO.pm \
 	lib/MYDan/Util/MIO/CMD.pm \
 	lib/MYDan/Util/MIO/SSH.pm \
@@ -821,15 +816,14 @@ manifypods : pure_all  \
 	  lib/MYDan/Util/Contact.pm $(INST_MAN3DIR)/MYDan::Util::Contact.$(MAN3EXT) \
 	  lib/MYDan/Util/DirConf.pm $(INST_MAN3DIR)/MYDan::Util::DirConf.$(MAN3EXT) \
 	  lib/MYDan/Util/ExpSSH.pm $(INST_MAN3DIR)/MYDan::Util::ExpSSH.$(MAN3EXT) \
-	  lib/MYDan/Util/MCMD.pm $(INST_MAN3DIR)/MYDan::Util::MCMD.$(MAN3EXT) \
 	  lib/MYDan/Util/MIO.pm $(INST_MAN3DIR)/MYDan::Util::MIO.$(MAN3EXT) \
 	  lib/MYDan/Util/MIO/CMD.pm $(INST_MAN3DIR)/MYDan::Util::MIO::CMD.$(MAN3EXT) \
 	  lib/MYDan/Util/MIO/SSH.pm $(INST_MAN3DIR)/MYDan::Util::MIO::SSH.$(MAN3EXT) \
 	  lib/MYDan/Util/MIO/TCP.pm $(INST_MAN3DIR)/MYDan::Util::MIO::TCP.$(MAN3EXT) \
 	  lib/MYDan/Util/MIO/UDP.pm $(INST_MAN3DIR)/MYDan::Util::MIO::UDP.$(MAN3EXT) \
-	  lib/MYDan/Util/OptConf.pm $(INST_MAN3DIR)/MYDan::Util::OptConf.$(MAN3EXT) 
+	  lib/MYDan/Util/OptConf.pm $(INST_MAN3DIR)/MYDan::Util::OptConf.$(MAN3EXT) \
+	  lib/MYDan/Util/Pass.pm $(INST_MAN3DIR)/MYDan::Util::Pass.$(MAN3EXT) 
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) -u \
-	  lib/MYDan/Util/Pass.pm $(INST_MAN3DIR)/MYDan::Util::Pass.$(MAN3EXT) \
 	  lib/MYDan/Util/Phasic.pm $(INST_MAN3DIR)/MYDan::Util::Phasic.$(MAN3EXT) \
 	  lib/MYDan/Util/ProcLock.pm $(INST_MAN3DIR)/MYDan::Util::ProcLock.$(MAN3EXT) \
 	  lib/MYDan/Util/SQLiteDB.pm $(INST_MAN3DIR)/MYDan::Util::SQLiteDB.$(MAN3EXT) \
@@ -901,7 +895,7 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(FIRST_MAKEFILE) $(MAKEFILE_OLD) 
+	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 
@@ -1432,7 +1426,6 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/MYDan/Util/Contact.pm blib/lib/MYDan/Util/Contact.pm \
 	  lib/MYDan/Util/DirConf.pm blib/lib/MYDan/Util/DirConf.pm \
 	  lib/MYDan/Util/ExpSSH.pm blib/lib/MYDan/Util/ExpSSH.pm \
-	  lib/MYDan/Util/MCMD.pm blib/lib/MYDan/Util/MCMD.pm \
 	  lib/MYDan/Util/MIO.pm blib/lib/MYDan/Util/MIO.pm \
 	  lib/MYDan/Util/MIO/CMD.pm blib/lib/MYDan/Util/MIO/CMD.pm \
 	  lib/MYDan/Util/MIO/SSH.pm blib/lib/MYDan/Util/MIO/SSH.pm \
@@ -1444,9 +1437,9 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/MYDan/Util/ProcLock.pm blib/lib/MYDan/Util/ProcLock.pm \
 	  lib/MYDan/Util/SQLiteDB.pm blib/lib/MYDan/Util/SQLiteDB.pm \
 	  lib/MYDan/Util/Say.pm blib/lib/MYDan/Util/Say.pm \
-	  lib/MYDan/Util/Screen.pm blib/lib/MYDan/Util/Screen.pm 
+	  lib/MYDan/Util/Screen.pm blib/lib/MYDan/Util/Screen.pm \
+	  lib/MYDan/Util/Sudo.pm blib/lib/MYDan/Util/Sudo.pm 
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
-	  lib/MYDan/Util/Sudo.pm blib/lib/MYDan/Util/Sudo.pm \
 	  lib/MYDan/Util/Sysrw.pm blib/lib/MYDan/Util/Sysrw.pm \
 	  lib/MYDan/Util/TcpServer.pm blib/lib/MYDan/Util/TcpServer.pm \
 	  lib/MYDan/Util/XTar.pm blib/lib/MYDan/Util/XTar.pm \

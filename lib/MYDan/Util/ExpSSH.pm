@@ -19,7 +19,7 @@ our $SSH = 'ssh -o StrictHostKeyChecking=no -t';
 
  $ssh->conn( host => 'foo', user => 'joe', 
              pass => '/conf/file', 
-             sudo => 'john' 
+             sudo => 'user1' 
            );
 
 =cut
@@ -50,7 +50,6 @@ sub conn
 
     if( $pass && ref $pass )
     {
-
         my $default = delete $pass->{default};
         my ( $j, @user ) = ( 0, keys %$pass );
 
@@ -63,11 +62,11 @@ sub conn
             my @u = map { sprintf "[ %d ] %s", $_ + 1, $user[$_] } 0 .. $#user;
             print STDERR join "\n", @u, "please select: [ 1 ] ";
             $j = $1 - 1 if <STDIN> =~ /(\d+)/ && $1 && $1 <= @user;
+            $conn{user} = $user[$j];
             $pass = $pass->{$user[$j]};
         }elsif( $pass = $default )
         {
             $conn{user} = `logname`;chop $conn{user};
-               
         }
     }
 

@@ -25,26 +25,25 @@ sub new
 
 sub run
 {
-    my ( $this, %param ) = @_;
+    my ( $this, %run ) = @_;
  
     if( $dan )
     {
-        my %query = ( code => 'exec', argv => [ $param{cmd} ], map{ $_ => $param{$_} }qw( logname user ) );
+        my %query = ( code => 'exec', argv => [ $run{cmd} ], map{ $_ => $run{$_} }qw( user sudo ) );
 
         my $client = MYDan::Agent::Client->new( @{$this->{node}} );
         return $client->run( %o, query => \%query );
     }
     else
     {
-
-        $param{user} = `logname` and chop $param{user} unless $param{user};
-
-        $pass = +{ MYDan::Util::Pass->new()->pass( $this->{node} => $param{user} )}unless defined $pass;
+        $pass = +{ MYDan::Util::Pass->new()->pass( $this->{node} => $run{user} )}unless defined $pass;
         tie my @input, 'Tie::File', my $input = "/tmp/mssh.".time.".$$";
-        @input = ( $param{cmd} );
+        @input = ( $run{cmd} );
 
         my ( %result, %re )= MYDan::Util::MIO::SSH->new( map{ $_ => [] }@{$this->{node}} )
-            ->run( user => $param{user}, pass => $pass, input => $input );
+            ->run( user => $run{user}, pass => $pass, input => $input );
+
+        unlink $input;
 
         while( my ( $type, $result ) = each %result )
         {

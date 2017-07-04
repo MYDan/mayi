@@ -56,13 +56,13 @@ sub dump
 
     if( $o{'auth'} && $query->{code} !~ /^free\./ )
     {
-        my ( $time, $logname ) = ( time, $query->{logname} );
-        die "logname unkown" unless $logname && $logname =~ /^\w+$/;
+        my ( $time, $user ) = ( time, $query->{user} );
+        die "user unkown" unless $user && $user =~ /^\w+$/;
         $query->{peri} = join '#', $time - $CA, $time + $CA;
 
         $query->{auth} = MYDan::Agent::Auth->new( 
             key => ( $o{role} && $o{role} eq 'client' ) 
-                ? $logname eq 'root' ? "/root/.ssh": "/home/$logname/.ssh"
+                ? $user eq 'root' ? "/root/.ssh": "/home/$user/.ssh"
                 : $o{'auth'},
         )->sign( YAML::XS::Dump $query );
     }
@@ -113,14 +113,14 @@ sub run
 {
     my ( $self, %path ) = @_;
     my $query = $self->{query};
-    my ( $code, $user, $env ) = @$query{ qw( code user env ) };
+    my ( $code, $sudo, $env ) = @$query{ qw( code sudo env ) };
 
     die "already running $code\n" if ( $code =~ /\.mx$/ ) && !
         MYDan::Util::ProcLock->new( File::Spec->join( $path{run}, $code ) )->lock();
 
-    if ( ! $< && $user && $user ne ( getpwuid $< )[0] )
+    if ( ! $< && $sudo && $sudo ne ( getpwuid $< )[0] )
     {
-        die "invalid user $user\n" unless my @pw = getpwnam $user;
+        die "invalid sudo $sudo\n" unless my @pw = getpwnam $sudo;
         @pw = map { 0 + sprintf '%d', $_ } @pw[2,3];
         POSIX::setgid( $pw[1] ); ## setgid must preceed setuid
         POSIX::setuid( $pw[0] );

@@ -16,21 +16,25 @@ $MYDan::Util::OptConf::ARGC = -1;
 
 =head1 SYNOPSIS
 
- $0 -r range [--user username] [--timeout seconds] [--max number] [--proxy] cmd ..
+ $0 -r range [--sudo sudoer ] [--verbose] cmd ..
 
-[--proxy-name foo] [--proxy-timeout 86400] [--proxy-max 32] [--env "A=123;B=abc" ]
+     [--user username (default `logname`)]
+     [--timeout seconds (default 500)] 
+     [--max number ( default 128 )]
+     [--env "A=123;B=abc" ]
 
 =cut
 my $option = MYDan::Util::OptConf->load();
 my %o = $option->get(
-     qw( range=s user=s timeout=i max=i port=i proxy verbose 
-     proxy-name=s proxy-timeout=i proxy-max=i )
+     qw( range=s sudo=s timeout=i max=i verbose env=s )
 )->dump();
 
 $option->assert( 'range' );
 
 my $code = shift;
-my %query = ( code => $code, logname => operator(), argv => argv( $code ) );
+$o{user} = `logname` and chop $o{user} unless $o{user};
+
+my %query = ( code => $code, user => operator(), argv => argv( $code ) );
 
 if( $o{env} )
 {
@@ -39,7 +43,7 @@ if( $o{env} )
     $query{env} = \%env if %env;
 }
 
-$query{user} = delete $o{user} if $o{user};
+$query{sudo} = delete $o{sudo} if $o{sudo};
 
 my $range = MYDan::Node->new( $option->dump( 'range' ) );
 
@@ -52,11 +56,6 @@ my %result = $client->run( %o, query => \%query );
 
 YAML::XS::DumpFile \*STDERR, \%result if %result;
 exit 0;
-
-sub operator
-{
-    my $name = `logname`; chop $name; return $name;
-}
 
 sub argv
 {
