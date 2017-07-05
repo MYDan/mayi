@@ -7,7 +7,7 @@ MYDan::Agent::Client
 =head1 SYNOPSIS
 
  use MYDan::Agent::Client;
- my $client = MYDan::Agent::Client->new( [ 'node1:13148', 'node2:13148' ] );
+ my $client = MYDan::Agent::Client->new( [ 'node1', 'node2' ] );
  my %result = $client->run( timeout => 300, input => '' ); 
 
 =cut

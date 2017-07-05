@@ -2,7 +2,7 @@ package MYDan::Agent::Mrsync;
 
 =head1 NAME
 
-MYDan::Util::Mrsync - Replicate data via phased rsync
+MYDan::Util::Mrsync - Replicate data via phased agent
 
 =head1 SYNOPSIS
 
@@ -36,6 +36,17 @@ use base qw( MYDan::Util::Phasic );
 
 our %RUN = ( retry => 2, opt => '-aq' );
 
+use MYDan::Agent::Query;
+use Time::HiRes qw(time);
+use AnyEvent;
+use AnyEvent::Impl::Perl;
+use AnyEvent::Socket;
+use AnyEvent::Handle;
+use MYDan::Util::OptConf;
+
+our %agent; 
+BEGIN{ %agent = MYDan::Util::OptConf->load()->dump( 'agent' ); };
+
 sub new
 {
     my ( $class, %param ) = splice @_;
@@ -63,30 +74,32 @@ sub new
         my ( $src, $dst, %param ) = splice @_;
         my $sp = $src{$src} ? $sp : $dp;
 
-#        my $ssh = 'ssh -x -c blowfish -o StrictHostKeyChecking=no';
-#        my @cmd = ( $ssh, $dst );
-#
-#        push @cmd, "nice -n $param{nice}" if $param{nice};
-#        push @cmd, << "RSYNC";
-#'rsync -e "$ssh" $param{opt} $src:$sp $dp'
-#RSYNC
-#        my $rsync = join ' ', @cmd; chop $rsync;
-
-        use MYDan::Agent::Query;
-        use Time::HiRes qw(time);
-        use AnyEvent;
-        use AnyEvent::Impl::Perl;
-        use AnyEvent::Socket;
-        use AnyEvent::Handle;
 
         eval{
 
-            my $load = MYDan::Agent::Query->dump(+{ code => 'load', argv => [ $sp ] });
-            my $query = MYDan::Agent::Query->dump(+{ code => 'download', 
-                argv => [ +{ load => $load, src => $src, port => 65111, sp => $sp, dp => $dp } ]
-             });
+
+            my $isc = $agent{role} && $agent{role} eq 'client' ? 1 : 0;
+
+            my %load = ( code => 'load', argv => [ $sp ] );
+            $load{node} = [ $src ] if $isc;
+
+            my $load = MYDan::Agent::Query->dump(\%load);
+            eval{ $load = MYDan::API::Agent->new()->encryption( $load ) if $isc };
+            die "encryption fail:$@" if $@;
+
+
+            my %query = (  code => 'download',
+                argv => [ +{ load => $load, src => $src, port => $agent{port}, sp => $sp, dp => $dp } ]
+            );
+
+            $query{node} = [ $dst ] if $isc;
+
+            my $query = MYDan::Agent::Query->dump(\%query);
+            eval{ $query = MYDan::API::Agent->new()->encryption( $query ) if $isc };
+            die "encryption fail:$@" if $@;
+
             my ( $cv, %keepalive ) = ( AE::cv, cont => '', skip => 0 );
-            tcp_connect $dst, "65111", sub {
+            tcp_connect $dst, $agent{port}, sub {
                my ( $fh ) = @_  or die "tcp_connect: $!";
                my $hdl; $hdl = new AnyEvent::Handle(
                        fh => $fh,
@@ -99,10 +112,7 @@ sub new
                                    unless( $keepalive{skip} )
                                    {
                                        $keepalive{cont} =~ s/^\*+//g;
-                                       if( $keepalive{cont} =~ s/^#\*keepalive\*#// )
-                                       {
-                                           $keepalive{skip} = 1;
-                                       }
+                                       $keepalive{skip} = 1 if $keepalive{cont} =~ s/^#\*keepalive\*#//;
                                    }
                                }
                            );
@@ -120,7 +130,7 @@ sub new
         };
 
         return $@ ? die "ERR: rsync $@" : 'OK';
-#        return system( $rsync ) ? die "ERR: $rsync" : 'OK';
+
     };
 
     bless $class->SUPER::new( %param, weight => $w8, code => $rsync ),

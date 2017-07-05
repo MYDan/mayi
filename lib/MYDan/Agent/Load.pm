@@ -26,9 +26,6 @@ use strict;
 use warnings;
 
 use Carp;
-use File::Spec;
-use MYDan::Util::OptConf;
-use MYDan::Agent::Client;
 use Time::HiRes qw(time);
 use AnyEvent;
 use AnyEvent::Impl::Perl;
@@ -61,12 +58,22 @@ sub run
 
     open my $TEMP, '+>', $temp or die "Can't open '$temp': $!";
 
-    my $query = MYDan::Agent::Query->dump(
-        +{ code => 'load', user => $run{user}, sudo=> $run{sudo} argv => [ $sp, $position ] }
-    );
+    my %query = ( code => 'load', user => $run{user}, sudo=> $run{sudo} argv => [ $sp, $position ] );
+
+    my $isc = $run{role} && $run{role} eq 'client' ? 1 : 0;
+
+    $query{node} = [ $node ] if $isc;
+
+    my $query = MYDan::Agent::Query->dump(\%query});
+    eval{ $query = MYDan::API::Agent->new()->encryption( $query ) if $isc };
+
+    die "encryption fail:$@" if $@;
+
 
     my ( $cv, $len, %keepalive )
-        = ( AE::cv, 0,  cont => '', skip => 0, first => 1 );
+        = ( AE::cv, $position,  cont => '', skip => 0, first => 1 );
+    
+    print "position: %d\n", $position if $run{verbose};;
 
     tcp_connect $node, $run{port}, sub {
         my ( $fh ) = @_  or die "tcp_connect: $!";
@@ -74,7 +81,6 @@ sub run
            fh => $fh,
            on_read => sub {
                my $self = shift;
-               printf "load byte: %s\n", length $self->{rbuf} if $run{verbose};
                $self->unshift_read (
                    chunk => length $self->{rbuf},
                    sub {
@@ -94,9 +100,11 @@ sub run
                            {
                                $keepalive{skip} = 1;
                                $len += length $keepalive{cont};
-                               print $TMP $keepalive{cont};
+                               print $TMP delete $keepalive{cont};
                            }
                        }
+
+		       printf "len : %d\n", $len if $run{verbose};
                    }
                );
             },
@@ -111,21 +119,20 @@ sub run
 
     $cv->recv;
     
-    seek( $TEMP, -38, SEEK_END );
-    my $end = ''; while( <$TEMP> ) { $end .= $_; }
-    my @end = $end =~ /^([0-9a-z]{32})--- (\d+)\n/;
-    unless( defined $end[1] && $end[1] == 0 )
+    sysread $TEMP, my $end, 38, $len - 38;
+
+    my ( $filemd5 ) = $end =~ /^([0-9a-z]{32})--- 0\n$/;
+    unless( $filemd5 )
     {
-        unlink  $temp;
-        die "call agent fail: end=$end\n";
+        unlink $temp;
+        die "end nomatch $end\n";
     }
     truncate $TEMP, $len - 38;
     seek $TEMP, 0, 0;
 
-    my $md5 = Digest::MD5->new()->addfile( $TEMP )->hexdigest();
-    unless( defined $end[0] && $end[0] eq $md5 )
+    unless( $filemd5 eq Digest::MD5->new()->addfile( $TEMP )->hexdigest() )
     {
-        unlink  $temp;
+        unlink $temp;
         die "md5 nomatch\n";
     }
     rename $temp, $dp;
