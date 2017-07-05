@@ -2,18 +2,7 @@
 use warnings;  
 use strict;  
   
-use File::Spec;
-use MYDan::Util::OptConf;
-use MYDan::Agent::Client;
-
-use Time::HiRes qw(time);  
-use AnyEvent;  
-use AnyEvent::Impl::Perl;  
-use AnyEvent::Socket;  
-use AnyEvent::Handle;  
-use Digest::MD5;
-  
-use MYDan::Agent::Query;
+use MYDan::Agent::Load;
 use Fcntl qw(:flock SEEK_END);
  
 $| ++;
@@ -32,90 +21,16 @@ $| ++;
 
 $MYDan::Util::OptConf::THIS = 'agent';
 my $option = MYDan::Util::OptConf->load();
-my %o = $option->get( qw( range=s sp=s dp=s verbose user=s sudo=s timeout=i ) )->dump();
+my %o = $option->get( 
+    qw( range=s sp=s dp=s verbose user=s sudo=s timeout=i ) 
+)->dump();
 
 $option->assert( 'range', 'sp' );
 $o{dp} ||= $o{sp};
 
 $o{user} = `logname` and chop $o{user} unless $o{user};
 
-my $query = MYDan::Agent::Query->dump(
-    +{ code => 'load', user => $o{user}, argv => [ $o{sp} ] }
-);
-
-my $
-open my $TMP, '+>', "$o{dp}.$$.tmp" 
-    or die "Can't open '$o{dp}.$$.tmp': $!";
-
-my ( $cv, $len, %keepalive ) 
-    = ( AE::cv, 0,  cont => '', skip => 0, first => 1 );  
-
-tcp_connect $o{range}, $o{port}, sub {  
-   my ( $fh ) = @_  or die "tcp_connect: $!";  
-   my $hdl; $hdl = new AnyEvent::Handle( 
-           fh => $fh,
-           on_read => sub {
-               my $self = shift;
-               printf "load byte: %s\n", length $self->{rbuf} if $o{verbose};
-               $self->unshift_read (
-                   chunk => length $self->{rbuf},
-                   sub { 
-                       if( $keepalive{first} && $_[1] !~ /^\*/ )
-                       {
-                            $keepalive{first} = 0;
-                            $keepalive{skip} = 1;   
-                       }
-
-                       if( $keepalive{skip} )
-                       {
-                           $len += length $_[1];
-                           print $TMP $_[1];
-                       }
-                       else
-                       {
-                          
-                           $keepalive{cont} .= $_[1];
-                           $keepalive{cont} =~ s/^\*+//g;
-                           if( $keepalive{cont} =~ s/^#\*keepalive\*#// )
-                           {
-                               $keepalive{skip} = 1;
-                               $len += length $keepalive{cont};
-                               print $TMP $keepalive{cont};
-                           }
-                       }
-                   }
-               );
-            },
-
-            on_eof => sub{
-                undef $hdl;
-                 $cv->send;  
-             }
-   );  
-
-   $hdl->push_write($query);  
-   $hdl->push_shutdown;
-};  
-$cv->recv;  
-
-seek( $TMP, -38, SEEK_END );
-my $end = ''; while( <$TMP> ) { $end .= $_; } 
-
-my @end = $end =~ /^([0-9a-z]{32})--- (\d+)\n/;
-unless( defined $end[1] && $end[1] == 0 )
-{
-    unlink  "$o{dp}.$$.tmp";
-    die "call agent fail: end=$end\n";
-}
-
-truncate $TMP, $len - 38;
-seek $TMP, 0, 0;
-my $md5 = Digest::MD5->new()->addfile( $TMP )->hexdigest();
-
-unless( defined $end[0] && $end[0] eq $md5 )
-{
-    unlink  "$o{dp}.$$.tmp";
-    die "md5 nomatch\n";
-}
-
-rename "$o{dp}.$$.tmp", $o{dp};
+MYDan::Agent::Load->new(
+    node => $o{range}, 
+    map{ $_ => $o{$_} }qw( sp dp )
+)->load( %o );

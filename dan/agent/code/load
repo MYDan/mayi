@@ -9,11 +9,13 @@ eval
     local $/ = undef;
     my (  %param, $i ) = %{ YAML::XS::Load( <> ) };
 
-    my ( $file ) = @{$param{argv}};
-    die "file undef" unless $file;
+    my ( $file, $position ) = @{$param{argv}} or "file undef";
+
+    seek $fh, $position || 0, 0;
+
     die "Can't open '$file': $!" unless open my  $fh, '+<', $file;
 
-    while(<$fh>) { print $_; }
+    while( <$fh> ) { print $_; }
 
     seek $fh, 0, 0;
     print Digest::MD5->new()->addfile( $fh )->hexdigest();
