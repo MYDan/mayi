@@ -48,7 +48,7 @@ sub _comp
         'clear'  => qr/\cl/,
         'reverse'  => qr/\cr/,
         'wipe'  => qr/\cw/,
-         prompt => sprintf( "%s sh#", join( ':', @_)|| 'mydan' ),
+         prompt => sprintf( "%s sh#", join( ':', grep{$_}@_)|| 'mydan' ),
          choices => [ ],
          up       => qr/\x1b\[[A]/,
          down     => qr/\x1b\[[B]/,

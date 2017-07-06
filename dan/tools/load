@@ -33,4 +33,4 @@ $o{user} = `logname` and chop $o{user} unless $o{user};
 MYDan::Agent::Load->new(
     node => $o{range}, 
     map{ $_ => $o{$_} }qw( sp dp )
-)->load( %o );
+)->run( %o );

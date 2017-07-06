@@ -50,21 +50,21 @@ sub run
 {
     my ( $this, %run ) = @_;
 
-    my ( $node, $sp, $dp ) = @$thisqw{qw( node sp dp )};
+    my ( $node, $sp, $dp ) = @$this{qw( node sp dp )};
 
     my $temp = sprintf "$dp.%stmp", $run{continue} ? '' : time.'.'.$$.'.';
 
-    my $position = -f $temp : ( stat $temp )[7] : 0;
+    my $position = -f $temp ? ( stat $temp )[7] : 0;
 
     open my $TEMP, '+>', $temp or die "Can't open '$temp': $!";
 
-    my %query = ( code => 'load', user => $run{user}, sudo=> $run{sudo} argv => [ $sp, $position ] );
+    my %query = ( code => 'load', user => $run{user}, sudo=> $run{sudo}, argv => [ $sp, $position ] );
 
     my $isc = $run{role} && $run{role} eq 'client' ? 1 : 0;
 
     $query{node} = [ $node ] if $isc;
 
-    my $query = MYDan::Agent::Query->dump(\%query});
+    my $query = MYDan::Agent::Query->dump(\%query);
     eval{ $query = MYDan::API::Agent->new()->encryption( $query ) if $isc };
 
     die "encryption fail:$@" if $@;
@@ -73,7 +73,7 @@ sub run
     my ( $cv, $len, %keepalive )
         = ( AE::cv, $position,  cont => '', skip => 0, first => 1 );
     
-    print "position: %d\n", $position if $run{verbose};;
+    printf "position: %d\n", $position if $run{verbose};
 
     tcp_connect $node, $run{port}, sub {
         my ( $fh ) = @_  or die "tcp_connect: $!";
@@ -90,7 +90,7 @@ sub run
                        if( $keepalive{skip} )
                        {
                            $len += length $_[1];
-                           print $TMP $_[1];
+                           print $TEMP $_[1];
                        }
                        else
                        {
@@ -100,7 +100,7 @@ sub run
                            {
                                $keepalive{skip} = 1;
                                $len += length $keepalive{cont};
-                               print $TMP delete $keepalive{cont};
+                               print $TEMP delete $keepalive{cont};
                            }
                        }
 
@@ -118,8 +118,9 @@ sub run
     };
 
     $cv->recv;
-    
-    sysread $TEMP, my $end, 38, $len - 38;
+
+    seek $TEMP, -38, SEEK_END;
+    sysread $TEMP, my $end, 38;
 
     my ( $filemd5 ) = $end =~ /^([0-9a-z]{32})--- 0\n$/;
     unless( $filemd5 )

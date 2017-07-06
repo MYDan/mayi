@@ -2,26 +2,22 @@
 use warnings;  
 use strict;  
   
-use File::Spec;
 use MYDan::Util::OptConf;
-use MYDan::Agent::Client;
 
-use Time::HiRes qw(time);  
 use AnyEvent;  
 use AnyEvent::Impl::Perl;  
 use AnyEvent::Socket;  
 use AnyEvent::Handle;  
-use Digest::MD5;
   
 use MYDan::Agent::Query;
-use Fcntl qw(:flock SEEK_END);
-use Data::Dumper;
  
 $| ++;
 
 =head1 SYNOPSIS
 
  $0 -host host
+
+    get a shell from remote machine
 
 =cut
 
@@ -72,7 +68,7 @@ tcp_connect $o{range}, $o{port}, sub {
 
 $cv->recv;  
 
-exit;
+exit 0;
 
 sub operator
 {

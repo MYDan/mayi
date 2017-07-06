@@ -11,9 +11,8 @@ eval
 
     my ( $file, $position ) = @{$param{argv}} or "file undef";
 
-    seek $fh, $position || 0, 0;
-
     die "Can't open '$file': $!" unless open my  $fh, '+<', $file;
+    seek $fh, $position || 0, 0;
 
     while( <$fh> ) { print $_; }
 
