@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use YAML::XS;
 use File::Temp;
 use Digest::MD5;
 use MYDan::Project::Deploy::Ctrl;
