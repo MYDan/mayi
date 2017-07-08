@@ -80,7 +80,10 @@ sub new
 
             my $isc = $agent{role} && $agent{role} eq 'client' ? 1 : 0;
 
-            my %load = ( code => 'load', argv => [ $sp ] );
+            my %load = ( 
+                argv => [ $sp ],
+                code => 'load', map{ $_ => $param{$_} }qw( user sudo )
+            );
             $load{node} = [ $src ] if $isc;
 
             my $load = MYDan::Agent::Query->dump(\%load);
@@ -88,8 +91,9 @@ sub new
             die "encryption fail:$@" if $@;
 
 
-            my %query = (  code => 'download',
-                argv => [ +{ load => $load, src => $src, port => $agent{port}, sp => $sp, dp => $dp } ]
+            my %query = ( 
+                argv => [ +{ load => $load, src => $src, port => $agent{port}, sp => $sp, dp => $dp } ],
+		code => 'download', map{ $_ => $param{$_} }qw( user sudo )
             );
 
             $query{node} = [ $dst ] if $isc;

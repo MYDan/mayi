@@ -17,8 +17,8 @@ eval{
     
     MYDan::Agent::Load->new( 
         node => $param->{src}, 
-        map{ $_ => $param{$_} }qw( sp dp )
-    )->load( %$param, role => 'agent' );
+        map{ $_ => $param->{$_} }qw( sp dp )
+    )->run( %$param, role => 'agent', query => $param->{load}||1 );
 };
 
 if($@) { print "load fail $@";exit 1; }

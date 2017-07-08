@@ -34,7 +34,7 @@ $option->assert( 'range' );
 my $code = shift;
 $o{user} = `logname` and chop $o{user} unless $o{user};
 
-my %query = ( code => $code, user => operator(), argv => argv( $code ) );
+my %query = ( code => $code, argv => argv( $code ), map{ $_ => $o{$_} }qw( user sudo ) );
 
 if( $o{env} )
 {
@@ -48,11 +48,9 @@ $query{sudo} = delete $o{sudo} if $o{sudo};
 my $range = MYDan::Node->new( $option->dump( 'range' ) );
 
 
-my $client = MYDan::Agent::Client->new( 
+my %result = MYDan::Agent::Client->new( 
     $range->load( delete $o{range} )->list
-);
-
-my %result = $client->run( %o, query => \%query ); 
+)->run( %o, query => \%query ); 
 
 YAML::XS::DumpFile \*STDERR, \%result if %result;
 exit 0;

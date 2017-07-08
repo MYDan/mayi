@@ -50,7 +50,7 @@ sub run
 {
     my ( $this, %run ) = @_;
 
-    my ( $node, $sp, $dp ) = @$this{qw( node sp dp )};
+    my ( $node, $sp, $dp, $query ) = @$this{qw( node sp dp )};
 
     my $temp = sprintf "$dp.%stmp", $run{continue} ? '' : time.'.'.$$.'.';
 
@@ -58,17 +58,20 @@ sub run
 
     open my $TEMP, '+>', $temp or die "Can't open '$temp': $!";
 
-    my %query = ( code => 'load', user => $run{user}, sudo=> $run{sudo}, argv => [ $sp, $position ] );
+    unless( $query = $run{query} )
+    {
+        my %query = ( code => 'load', user => $run{user}, sudo=> $run{sudo}, argv => [ $sp, $position ] );
 
-    my $isc = $run{role} && $run{role} eq 'client' ? 1 : 0;
+        my $isc = $run{role} && $run{role} eq 'client' ? 1 : 0;
 
-    $query{node} = [ $node ] if $isc;
+        $query{node} = [ $node ] if $isc;
 
-    my $query = MYDan::Agent::Query->dump(\%query);
-    eval{ $query = MYDan::API::Agent->new()->encryption( $query ) if $isc };
+        my $query = MYDan::Agent::Query->dump(\%query);
+        eval{ $query = MYDan::API::Agent->new()->encryption( $query ) if $isc };
 
-    die "encryption fail:$@" if $@;
+        die "encryption fail:$@" if $@;
 
+    }
 
     my ( $cv, $len, %keepalive )
         = ( AE::cv, $position,  cont => '', skip => 0, first => 1 );

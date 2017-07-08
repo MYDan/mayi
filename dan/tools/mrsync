@@ -11,6 +11,12 @@
     [--nice number] 
     [rsync options] 
 
+
+    The following parameters are valid only in dan
+
+    [--nice number] 
+    [rsync options] 
+
 =cut
 use strict;
 use warnings;
@@ -26,10 +32,12 @@ $| ++;
 
 my $option = MYDan::Util::OptConf->load();
 my %o = $option->set( retry => 2, timeout => 300, src => hostname() )
-    ->get( qw( src=s dst=s sp=s dp=s timeout=i max=i Retry=i nice=i ) )
+    ->get( qw( src=s dst=s sp=s dp=s timeout=i max=i Retry=i nice=i user=s sudo=s ) )
     ->dump();
 
 $option->assert( qw( src dst sp ) );
+
+$o{user} = `logname` and chop $o{user} unless $o{user};
 
 my $range = MYDan::Node->new( $option->dump( 'range' ) );
 my $mrsync = MYDan::Agent::Mrsync->new
