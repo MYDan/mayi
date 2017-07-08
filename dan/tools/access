@@ -16,7 +16,11 @@ $| ++;
 
 =head1 SYNOPSIS
 
- $0 -r range [--delete] [--add] users
+ $0 -r range [--delete] [--add] users1 user2 ..
+
+ Add or delete some users on the remote machine
+
+ Only root users can execute
 
 =cut
 MYDan::Util::Sudo->sudo();
