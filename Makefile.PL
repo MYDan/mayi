@@ -5,7 +5,7 @@ use ExtUtils::MakeMaker;
 
 our %PREREQ_PM =
 (
-    DBI => 1.625,
+    DBI => 1.625,#box
     JSON => 2.90,
     Dancer => 1.31,
     Expect => 1.21,
@@ -25,10 +25,8 @@ our %PREREQ_PM =
     'AnyEvent' => 0,
     'Crypt::PK::RSA' => 0,
     'Term::Completion' => 0,
-    'Net::SSH::Perl' => 0,
     'Template' => 0,
     'Dancer::Plugin::Database' => 0,
-#    'DBD::mysql' => 0,
     'Mail::Sendmail' => 0,
     'Data::UUID' => 0,
 );
@@ -44,7 +42,7 @@ WriteMakefile
     ABSTRACT_FROM => $PKG_FILE,
     PREREQ_PM     => \%PREREQ_PM, 
     dist          => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean         => { FILES => [ "$PKG_NAME-*", "dan.i", 'Makefile.old', qw( *.in *.ex ) ] },
+    clean         => { FILES => [ "$PKG_NAME-*", "dan.i", "box.i", 'Makefile.old', qw( *.in *.ex ) ] },
     ( $ExtUtils::MakeMaker::VERSION >= 6.3002 ? ( LICENSE => 'perl' ) : () ),
 );
 

@@ -5,10 +5,11 @@ use warnings;
 
 =head1 NAME
 
-MYDan - A suite of cluster administration tools and platforms
+mydan - A suite of cluster administration tools and platforms
 
 =cut
-our $VERSION = '0.2.9';
+
+our $VERSION = '0.0.1';
 our $PATH;
 
 require 5.000;
@@ -45,6 +46,10 @@ A cluster information management platform
  MYDan::Node::DBI::Cache
  MYDan::Node::DBI::Root
 
+a agent
+
+ Agent
+ 
 =head3 API
 
 platform api

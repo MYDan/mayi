@@ -17,10 +17,10 @@
 #     CONFIGURE_REQUIRES => {  }
 #     LICENSE => q[perl]
 #     NAME => q[mydan]
-#     PREREQ_PM => { AnyEvent=>q[0], Crypt::PK::RSA=>q[0], DBD::SQLite=>q[1.37], DBI=>q[1.625], Dancer=>q[1.31], Dancer::Plugin::Database=>q[0], Data::UUID=>q[0], DateTime=>q[1.03], Expect=>q[1.21], Getopt::Long=>q[2.38], IO::Socket::Multicast=>q[1.12], IO::Stty=>q[0.03], JSON=>q[2.9], Mail::Sendmail=>q[0], Net::SSH::Perl=>q[0], Template=>q[0], Term::ANSIColor=>q[3], Term::Completion=>q[0], Term::ReadPassword=>q[0.11], Thread::Queue=>q[2.12], Time::TAI64=>q[0], YAML::XS=>q[0.65], threads=>q[1.8] }
+#     PREREQ_PM => { AnyEvent=>q[0], Crypt::PK::RSA=>q[0], DBD::SQLite=>q[1.37], DBI=>q[1.625], Dancer=>q[1.31], Dancer::Plugin::Database=>q[0], Data::UUID=>q[0], DateTime=>q[1.03], Expect=>q[1.21], Getopt::Long=>q[2.38], IO::Socket::Multicast=>q[1.12], IO::Stty=>q[0.03], JSON=>q[2.9], Mail::Sendmail=>q[0], Template=>q[0], Term::ANSIColor=>q[3], Term::Completion=>q[0], Term::ReadPassword=>q[0.11], Thread::Queue=>q[2.12], Time::TAI64=>q[0], YAML::XS=>q[0.65], threads=>q[1.8] }
 #     TEST_REQUIRES => {  }
 #     VERSION_FROM => q[lib/MYDan.pm]
-#     clean => { FILES=>[q[mydan-*], q[dan.i], q[Makefile.old], q[*.in], q[*.ex]] }
+#     clean => { FILES=>[q[mydan-*], q[dan.i], q[box.i], q[Makefile.old], q[*.in], q[*.ex]] }
 #     dist => { COMPRESS=>q[gzip -9f], SUFFIX=>q[gz] }
 
 # --- MakeMaker post_initialize section:
@@ -60,11 +60,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = mydan
 NAME_SYM = mydan
-VERSION = 0.2.9
+VERSION = 0.0.1
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_2_9
+VERSION_SYM = 0_0_1
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.2.9
+XS_VERSION = 0.0.1
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -197,6 +197,7 @@ MAN3PODS = lib/MYDan.pm \
 	lib/MYDan/Util/Contact.pm \
 	lib/MYDan/Util/DirConf.pm \
 	lib/MYDan/Util/ExpSSH.pm \
+	lib/MYDan/Util/File.pm \
 	lib/MYDan/Util/MIO.pm \
 	lib/MYDan/Util/MIO/CMD.pm \
 	lib/MYDan/Util/MIO/SSH.pm \
@@ -233,10 +234,7 @@ PERL_ARCHIVEDEP    =
 PERL_ARCHIVE_AFTER = 
 
 
-TO_INST_PM = box.pl \
-	build.pl \
-	dan.pl \
-	lib/MYDan.pm \
+TO_INST_PM = lib/MYDan.pm \
 	lib/MYDan/API.pm \
 	lib/MYDan/API/Agent.pm \
 	lib/MYDan/Agent.pm \
@@ -309,6 +307,7 @@ TO_INST_PM = box.pl \
 	lib/MYDan/Util/Contact.pm \
 	lib/MYDan/Util/DirConf.pm \
 	lib/MYDan/Util/ExpSSH.pm \
+	lib/MYDan/Util/File.pm \
 	lib/MYDan/Util/MIO.pm \
 	lib/MYDan/Util/MIO/CMD.pm \
 	lib/MYDan/Util/MIO/SSH.pm \
@@ -332,13 +331,7 @@ TO_INST_PM = box.pl \
 	lib/MYDan/VSSH/History.pm \
 	lib/MYDan/VSSH/Print.pm
 
-PM_TO_BLIB = box.pl \
-	$(INST_LIB)/box.pl \
-	build.pl \
-	$(INST_LIB)/build.pl \
-	dan.pl \
-	$(INST_LIB)/dan.pl \
-	lib/MYDan.pm \
+PM_TO_BLIB = lib/MYDan.pm \
 	blib/lib/MYDan.pm \
 	lib/MYDan/API.pm \
 	blib/lib/MYDan/API.pm \
@@ -484,6 +477,8 @@ PM_TO_BLIB = box.pl \
 	blib/lib/MYDan/Util/DirConf.pm \
 	lib/MYDan/Util/ExpSSH.pm \
 	blib/lib/MYDan/Util/ExpSSH.pm \
+	lib/MYDan/Util/File.pm \
+	blib/lib/MYDan/Util/File.pm \
 	lib/MYDan/Util/MIO.pm \
 	blib/lib/MYDan/Util/MIO.pm \
 	lib/MYDan/Util/MIO/CMD.pm \
@@ -597,7 +592,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = mydan
-DISTVNAME = mydan-0.2.9
+DISTVNAME = mydan-0.0.1
 
 
 # --- MakeMaker macro section:
@@ -781,6 +776,7 @@ manifypods : pure_all  \
 	lib/MYDan/Util/Contact.pm \
 	lib/MYDan/Util/DirConf.pm \
 	lib/MYDan/Util/ExpSSH.pm \
+	lib/MYDan/Util/File.pm \
 	lib/MYDan/Util/MIO.pm \
 	lib/MYDan/Util/MIO/CMD.pm \
 	lib/MYDan/Util/MIO/SSH.pm \
@@ -827,13 +823,14 @@ manifypods : pure_all  \
 	  lib/MYDan/Util/Contact.pm $(INST_MAN3DIR)/MYDan::Util::Contact.$(MAN3EXT) \
 	  lib/MYDan/Util/DirConf.pm $(INST_MAN3DIR)/MYDan::Util::DirConf.$(MAN3EXT) \
 	  lib/MYDan/Util/ExpSSH.pm $(INST_MAN3DIR)/MYDan::Util::ExpSSH.$(MAN3EXT) \
+	  lib/MYDan/Util/File.pm $(INST_MAN3DIR)/MYDan::Util::File.$(MAN3EXT) \
 	  lib/MYDan/Util/MIO.pm $(INST_MAN3DIR)/MYDan::Util::MIO.$(MAN3EXT) \
 	  lib/MYDan/Util/MIO/CMD.pm $(INST_MAN3DIR)/MYDan::Util::MIO::CMD.$(MAN3EXT) \
 	  lib/MYDan/Util/MIO/SSH.pm $(INST_MAN3DIR)/MYDan::Util::MIO::SSH.$(MAN3EXT) \
 	  lib/MYDan/Util/MIO/TCP.pm $(INST_MAN3DIR)/MYDan::Util::MIO::TCP.$(MAN3EXT) \
-	  lib/MYDan/Util/MIO/UDP.pm $(INST_MAN3DIR)/MYDan::Util::MIO::UDP.$(MAN3EXT) \
-	  lib/MYDan/Util/Mrsync.pm $(INST_MAN3DIR)/MYDan::Util::Mrsync.$(MAN3EXT) 
+	  lib/MYDan/Util/MIO/UDP.pm $(INST_MAN3DIR)/MYDan::Util::MIO::UDP.$(MAN3EXT) 
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) -u \
+	  lib/MYDan/Util/Mrsync.pm $(INST_MAN3DIR)/MYDan::Util::Mrsync.$(MAN3EXT) \
 	  lib/MYDan/Util/OptConf.pm $(INST_MAN3DIR)/MYDan::Util::OptConf.$(MAN3EXT) \
 	  lib/MYDan/Util/Pass.pm $(INST_MAN3DIR)/MYDan::Util::Pass.$(MAN3EXT) \
 	  lib/MYDan/Util/Phasic.pm $(INST_MAN3DIR)/MYDan::Util::Phasic.$(MAN3EXT) \
@@ -893,7 +890,8 @@ clean :: clean_subdirs
 	- $(RM_RF) \
 	  *.ex *.in \
 	  Makefile.old blib \
-	  dan.i mydan-* 
+	  box.i dan.i \
+	  mydan-* 
 	  $(NOECHO) $(RM_F) $(MAKEFILE_OLD)
 	- $(MV) $(FIRST_MAKEFILE) $(MAKEFILE_OLD) $(DEV_NULL)
 
@@ -916,7 +914,7 @@ realclean purge ::  clean realclean_subdirs
 metafile : create_distdir
 	$(NOECHO) $(ECHO) Generating META.yml
 	$(NOECHO) $(ECHO) '---' > META_new.yml
-	$(NOECHO) $(ECHO) 'abstract: unknown' >> META_new.yml
+	$(NOECHO) $(ECHO) 'abstract: '\''A suite of cluster administration tools and platforms'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'author:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  - '\''Lijinfeng <lijinfeng2011@gmail.com>'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'build_requires:' >> META_new.yml
@@ -949,7 +947,6 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '  IO::Stty: '\''0.03'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  JSON: '\''2.9'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mail::Sendmail: '\''0'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) '  Net::SSH::Perl: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Template: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Term::ANSIColor: '\''3'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Term::Completion: '\''0'\''' >> META_new.yml
@@ -958,12 +955,12 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '  Time::TAI64: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  YAML::XS: '\''0.65'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  threads: '\''1.8'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: v0.2.9' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: v0.0.1' >> META_new.yml
 	$(NOECHO) $(ECHO) 'x_serialization_backend: '\''CPAN::Meta::YAML version 0.018'\''' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
 	$(NOECHO) $(ECHO) '{' > META_new.json
-	$(NOECHO) $(ECHO) '   "abstract" : "unknown",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "abstract" : "A suite of cluster administration tools and platforms",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "author" : [' >> META_new.json
 	$(NOECHO) $(ECHO) '      "Lijinfeng <lijinfeng2011@gmail.com>"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
@@ -1010,7 +1007,6 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '            "IO::Stty" : "0.03",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "JSON" : "2.9",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Mail::Sendmail" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "Net::SSH::Perl" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Template" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Term::ANSIColor" : "3",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Term::Completion" : "0",' >> META_new.json
@@ -1023,7 +1019,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "v0.2.9",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "v0.0.1",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "x_serialization_backend" : "JSON::PP version 2.27300"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
@@ -1326,7 +1322,7 @@ testdb_static :: testdb_dynamic
 # Creates a PPD (Perl Package Description) for a binary distribution.
 ppd :
 	$(NOECHO) $(ECHO) '<SOFTPKG NAME="$(DISTNAME)" VERSION="$(VERSION)">' > $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '    <ABSTRACT></ABSTRACT>' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '    <ABSTRACT>A suite of cluster administration tools and platforms</ABSTRACT>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <AUTHOR>Lijinfeng &lt;lijinfeng2011@gmail.com&gt;</AUTHOR>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="AnyEvent::" />' >> $(DISTNAME).ppd
@@ -1343,7 +1339,6 @@ ppd :
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="IO::Stty" VERSION="0.03" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="JSON::" VERSION="2.9" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mail::Sendmail" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Net::SSH::Perl" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Template::" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Term::ANSIColor" VERSION="3" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Term::Completion" />' >> $(DISTNAME).ppd
@@ -1362,9 +1357,6 @@ ppd :
 
 pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
-	  box.pl $(INST_LIB)/box.pl \
-	  build.pl $(INST_LIB)/build.pl \
-	  dan.pl $(INST_LIB)/dan.pl \
 	  lib/MYDan.pm blib/lib/MYDan.pm \
 	  lib/MYDan/API.pm blib/lib/MYDan/API.pm \
 	  lib/MYDan/API/Agent.pm blib/lib/MYDan/API/Agent.pm \
@@ -1403,10 +1395,10 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/MYDan/Collector/Stat/Uptime.pm blib/lib/MYDan/Collector/Stat/Uptime.pm \
 	  lib/MYDan/Collector/Stat/User.pm blib/lib/MYDan/Collector/Stat/User.pm \
 	  lib/MYDan/Collector/Stat/Watch.pm blib/lib/MYDan/Collector/Stat/Watch.pm \
-	  lib/MYDan/Collector/Util.pm blib/lib/MYDan/Collector/Util.pm 
-	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
+	  lib/MYDan/Collector/Util.pm blib/lib/MYDan/Collector/Util.pm \
 	  lib/MYDan/Deploy.pm blib/lib/MYDan/Deploy.pm \
-	  lib/MYDan/Deploy/Cache.pm blib/lib/MYDan/Deploy/Cache.pm \
+	  lib/MYDan/Deploy/Cache.pm blib/lib/MYDan/Deploy/Cache.pm 
+	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
 	  lib/MYDan/Deploy/Code.pm blib/lib/MYDan/Deploy/Code.pm \
 	  lib/MYDan/Deploy/Conf.pm blib/lib/MYDan/Deploy/Conf.pm \
 	  lib/MYDan/Deploy/Ctrl.pm blib/lib/MYDan/Deploy/Ctrl.pm \
@@ -1439,6 +1431,7 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/MYDan/Util/Contact.pm blib/lib/MYDan/Util/Contact.pm \
 	  lib/MYDan/Util/DirConf.pm blib/lib/MYDan/Util/DirConf.pm \
 	  lib/MYDan/Util/ExpSSH.pm blib/lib/MYDan/Util/ExpSSH.pm \
+	  lib/MYDan/Util/File.pm blib/lib/MYDan/Util/File.pm \
 	  lib/MYDan/Util/MIO.pm blib/lib/MYDan/Util/MIO.pm \
 	  lib/MYDan/Util/MIO/CMD.pm blib/lib/MYDan/Util/MIO/CMD.pm \
 	  lib/MYDan/Util/MIO/SSH.pm blib/lib/MYDan/Util/MIO/SSH.pm \
@@ -1450,9 +1443,9 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	  lib/MYDan/Util/Phasic.pm blib/lib/MYDan/Util/Phasic.pm \
 	  lib/MYDan/Util/ProcLock.pm blib/lib/MYDan/Util/ProcLock.pm \
 	  lib/MYDan/Util/SQLiteDB.pm blib/lib/MYDan/Util/SQLiteDB.pm \
-	  lib/MYDan/Util/Say.pm blib/lib/MYDan/Util/Say.pm 
+	  lib/MYDan/Util/Say.pm blib/lib/MYDan/Util/Say.pm \
+	  lib/MYDan/Util/Screen.pm blib/lib/MYDan/Util/Screen.pm 
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
-	  lib/MYDan/Util/Screen.pm blib/lib/MYDan/Util/Screen.pm \
 	  lib/MYDan/Util/Sudo.pm blib/lib/MYDan/Util/Sudo.pm \
 	  lib/MYDan/Util/Sysrw.pm blib/lib/MYDan/Util/Sysrw.pm \
 	  lib/MYDan/Util/TcpServer.pm blib/lib/MYDan/Util/TcpServer.pm \
