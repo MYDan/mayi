@@ -12,5 +12,6 @@
             II. make install dan=1 安装模块和所有mydan平台
             IV. make install dan=1 box=1
 
+            a. make install dan=1 cpan=/path/to/your/cpan 指定cpan工具路径
 
             (注：当前安装目录的上一层目录必须命名命名为 'mydan')
