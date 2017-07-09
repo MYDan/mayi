@@ -3,7 +3,7 @@
 =head1 SYNOPSIS
 
  $0 [--src src-range] --dst dst-range --sp src-path [--dp dst-path] \
-    [--timeout seconds] [--max number] [--Retry number]
+    [--timeout seconds] [--max number] [--retry number]
 
 
     The following parameters are valid only in box
@@ -14,8 +14,8 @@
 
     The following parameters are valid only in dan
 
-    [--nice number] 
-    [rsync options] 
+    [--user username(default `logname`)] 
+    [--sudo user1 ] 
 
 =cut
 use strict;
@@ -32,7 +32,7 @@ $| ++;
 
 my $option = MYDan::Util::OptConf->load();
 my %o = $option->set( retry => 2, timeout => 300, src => hostname() )
-    ->get( qw( src=s dst=s sp=s dp=s timeout=i max=i Retry=i nice=i user=s sudo=s ) )
+    ->get( qw( src=s dst=s sp=s dp=s timeout=i max=i retry=i nice=i user=s sudo=s ) )
     ->dump();
 
 $option->assert( qw( src dst sp ) );

@@ -16,13 +16,14 @@ $| ++;
      [--sudo sudoer ]
      [--user username (default `logname`)]
      [--timeout seconds (default 500)]
+     [--continue]
 
 =cut
 
 $MYDan::Util::OptConf::THIS = 'agent';
 my $option = MYDan::Util::OptConf->load();
 my %o = $option->get( 
-    qw( range=s sp=s dp=s verbose user=s sudo=s timeout=i ) 
+    qw( range=s sp=s dp=s verbose user=s sudo=s timeout=i continue ) 
 )->dump();
 
 $option->assert( 'range', 'sp' );
