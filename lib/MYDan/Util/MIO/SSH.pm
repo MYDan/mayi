@@ -31,7 +31,7 @@ use FindBin qw( $Script );
 use base qw( MYDan::Util::MIO );
 
 our %RUN = %MYDan::Util::MIO::RUN;
-our $SSH = 'ssh -o StrictHostKeyChecking=no';
+our $SSH = 'ssh -o StrictHostKeyChecking=no -o NumberOfPasswordPrompts=1';
 
 local $| = 1;
 
@@ -99,7 +99,7 @@ sub run
             if ( my $pid = fork() ) { $busy{$pid} = [ $log, $node ]; next }
             
             my $exp = Expect->new();
-            my $login = sub { $exp->send( $pass->{$node} ? "$$pass->{$node}\n" : "\n" ); exp_continue };
+            my $login = sub { $exp->send( $pass->{$node} ? "$pass->{$node}\n" : "\n" ); exp_continue };
 
             $exp->log_file( $log, 'w' );
 
@@ -121,7 +121,7 @@ sub run
             my @i = grep { $log[$_] =~ /$prompt/ } 0 .. $#log;
             splice @log, 0, $i[-1] + 1 if @i;
 
-            push @{ $result{output}{ join "\n", map{$_=~s/$node/{}/;$_}@log, '' } }, $node if @log;
+            push @{ $result{output}{ join "\n", map{my $t=$_;$t=~s/$node/{}/;$t}@log, '' } }, $node if @log;
             unlink $log;
         }
     }

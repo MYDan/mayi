@@ -158,7 +158,6 @@ sub run
         after => 1, 
         interval => 1,
         cb => sub { 
-            print Dumper \%index;
             map{ 
                 $_->{handle}->push_write('*') if $_->{handle} && $_->{handle}->fh;
             }values %index; 

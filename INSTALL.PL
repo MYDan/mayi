@@ -73,7 +73,6 @@ if( $ENV{box} )
     mysystem "rsync -a box/ box.i/";
     mysystem "rsync -a dan/node/ box.i/node/";
     mysystem "rsync -a dan/tools/{range,mcmd,mssh,expect,vssh,go,mrsync} box.i/tools/";
-    mysystem "rsync -a dan/util/conf/{pass,expect} box.i/util/conf/";
     
     my %sed = (
         'tools/vssh' => 's/MYDan::VSSH::Execute::dan=1/MYDan::VSSH::Execute::dan=0/',
@@ -85,6 +84,7 @@ if( $ENV{box} )
         mysystem "sed -i '$s' box.i/$f";
     }
 
+    repl( 'box.i' );
     mysystem "rsync -a box.i/ '$mydan/box/'";
 
     unless( $ENV{dan} )
@@ -93,5 +93,7 @@ if( $ENV{box} )
          insl( @m );
     }
 }
+
+mysystem( "rsync -av def/ ../" ) if $ENV{def};
 
 exit 0;

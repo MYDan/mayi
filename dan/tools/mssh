@@ -38,8 +38,8 @@ my $range = MYDan::Node->new( $option->dump( 'range' ) );
 my %cmd = map { $_ => \@ARGV } $range->load( delete $o{range} )->list();
 
 $o{user} = `logname` and chop $o{user} unless $o{user};
-$o{pass} = MYDan::Util::Pass->new( conf => "$o{conf}/pass", range => $range )
-    ->pass( [ keys %cmd ] => $o{user} ) unless  $o{noop};
+$o{pass} = +{ MYDan::Util::Pass->new( conf => "$o{conf}/pass", range => $range )
+    ->pass( [ keys %cmd ] => $o{user} ) } unless $o{noop};
     
 my ( %result, %mesg )= MYDan::Util::MIO::SSH->new( %cmd )->run( %o );
 

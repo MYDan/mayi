@@ -109,7 +109,6 @@ sub run
         after => 30,
         interval => 60,
         cb => sub {
-            print "cut log\n";
             my $size= ( stat "$logs/current" )[7];
             return unless $size > $RUN{size};
             my $num = $this->_num();

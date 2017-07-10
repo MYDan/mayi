@@ -67,9 +67,7 @@ sub run
         after => 2,
         interval => 3,
         cb => sub {
-            print "check\n";
             my %name = map{ basename( $_ ) => 1  }glob "$exec/*";
-            print Dumper \%name,\%proc;
             for my $name ( keys %name )
             {
                 next if $proc{$name};
@@ -109,7 +107,6 @@ sub run
         after => 30,
         interval => 60,
         cb => sub {
-            print "cut log\n";
             my $size= ( stat "$logs/current" )[7];
             return unless $size > $RUN{size};
             my $num = $this->_num();

@@ -9,7 +9,7 @@ use MYDan::Util::OptConf;
 use MYDan::Util::Pass;
 
 our $TIMEOUT = 20;
-our $SSH = 'ssh -o StrictHostKeyChecking=no -t';
+our $SSH = 'ssh -o StrictHostKeyChecking=no -o NumberOfPasswordPrompts=1 -t';
 
 =head1 SYNOPSIS
 

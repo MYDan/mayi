@@ -48,11 +48,24 @@ $query{sudo} = delete $o{sudo} if $o{sudo};
 my $range = MYDan::Node->new( $option->dump( 'range' ) );
 
 
-my %result = MYDan::Agent::Client->new( 
+my ( %result, %re, %mesg )= MYDan::Agent::Client->new( 
     $range->load( delete $o{range} )->list
 )->run( %o, query => \%query ); 
 
-YAML::XS::DumpFile \*STDERR, \%result if %result;
+while( my( $node, $mesg ) = each %result )
+{
+    push @{$re{$mesg}}, $node;
+}
+
+while( my( $mesg, $node ) = each %re )
+{
+    $mesg =~ s/--- \d+\n$//;
+    $node = $range->load( $node );
+    $node = sprintf "%s[%d]", $node->dump(), scalar $node->list;
+    $mesg{$node} = $mesg;
+}
+
+YAML::XS::DumpFile \*STDOUT, \%mesg if %mesg;
 exit 0;
 
 sub argv

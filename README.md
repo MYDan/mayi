@@ -10,7 +10,8 @@
             I.  make install 只安装模块
             II. make install box=1 安装模块和急救箱(box)
             II. make install dan=1 安装模块和所有mydan平台
-            IV. make install dan=1 box=1
+            IV. make install def=1 安装模块和默认配置
+            V.  make install dan=1 box=1 def=1 全安装
 
             a. make install dan=1 cpan=/path/to/your/cpan 指定cpan工具路径
 
