@@ -9,7 +9,7 @@ my %param = %{ YAML::XS::Load( <STDIN> ) };
 local $/ = "\n";
 
 my %file = map { $_ => MYDan::Util::File->new( "/etc/$_" ) }
-    qw( passwd shadow sudoers );
+    qw( passwd shadow group sudoers );
 
 for my $conf ( @{ $param{argv} } )
 {
