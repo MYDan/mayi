@@ -51,7 +51,7 @@ unless( $o{pack} || $o{release} )
 }
 
 my $version = $o{release} || $o{pack};
-system( "tar -zcvf $tmp/$version $mydan/perl $mydan/dan" ) 
+system( "tar -zcvf $tmp/$version $mydan/perl $mydan/dan  $mydan/etc/agent/auth/*.pub $mydan/etc/node/cache/current" ) 
     unless -f "$tmp/$version";
 
 if( $o{release} )

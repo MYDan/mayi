@@ -127,6 +127,7 @@ sub run
     }
 
     %ENV = ( %ENV, %$env ) if $env && ref $env eq 'HASH';
+    map{ $ENV{"MYDan_$_"} = $query->{$_} }qw( user sudo );
 
     my $tmpfile = "/tmp/tmp.agent.$$";
     YAML::XS::DumpFile $tmpfile, $query;

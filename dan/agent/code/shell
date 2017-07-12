@@ -11,6 +11,11 @@ my %param = %{ YAML::XS::Load( <> ) };
 my( $host, $port ) = @{$param{argv}};
 $host ||= $ENV{HOSTNAME};
 
+die "nofind user" unless my $user = $ENV{MYDan_sudo} ||  $ENV{MYDan_user};
+die "nofind user home" unless my $dir = ( getpwnam $user )[7];
+
+$ENV{HISTORY_FILE}="$dir/.bash_history";
+
 map{ die "param error" unless $_ }( $host, $port );
 
 local $/ = "\n";

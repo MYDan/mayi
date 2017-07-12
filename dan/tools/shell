@@ -1,65 +1,80 @@
 #!/usr/bin/env perl
 use warnings;  
 use strict;  
-  
-use MYDan::Util::OptConf;
 
 use AnyEvent;  
 use AnyEvent::Impl::Perl;  
 use AnyEvent::Socket;  
 use AnyEvent::Handle;  
   
+use MYDan::API::Agent;
 use MYDan::Agent::Query;
+use MYDan::Util::OptConf;
  
 $| ++;
 
 =head1 SYNOPSIS
 
- $0 -host host
+ $0 --host host
 
     get a shell from remote machine
+
+ $0 --host host --listen 9999
+
+ $0 --host host --listen 9999 [--addr 10.10.10.1]\
+      [--user user(default `logname`)] [--sudo sudoer]
 
 =cut
 
 $MYDan::Util::OptConf::THIS = 'agent';
 my $option = MYDan::Util::OptConf->load();
-my %o = $option->get( qw( range=s ) )->dump();
-
-$option->assert( 'range' );
-
+my %o = $option->get( qw( host=s listen=i addr=s user=s sudo=s ) )->dump();
+$option->assert( 'host' );
 
 my $cv = AE::cv;  
 
-my $scan = `nc -z localhost 65111-65333`;
-my %open = map{ $_ => 1 }my @open = $scan =~ / (\d+) /g;
+my $listen = $o{listen};
 
-my ( $listen ) = grep{ ! $open{$_} }65111 .. 65333 ;
+unless( $listen )
+{
+    my $scan = `nc -z localhost 65111-65333`;
+    my %open = map{ $_ => 1 }my @open = $scan =~ / (\d+) /g;
+    ( $listen ) = grep{ ! $open{$_} }65111 .. 65333 ;
+}
 
 if( fork ) { exec "nc -l $listen"; }
-
 print "listen shell on:$listen\n";
-my $query = MYDan::Agent::Query->dump(+{ 
-    code => 'shell',
-    logname => operator(),
-    argv => [ undef, $listen ]
-});
 
-tcp_connect $o{range}, $o{port}, sub {  
+$o{user} = `logname` and chop $o{user}  unless $o{user};
+
+my %query = (
+    code => 'shell',
+    argv => [ $o{addr}, $listen ],
+    map{ $_ => $o{$_} }qw( user sudo )
+);
+
+my $isc = $o{role} && $o{role} eq 'client' ? 1 : 0;
+$query{node} = [ $o{host}] if $isc;
+my $query = MYDan::Agent::Query->dump( \%query );
+
+eval{ $query = MYDan::API::Agent->new()->encryption( $query ) if $isc };
+die "encryption fail:$@" if $@;
+
+tcp_connect $o{host}, $o{port}, sub {  
    my ( $fh ) = @_  or die "tcp_connect: $!";  
    my $hdl; $hdl = new AnyEvent::Handle( 
-           fh => $fh,
-           on_read => sub {
-               my $self = shift;
-               $self->unshift_read (
-                   chunk => length $self->{rbuf},
-                   sub { }
-               );
-            },
-
-            on_eof => sub{
-                undef $hdl;
-                 $cv->send;  
-             }
+       fh => $fh,
+       on_read => sub {
+           my $self = shift;
+           $self->unshift_read (
+               chunk => length $self->{rbuf},
+               sub {}
+           );
+       },
+       on_eof => sub{
+           undef $hdl;
+           $cv->send;  
+       }
    );  
 
    $hdl->push_write($query);  
@@ -67,10 +82,4 @@ tcp_connect $o{range}, $o{port}, sub {
 };  
 
 $cv->recv;  
-
 exit 0;
-
-sub operator
-{
-    my $name = `logname`; chop $name; return $name;
-}
