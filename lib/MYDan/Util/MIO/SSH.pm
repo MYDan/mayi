@@ -101,6 +101,7 @@ sub run
             my $exp = Expect->new();
             my $login = sub { $exp->send( $pass->{$node} ? "$pass->{$node}\n" : "\n" ); exp_continue };
 
+	    $exp->log_stdout(0); #disable output to stdion (password: )
             $exp->log_file( $log, 'w' );
 
             if ( $exp->spawn( $ssh ) )
@@ -120,6 +121,7 @@ sub run
 
             my @i = grep { $log[$_] =~ /$prompt/ } 0 .. $#log;
             splice @log, 0, $i[-1] + 1 if @i;
+	    @log = grep { $_ !~ m{Connection\ to.*?closed}xms } @log;
 
             push @{ $result{output}{ join "\n", map{my $t=$_;$t=~s/$node/{}/;$t}@log, '' } }, $node if @log;
             unlink $log;

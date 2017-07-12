@@ -38,7 +38,7 @@ for my $user ( @ARGV )
     if ( $o{add} )
     {
         map { next unless ( $param{$_} ) = `grep -P '^$user:' /etc/$_`;
-            chop $param{$_} } qw( passwd shadow );
+            chop $param{$_} } qw( passwd shadow group );
 
         if ( my ( $sudo ) = `grep -P '^$user ' /etc/sudoers` )
         {
