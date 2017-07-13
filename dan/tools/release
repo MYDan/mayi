@@ -51,7 +51,9 @@ unless( $o{pack} || $o{release} )
 }
 
 my $version = $o{release} || $o{pack};
-system( "tar -zcvf $tmp/$version $mydan/perl $mydan/dan  $mydan/etc/agent/auth/*.pub $mydan/etc/node/cache/current" ) 
+system( "rsync -av --delete $mydan/etc/agent/auth/*.pub $mydan/etc/agent/auth.tmp/ && \
+
+tar -zcvf $tmp/$version $mydan/perl $mydan/dan $mydan/etc/agent/auth.tmp/*.pub $mydan/etc/node/cache/current" ) 
     unless -f "$tmp/$version";
 
 if( $o{release} )

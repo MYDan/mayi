@@ -16,12 +16,13 @@ require 5.000;
 require Exporter;
 our @EXPORT_OK = qw( $PATH );
 our @ISA = qw(Exporter);
+use FindBin qw( $RealBin );
 
 BEGIN{
    my @path;
    unless( $PATH = $ENV{MYDanPATH} )
    {
-       for( split /\//,  __FILE__ )
+       for( split /\//, $RealBin )
        {
            push @path, $_;
            last if $_ eq 'mydan';

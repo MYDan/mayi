@@ -36,7 +36,6 @@ sub repl
         warn "$file\n";
         untie @file;
     }
-    
 }
 
 sub insl
@@ -63,8 +62,12 @@ if( $ENV{dan} )
     repl( 'dan.i' );
     mysystem "rsync -a dan.i/ '$mydan/dan/'";
 
-    map{ chomp $_ }my @m = `cat Makefile.PL |grep -P '=>\\s+\\d.*'|awk '{print \$1}'`;
-    insl( @m );   
+    my %m;
+    tie my ( @file ), 'Tie::File', 'Makefile.PL';
+    map{ $m{$1} = 1 if $_ =~ /\s+'?([:\w]+)'? => [\d\.]+/ }@file;
+    untie @file;
+
+    insl( keys %m );   
 }
 
 if( $ENV{box} )
@@ -75,13 +78,15 @@ if( $ENV{box} )
     map { mysystem "rsync -a dan/tools/$_ box.i/tools/" } qw(range mcmd mssh expect vssh go mrsync);
     
     my %sed = (
-        'tools/vssh' => 's/MYDan::VSSH::Execute::dan=1/MYDan::VSSH::Execute::dan=0/',
-        'tools/mrsync' => 's/MYDan::Agent::Mrsync/MYDan::Util::Mrsync/',
+        'box.i/tools/vssh' => [ 'MYDan::VSSH::Execute::dan=1', 'MYDan::VSSH::Execute::dan=0' ],
+        'box.i/tools/mrsync' => [ 'MYDan::Agent::Mrsync', 'MYDan::Util::Mrsync' ],
     );
 
     while( my ( $f, $s ) = each %sed )
     {
-        mysystem "sed -i '$s' box.i/$f";
+        tie my ( @file ), 'Tie::File', $f;
+        map{ s/$s->[0]/$s->[1]/g }@file;
+        untie @file;
     }
 
     repl( 'box.i' );
@@ -89,8 +94,12 @@ if( $ENV{box} )
 
     unless( $ENV{dan} )
     {
-         map{ chomp $_ }my @m = `cat Makefile.PL |grep -P '=>\\s+\\d.*#box'|awk '{print \$1}'`;
-         insl( @m );
+         my %m;
+         tie my ( @file ), 'Tie::File', 'Makefile.PL';
+         map{ $m{$1} = 1 if $_ =~ /\s+'?([:\w]+)'? => [\d\.]+,\s*#box/ }@file;
+         untie @file;
+
+         insl( keys %m );
     }
 }
 
