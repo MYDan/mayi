@@ -47,7 +47,7 @@ sub _query
 {
     my ( $this, $node ) = @_;
 
-    my %query = ( code => 'collector', logname => 'monitor', argv => [ +{ conf => YAML::XS::LoadFile "$monitor{make}/$node" }] );
+    my %query = ( code => 'collector', user => 'monitor', argv => [ +{ conf => YAML::XS::LoadFile "$monitor{make}/$node" }] );
     my $query = MYDan::Agent::Query->dump(\%query);
     return $query;
 }
