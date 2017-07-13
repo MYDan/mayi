@@ -13,7 +13,7 @@ my $mydan = join '/', @p;
 
 
 my $perl = $ENV{PERL_PATH} || $^X;
-my ( $cpan, $do )= $perl;$cpan =~ s/perl$/cpan/;
+my $cpan = $perl;$cpan =~ s/perl$/cpan/;
 $cpan = $ENV{cpan} unless -f $cpan;
 die "no find cpan" unless -f $cpan;
 

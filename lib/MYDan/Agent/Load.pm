@@ -66,7 +66,7 @@ sub run
 
         $query{node} = [ $node ] if $isc;
 
-        my $query = MYDan::Agent::Query->dump(\%query);
+        $query = MYDan::Agent::Query->dump(\%query);
         eval{ $query = MYDan::API::Agent->new()->encryption( $query ) if $isc };
 
         die "encryption fail:$@" if $@;
@@ -139,7 +139,8 @@ sub run
         unlink $temp;
         die "md5 nomatch\n";
     }
-    rename $temp, $dp;
+
+    die "rename temp file\n" unless rename $temp, $dp;
 }
 
 1;
