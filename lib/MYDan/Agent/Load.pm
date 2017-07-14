@@ -33,6 +33,7 @@ use AnyEvent::Socket;
 use AnyEvent::Handle;
 use Digest::MD5;
 use MYDan::Agent::Query;
+use  MYDan::Util::Percent;
 use Fcntl qw(:flock SEEK_END);
 
 sub new
@@ -74,10 +75,13 @@ sub run
     }
 
     my ( $cv, $len, %keepalive )
-        = ( AE::cv, $position,  cont => '', skip => 0, first => 1 );
+        = ( AE::cv, $position,  cont => '', save => 0 );
     
     printf "position: %d\n", $position if $run{verbose};
 
+    my $percent =  MYDan::Util::Percent->new()->add( $position );
+    
+    my ( $size, $filemd5 );
     tcp_connect $node, $run{port}, sub {
         my ( $fh ) = @_  or die "tcp_connect: $!";
         my $hdl; $hdl = new AnyEvent::Handle(
@@ -87,27 +91,26 @@ sub run
                $self->unshift_read (
                    chunk => length $self->{rbuf},
                    sub {
-		       ( $keepalive{first}, $keepalive{skip} ) = ( 0, 1 )
-                           if $keepalive{first} && $_[1] !~ /^\*/;
-
-                       if( $keepalive{skip} )
+                       if( $keepalive{save} )
                        {
-                           $len += length $_[1];
+                           $percent->add( length $_[1] );
                            print $TEMP $_[1];
                        }
                        else
                        {
                            $keepalive{cont} .= $_[1];
                            $keepalive{cont} =~ s/^\*+//g;
-                           if( $keepalive{cont} =~ s/^#\*keepalive\*#// )
+                           if( $keepalive{cont} =~ s/\**#\*keepalive\*#(\d+):([a-z0-9]+):// )
                            {
-                               $keepalive{skip} = 1;
-                               $len += length $keepalive{cont};
+                               ( $size, $filemd5 ) = ( $1, $2 );
+
+			       $percent->renew( $size )->add( length $keepalive{cont}  );
                                print $TEMP delete $keepalive{cont};
+                               $keepalive{save} = 1;
                            }
                        }
 
-		       printf "len : %d\n", $len if $run{verbose};
+                       $percent->print('Load ..') if $run{verbose};
                    }
                );
             },
@@ -122,16 +125,15 @@ sub run
 
     $cv->recv;
 
-    seek $TEMP, -38, SEEK_END;
-    sysread $TEMP, my $end, 38;
+    seek $TEMP, -6, SEEK_END;
+    sysread $TEMP, my $end, 6;
 
-    my ( $filemd5 ) = $end =~ /^([0-9a-z]{32})--- 0\n$/;
-    unless( $filemd5 )
+    unless( $end =~ /^--- 0\n$/  )
     {
         unlink $temp;
-        die "end nomatch $end\n";
+        die "status error $end\n";
     }
-    truncate $TEMP, $len - 38;
+    truncate $TEMP, $size;
     seek $TEMP, 0, 0;
 
     unless( $filemd5 eq Digest::MD5->new()->addfile( $TEMP )->hexdigest() )

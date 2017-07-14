@@ -12,12 +12,12 @@ eval
     my ( $file, $position ) = @{$param{argv}} or "file undef";
 
     die "Can't open '$file': $!" unless open my  $fh, '+<', $file;
-    seek $fh, $position || 0, 0;
 
+    printf "%d:%s:", (stat $file)[7], Digest::MD5->new()->addfile( $fh )->hexdigest();
+
+    seek $fh, $position || 0, 0;
     while( <$fh> ) { print $_; }
 
-    seek $fh, 0, 0;
-    print Digest::MD5->new()->addfile( $fh )->hexdigest();
     exit 0;
 };
 print $@;
