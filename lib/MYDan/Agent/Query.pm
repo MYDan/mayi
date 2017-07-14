@@ -44,7 +44,7 @@ Returns a scalar dumped from input HASH.
 our ( %o, @myip );
 BEGIN{ 
     %o = MYDan::Util::OptConf->load()->dump( 'agent' );
-    @myip = grep{ /\d/ }split /\s+/, `hostname -I;hostname`;
+    @myip = grep{ /\d/ }split /\s+/, `hostname -I 2>/dev/null;hostname 2>/dev/null`;
 };
 
 sub dump
@@ -62,7 +62,7 @@ sub dump
 
         $query->{auth} = MYDan::Agent::Auth->new( 
             key => ( $o{role} && $o{role} eq 'client' ) 
-                ? $user eq 'root' ? "/root/.ssh": "/home/$user/.ssh"
+                ? ( getpwnam $user )[7].'/.ssh'
                 : $o{'auth'},
         )->sign( YAML::XS::Dump $query );
     }

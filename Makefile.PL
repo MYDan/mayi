@@ -24,6 +24,11 @@ our %PREREQ_PM =
     'Term::Completion' => 0,#box
     'Mail::Sendmail' => 0,
     'Data::UUID' => 0,
+    'Time::HiRes' => 0,#box
+    'Compress::Zlib' => 0,#box
+    'Crypt::PK::RSA' => 0,#box
+    'LWP::UserAgent' => 0,#box
+    'IO::Stty' => 0,#box
 );
 
 our $PKG_NAME = 'mydan';
