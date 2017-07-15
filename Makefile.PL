@@ -29,6 +29,12 @@ our %PREREQ_PM =
     'Crypt::PK::RSA' => 0,#box
     'LWP::UserAgent' => 0,#box
     'IO::Stty' => 0,#box
+    'Term::ReadKey' => 0,
+    'IO::Poll' => 0,
+    'AnyEvent::Handle' => 0,
+    'AnyEvent::Socket' => 0,
+    'AnyEvent::Impl::Perl' => 0,
+    'IO::Pty' => 0,
 );
 
 our $PKG_NAME = 'mydan';
