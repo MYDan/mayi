@@ -25,7 +25,7 @@ use MYDan::Util::Say;
  );
 
 =cut
-our ( $MAX, $POLL, $MULTI, $SPLIT ) = ( 128, 0.01, 2, 0.5 );
+our ( $MAX, $POLL, $SPLIT ) = ( 128, 0.01, 0.5 );
 
 sub new
 {
@@ -65,7 +65,9 @@ sub run
     my $self = shift;
     my %run = ( retry => 0, timeout => 0, log => \*STDERR, @_ );
 
-    my ( $retry, $log ) = delete @run{ qw( retry log ) };
+    my ( $retry, $log, $gave ) = delete @run{ qw( retry log gave ) };
+    my $MULTI = ( $gave && $gave > 0 ) ? $gave - 1 : 2;
+
     my $timeout = $run{timeout};
     my ( $w8, $code ) = @$self{ 'weight', 'code' };
 

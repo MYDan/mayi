@@ -2,8 +2,11 @@
 
 =head1 SYNOPSIS
 
- $0 [--src src-range] --dst dst-range --sp src-path [--dp dst-path] \
-    [--timeout seconds] [--max number] [--retry number]
+ $0 [--src src-range(default `hostname`)] --dst dst-range --sp src-path [--dp dst-path] \
+    [--timeout seconds(default 300)]
+    [--max number(default 128)]
+    [--retry number(default 2)]
+    [--gave number(default 3)]
 
 
     The following parameters are valid only in box
@@ -31,8 +34,8 @@ $| ++;
 @MYDan::Util::OptConf::CONF = qw( pass_through no_ignore_case );
 
 my $option = MYDan::Util::OptConf->load();
-my %o = $option->set( retry => 2, timeout => 300, src => hostname() )
-    ->get( qw( src=s dst=s sp=s dp=s timeout=i max=i retry=i nice=i user=s sudo=s ) )
+my %o = $option->set( retry => 2, timeout => 300, gave => 3, src => hostname() )
+    ->get( qw( src=s dst=s sp=s dp=s timeout=i max=i retry=i nice=i user=s sudo=s gave=i ) )
     ->dump();
 
 $option->assert( qw( src dst sp ) );
