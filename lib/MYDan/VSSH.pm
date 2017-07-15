@@ -29,9 +29,10 @@ sub run
     my $print = MYDan::VSSH::Print->new();
     $print->welcome();
 
+    my $c = scalar @{$this->{node}};
     while ( 1 )
     {
-	next unless my $cmd = $this->_comp( @run{qw( user sudo )} );
+	next unless my $cmd = $this->_comp( $c, @run{qw( user sudo )} );
         exit if $cmd eq 'exit' || $cmd eq 'quit' ||  $cmd eq 'logout';
    
         my %result = $execute->run( %run, cmd => $cmd );
@@ -43,12 +44,12 @@ sub run
 
 sub _comp
 {
-    my $self = shift;
+    my ( $self, $c ) = splice @_, 0, 2;
     my $tc = MYDan::VSSH::Comp->new(
         'clear'  => qr/\cl/,
         'reverse'  => qr/\cr/,
         'wipe'  => qr/\cw/,
-         prompt => sprintf( "%s sh#", join( ':', grep{$_}@_)|| 'mydan' ),
+         prompt => sprintf( "%s ($c)sh#", join( ':', grep{$_}@_)|| 'mydan' ),
          choices => [ ],
          up       => qr/\x1b\[[A]/,
          down     => qr/\x1b\[[B]/,
