@@ -9,7 +9,7 @@ $| ++;
 
 =head1 SYNOPSIS
 
- $0 -range host [--sp srcfile] [--verbose]
+ $0 -host host [--sp srcfile] [--verbose]
 
      [--dp dstfile (default sp )]
 
@@ -23,15 +23,15 @@ $| ++;
 $MYDan::Util::OptConf::THIS = 'agent';
 my $option = MYDan::Util::OptConf->load();
 my %o = $option->get( 
-    qw( range=s sp=s dp=s verbose user=s sudo=s timeout=i continue ) 
+    qw( host=s sp=s dp=s verbose user=s sudo=s timeout=i continue ) 
 )->dump();
 
-$option->assert( 'range', 'sp' );
+$option->assert( 'host', 'sp' );
 $o{dp} ||= $o{sp};
 
 $o{user} = `logname` and chop $o{user} unless $o{user};
 
 MYDan::Agent::Load->new(
-    node => $o{range}, 
+    node => $o{host}, 
     map{ $_ => $o{$_} }qw( sp dp )
 )->run( %o );
