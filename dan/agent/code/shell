@@ -11,7 +11,7 @@ local $/ = undef;
 
 my %param = %{ YAML::XS::Load( <> ) };
 
-my( $host, $port, $uuid ) = @{$param{argv}};
+my( $host, $port, $uuid, $row, $col ) = @{$param{argv}};
 $host ||= $ENV{TCPREMOTEIP};
 
 die "nofind user" unless my $user = $ENV{MYDan_sudo} ||  $ENV{MYDan_user};
@@ -32,6 +32,8 @@ my $soc = IO::Socket::INET->new(
 exit 0 if fork;
 
 my ( $pty, $pid ) = bash();
+
+$pty->set_winsize($row, $col, 0, 0);
 
 $soc->blocking(0);
 $pty->blocking(0);

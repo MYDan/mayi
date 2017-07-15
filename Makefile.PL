@@ -35,6 +35,7 @@ our %PREREQ_PM =
     'AnyEvent::Socket' => 0,
     'AnyEvent::Impl::Perl' => 0,
     'IO::Pty' => 0,
+    'Term::Size' => 0,
 );
 
 our $PKG_NAME = 'mydan';
