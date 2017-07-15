@@ -43,6 +43,7 @@ use AnyEvent::Impl::Perl;
 use AnyEvent::Socket;
 use AnyEvent::Handle;
 use MYDan::Util::OptConf;
+use MYDan::API::Agent;
 
 our %agent; 
 BEGIN{ %agent = MYDan::Util::OptConf->load()->dump( 'agent' ); };

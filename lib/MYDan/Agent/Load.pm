@@ -33,7 +33,8 @@ use AnyEvent::Socket;
 use AnyEvent::Handle;
 use Digest::MD5;
 use MYDan::Agent::Query;
-use  MYDan::Util::Percent;
+use MYDan::Util::Percent;
+use MYDan::API::Agent;
 use Fcntl qw(:flock SEEK_END);
 
 sub new
