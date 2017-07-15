@@ -2,81 +2,83 @@
 use strict;
 use warnings;
 use YAML::XS;
-use IO::Socket;
 use IO::Pty;
 use IO::Poll qw( POLLIN POLLHUP POLLOUT POLLERR);
+use IO::Socket;
 
 $|++;
 local $/ = undef;
 
 my %param = %{ YAML::XS::Load( <> ) };
 
-my( $host, $port ) = @{$param{argv}};
-$host ||= $ENV{HOSTNAME};
+my( $host, $port, $uuid ) = @{$param{argv}};
+$host ||= $ENV{TCPREMOTEIP};
 
 die "nofind user" unless my $user = $ENV{MYDan_sudo} ||  $ENV{MYDan_user};
 die "nofind user home" unless my $dir = ( getpwnam $user )[7];
+
+warn sprintf "shell info: host:%s port:%s uuid:%s\n", map{ $_||''}$host, $port, $uuid;
 
 $ENV{HISTORY_FILE}="$dir/.bash_history";
 
 map{ die "param error" unless $_ }( $host, $port );
 
-my $socket = IO::Socket::INET->new(
+my $soc = IO::Socket::INET->new(
     PeerAddr => $host,
     PeerPort => $port,
     Proto    => 'tcp'
 );
 
-my $pty = exec_cmd('/bin/bash -i');
+exit 0 if fork;
 
-$socket->blocking(0);
+my ( $pty, $pid ) = bash();
+
+$soc->blocking(0);
 $pty->blocking(0);
+
 my $poll = IO::Poll->new();
-$poll->mask( $socket => POLLIN  );
+$poll->mask( $soc => POLLIN  );
+
+my $d;
+$poll->poll();
+sysread( $soc, $d, 36 );
+
+die( sprintf "check fail: data:%s uuid:%s\n", $d||'', $uuid|'' )
+    unless $d && $uuid && $d eq $uuid;
+
 $poll->mask( $pty => POLLIN );
 
-while ( $poll->handles && $socket ) {
+while ( $poll->handles && $soc ) {
     $poll->poll();
     for my $handle ( $poll->handles( POLLIN ) ) {
-        if ( $handle eq $socket ) {
-            my $data;
-            if ( my $byte = sysread( $socket, $data, 1024 ) ) {
-                syswrite( $pty, $data, $byte );
-            }
-        }
-        elsif ( $handle eq $pty ) {
-            my $data;
-            if ( my $byte = sysread( $pty, $data, 1024 ) ) {
-                syswrite( $socket, $data, $byte );
-            }
-        }
+        my ( $byte, $data );
+	syswrite( $pty, $data, $byte ) if $handle eq $soc && ( $byte = sysread( $soc, $data, 1024 ) );
+        syswrite( $soc, $data, $byte ) if $handle eq $pty && ( $byte = sysread( $pty, $data, 1024 ) );
     }
     if ( $poll->handles( POLLHUP | POLLERR) ) {
-        $socket->shutdown( 2 );
+        $soc->shutdown( 2 );
+        last;
     }
 }
 
-sub exec_cmd {
-    my $cmd = shift;
+sub bash {
     my $pty = IO::Pty->new();
 
-    close( STDIN );
-    close( STDOUT );
-    close( STDERR );
-    if ( my $child = fork ) {
+    if ( my $pid = fork ) {
         $pty->close_slave();
-        return $pty;
+        return ( $pty, $pid  );
     }
 
     POSIX::setsid();
+
     my $slave = $pty->slave();
     close( $pty );
 
-    open(STDIN,  "<&"  .  $slave->fileno());
+    open(STDIN,  "<&" . $slave->fileno());
     open(STDOUT, ">&" . $slave->fileno());
     open(STDERR, ">&" . $slave->fileno());
-    exec( $cmd );
+    exec( '/bin/bash -i' );
 }
 
-exit 1;
+kill 'KILL', $pid;
 
