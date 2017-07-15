@@ -10,7 +10,10 @@ use AnyEvent::Handle;
 use MYDan::API::Agent;
 use MYDan::Agent::Query;
 use MYDan::Util::OptConf;
- 
+use IO::Socket;
+use Term::ReadKey;
+use POSIX qw( :sys_wait_h );
+
 $| ++;
 
 =head1 SYNOPSIS
@@ -42,8 +45,42 @@ unless( $listen )
     ( $listen ) = grep{ ! $open{$_} }65111 .. 65333 ;
 }
 
-if( fork ) { exec "nc -l $listen"; }
+if ( fork ) {
+    my $handle;
+    $|++;
+    my $socket = IO::Socket::INET->new (
+        LocalPort => $o{listen},
+        LocalAddr => $o{addr},
+        Type      => SOCK_STREAM,
+        Reuse     => 1,
+        Listen    => 1
+    ) or die "Could not connect to $o{addr} on Port $o{listen}: $!";
+    $handle = $socket->accept();
+    $handle->autoflush();
+
+    defined (my $child = fork()) or die "Could not fork: $!";
+    my $char;
+    ReadMode(4);
+    if ($child) {
+        close( STDIN );
+        while ( my $byte = sysread( $handle, my $char, 1024 )) {
+            syswrite( STDOUT, $char, $byte );
+        }
+        print "exit done\n";
+        exit 1;
+    } else {
+        close( STDOUT );
+        while (my $byte = sysread( STDIN, my $char, 1024 )) {
+            syswrite( $handle, $char, $byte );
+        }
+        waitpid(-1, WNOHANG);
+        exit 1;
+    }
+}
 print "listen shell on:$listen\n";
+
+close( STDIN );
+close( STDOUT );
 
 $o{user} = `logname` and chop $o{user}  unless $o{user};
 
