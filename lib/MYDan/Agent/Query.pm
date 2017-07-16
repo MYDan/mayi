@@ -56,14 +56,19 @@ sub dump
 
     if( $o{'auth'} && $query->{code} !~ /^free\./ )
     {
-        my ( $time, $user ) = ( time, $query->{user} );
+        my ( $time, $user, $auth ) = ( time, $query->{user}, $o{'auth'} );
+
+        if( $o{role} && $o{role} eq 'client' )
+        {
+            $auth = ( getpwnam $user )[7].'/.ssh';
+            $query->{user} = $ENV{MYDan_username} if $ENV{MYDan_username};
+        }
+
         die "user unkown" unless $user && $user =~ /^\w+$/;
         $query->{peri} = join '#', $time - $CA, $time + $CA;
 
         $query->{auth} = MYDan::Agent::Auth->new( 
-            key => ( $o{role} && $o{role} eq 'client' ) 
-                ? ( getpwnam $user )[7].'/.ssh'
-                : $o{'auth'},
+            key => $auth
         )->sign( YAML::XS::Dump $query );
     }
     
