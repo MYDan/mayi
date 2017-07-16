@@ -89,21 +89,21 @@ sub load
         && eval { $query = YAML::XS::Load $yaml }
         && ref $query eq 'HASH' && $query->{code};
 
-    die "code format error:$query->{code}\n" unless $query->{code} =~ /^[A-Za-z0-9_\.]+$/;
+    idie( "code format error:$query->{code}\n" ) unless $query->{code} =~ /^[A-Za-z0-9_\.]+$/;
 
     if( $o{'auth'} && $query->{code} !~ /^free\./ )
     {
         my $auth = delete $query->{auth};
 
-        die "auth fail\n" unless MYDan::Agent::Auth->new(
+        idie( "auth fail\n" ) unless MYDan::Agent::Auth->new(
             pub => $o{'auth'}
         )->verify( $auth, YAML::XS::Dump $query );
-        die "peri undef\n" unless my $peri = delete $query->{peri};
+        idie ( "peri undef\n" ) unless my $peri = delete $query->{peri};
         my @peri = split '#', $peri;
-        die "peri fail\n" unless $peri[0] < time && time < $peri[1];
+        idie( "peri fail\n" ) unless $peri[0] < time && time < $peri[1];
     }
 
-    die "auth fail.access" if $query->{node} && 0 == grep { $query->{node}{$_} } @myip;
+    idie( "auth fail.access\n" ) if $query->{node} && 0 == grep { $query->{node}{$_} } @myip;
 
     bless { yaml => $yaml, query => $query }, ref $class || $class;
 }
@@ -120,12 +120,12 @@ sub run
     my $query = $self->{query};
     my ( $code, $sudo, $env ) = @$query{ qw( code sudo env ) };
 
-    die "already running $code\n" if ( $code =~ /\.mx$/ ) && !
+    idie( "already running $code\n" ) if ( $code =~ /\.mx$/ ) && !
         MYDan::Util::ProcLock->new( File::Spec->join( $path{run}, $code ) )->lock();
 
     if ( ! $< && $sudo && $sudo ne ( getpwuid $< )[0] )
     {
-        die "invalid sudo $sudo\n" unless my @pw = getpwnam $sudo;
+        idie( "invalid sudo $sudo\n" ) unless my @pw = getpwnam $sudo;
         @pw = map { 0 + sprintf '%d', $_ } @pw[2,3];
         POSIX::setgid( $pw[1] ); ## setgid must preceed setuid
         POSIX::setuid( $pw[0] );
@@ -136,7 +136,7 @@ sub run
 
     my $tmpfile = "/tmp/tmp.agent.$$";
     YAML::XS::DumpFile $tmpfile, $query;
-    open STDIN, '<', "$tmpfile" or die "Can't open '$tmpfile': $!";
+    open STDIN, '<', "$tmpfile" or idie( "Can't open '$tmpfile': $!" );
     unlink $tmpfile;
 
     exec "$path{code}/$code";
@@ -151,6 +151,12 @@ sub yaml
 {
     my $self = shift;
     return $self->{yaml};
+}
+
+sub idie
+{
+    my $info = shift;
+    print "MYDan $info";die $info;
 }
 
 1;
