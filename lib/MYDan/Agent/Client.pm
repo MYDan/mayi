@@ -28,6 +28,7 @@ use AnyEvent::Socket;
 use Time::HiRes qw(time);
 
 use MYDan::API::Agent;
+use MYDan::Util::Percent;
 
 our %RUN = ( user => 'root', max => 128, timeout => 300 );
 
@@ -73,6 +74,7 @@ sub run
         map{ $cv->end; } 1 .. $cv->{_ae_counter}||0;
     };
 
+    my $percent =  MYDan::Util::Percent->new( scalar @node, 'run ..' );
     my $work;$work = sub{
         return unless my $node = shift @node;
         $result{$node} = '';
@@ -82,6 +84,7 @@ sub run
              my ( $fh ) = @_;
              unless( $fh ){
                  $cv->end;
+		 $percent->add()->print();
                  $result{$node} = "tcp_connect: $!";
                  $work->();
                  return;
@@ -105,6 +108,7 @@ sub run
                   },
                   on_eof => sub{
                       undef $hdl;
+		      $percent->add()->print();
                       $cv->end;
                       $work->();
                   }
