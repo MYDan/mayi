@@ -7,7 +7,8 @@ $|++;
 sub new
 {
     my $class = shift;
-    bless +{ size => shift, len => 0 }, ref $class || $class;
+    bless +{ size => shift, len => 0, prompt => (shift||'') }, 
+        ref $class || $class;
 }
 
 sub renew
@@ -20,7 +21,7 @@ sub renew
 sub add
 {
     my $this = shift;
-    $this->{len} = $this->{len}  + shift;
+    $this->{len} = $this->{len}  + (shift||1);
     return $this;
 }
 
@@ -28,10 +29,10 @@ sub print
 {
     my ( $this, $prompt ) = @_;
     my ( $size, $len ) = @$this{qw( size len )};
-    $prompt ||='';
+    $prompt ||= $this->{prompt};
     my $p = $size ? sprintf( "%d", $len*100/$size ) : 0;
     $p = 100 if $p >100;
-    print "\r$prompt $p%";
+    print "\r$prompt $p% $len/$size";
     print "\n" if $p==100;
     return $this;
 }
