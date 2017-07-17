@@ -32,7 +32,7 @@ sub run
         my %query = ( code => 'exec', argv => [ $run{cmd} ], map{ $_ => $run{$_} }qw( user sudo ) );
 
         my $client = MYDan::Agent::Client->new( @{$this->{node}} );
-        return $client->run( %o, query => \%query );
+        return $client->run( %o, query => \%query, verbose => 1 );
     }
     else
     {

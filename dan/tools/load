@@ -28,6 +28,7 @@ my %o = $option->get(
 
 $option->assert( 'host', 'sp' );
 $o{dp} ||= $o{sp};
+$o{verbose} = 1;
 
 $o{user} = `logname` and chop $o{user} unless $o{user};
 

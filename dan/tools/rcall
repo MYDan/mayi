@@ -30,6 +30,7 @@ my %o = $option->get(
 )->dump();
 
 $option->assert( 'range' );
+$o{verbose} = 1;
 
 my $code = shift;
 $o{user} = `logname` and chop $o{user} unless $o{user};

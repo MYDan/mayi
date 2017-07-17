@@ -84,7 +84,7 @@ sub run
              my ( $fh ) = @_;
              unless( $fh ){
                  $cv->end;
-		 $percent->add()->print();
+		 $percent->add()->print() if $run{verbose};
                  $result{$node} = "tcp_connect: $!";
                  $work->();
                  return;
@@ -108,7 +108,7 @@ sub run
                   },
                   on_eof => sub{
                       undef $hdl;
-		      $percent->add()->print();
+		      $percent->add()->print() if $run{verbose};
                       $cv->end;
                       $work->();
                   }
