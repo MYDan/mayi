@@ -118,9 +118,12 @@ while ( $poll->handles && $soc ) {
     for my $handle ( $poll->handles( POLLIN ) ) 
     {
         my ( $data, $byte );
-	syswrite( STDOUT, $data, $byte ) 
-            if ( $handle eq $soc ) 
-            && ( $byte = sysread( $soc, $data, 1024 ) );
+        if ( $handle eq $soc )
+        {
+            if ( $byte = sysread( $soc, $data, 1024 ) ) { syswrite( STDOUT, $data, $byte ); }
+            else { $soc->shutdown(2); last; }
+        }
+
         syswrite( $soc, $data, $byte ) 
             if ( $handle eq \*STDIN )
             &&  ( $byte = sysread( STDIN, $data, 1024 ) );
