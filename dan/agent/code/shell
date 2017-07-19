@@ -16,6 +16,7 @@ $host ||= $ENV{TCPREMOTEIP};
 
 die "nofind user" unless my $user = $ENV{MYDan_sudo} ||  $ENV{MYDan_user};
 die "nofind user home" unless my $dir = ( getpwnam $user )[7];
+chdir $dir;
 
 warn sprintf "shell info: host:%s port:%s uuid:%s\n", map{ $_||''}$host, $port, $uuid;
 

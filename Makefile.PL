@@ -34,7 +34,7 @@ our %PREREQ_PM =
     'AnyEvent::Handle' => 0,
     'AnyEvent::Socket' => 0,
     'AnyEvent::Impl::Perl' => 0,
-    'IO::Pty' => 0,
+    'IO::Pty' => 1.12,
     'Term::Size' => 0,
 );
 
