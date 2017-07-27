@@ -82,7 +82,7 @@ sub run
 
     my $percent =  MYDan::Util::Percent->new()->add( $position );
     
-    my ( $size, $filemd5 );
+    my ( $size, $filemd5, $uid, $gid, $mode );
     tcp_connect $node, $run{port}, sub {
         my ( $fh ) = @_  or die "tcp_connect: $!";
         my $hdl; $hdl = new AnyEvent::Handle(
@@ -101,10 +101,10 @@ sub run
                        {
                            $keepalive{cont} .= $_[1];
                            $keepalive{cont} =~ s/^\*+//g;
-                           if( $keepalive{cont} =~ s/\**#\*keepalive\*#(\d+):([a-z0-9]+):// )
+                           if( $keepalive{cont} =~ s/\**#\*keepalive\*#(\d+):([a-z0-9]+):(\d+):(\d+):(\d+):// )
                            {
-                               ( $size, $filemd5 ) = ( $1, $2 );
-
+                               ( $size, $filemd5, $uid, $gid, $mode ) = ( $1, $2, $3, $4, $5 );
+			       
 			       $percent->renew( $size )->add( length $keepalive{cont}  );
                                print $TEMP delete $keepalive{cont};
                                $keepalive{save} = 1;
@@ -143,6 +143,8 @@ sub run
         die "md5 nomatch\n";
     }
 
+    chmod oct($mode), $temp;
+    chown $uid, $gid, $temp;
     die "rename temp file\n" unless rename $temp, $dp;
 }
 
