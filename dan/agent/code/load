@@ -13,7 +13,11 @@ eval
 
     die "Can't open '$file': $!" unless open my  $fh, '+<', $file;
 
-    printf "%d:%s:", (stat $file)[7], Digest::MD5->new()->addfile( $fh )->hexdigest();
+    my ( $uid, $gid, $mode );
+    ( $uid, $gid ) = (stat $file)[4,5];
+    $mode  = sprintf( "%04o", (stat $file)[2] & 07777 );
+    printf "%d:%s:%d:%d:%s:", 
+        (stat $file)[7], Digest::MD5->new()->addfile( $fh )->hexdigest(), $uid, $gid, $mode;
 
     seek $fh, $position || 0, 0;
     while( <$fh> ) { print $_; }
