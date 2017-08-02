@@ -1,0 +1,24 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use YAML::XS;
+use Digest::MD5;
+use MYDan::Agent::Client::Proxy;
+
+eval
+{
+    local $/ = undef;
+    my %param = %{ YAML::XS::Load( <> ) };
+
+    my @argv = @{$param{argv}};
+
+    my %result = MYDan::Agent::Client::Proxy->new(
+        @{$argv[0]}
+    )->run( %{$argv[1]} );
+    print YAML::XS::Dump \%result;
+
+    exit 0;
+};
+
+print $@;
+exit 1;
