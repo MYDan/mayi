@@ -58,7 +58,7 @@ sub run
 
     my $position = -f $temp ? ( stat $temp )[7] : 0;
 
-    open my $TEMP, '+>', $temp or die "Can't open '$temp': $!";
+    open my $TEMP, '+>>', $temp or die "Can't open '$temp': $!";
 
     unless( $query = $run{query} )
     {
