@@ -6,7 +6,7 @@ use Sys::Hostname;
 use Data::Dumper;
 use MYDan::Agent::Client;
 use MYDan::Node;
-use MYDan::Util::MCMD;
+use MYDan::Util::MIO::CMD;
 
 my $conf;
 BEGIN{
@@ -25,28 +25,23 @@ return sub
     my $range = MYDan::Node->new();
 
     print "=" x 30,"\n";
-    my %fail;
 
-    my $mcmd = MYDan::Util::MCMD->new( @$batch );
-    
-    $mcmd->proxy( "$conf/proxy/$param->{proxy}" ) if $param->{proxy};
-    
-    my %result = $mcmd->run( cmd => $bin, 
-        map{ $_ => $param->{$_} }grep{ $param->{$_} }qw( timeout max )
-    );
-
-    my %mesg;
-    while ( my ( $type, $mesg ) = each %result )
+    my %result = MYDan::Util::MIO::CMD->new( map { $_ => $bin } @$batch  )->run( %$param );
+    my ( %mesg, %succ );
+    while ( my ( $io, $mesg ) = each %result )
     {
         while ( my ( $mesg, $node ) = each %$mesg )
         {
-            chomp $mesg;
-            map{$mesg{$type}{$_} = $mesg}@$node;
-            map{ $fail{$_} = 1 }@$node if $type eq 'stderr';
+            push @{ $mesg{$io} }, join ': ', $range->load( $node )->dump, $mesg;
         }
     }
+    for my $io ( sort keys %mesg )
+    {
+        print "\n---\n$io:\n";
+        map { print "  $_" } @{ $mesg{$io} };
+    }
 
-    YAML::XS::DumpFile \*STDOUT, \%mesg;
+    %succ = map{ $_ => 1 }@{$result{status}{0}} if $result{status} && $result{status}{0};
     print "=" x 30,"\n";
-    return map{ $_ => 1 }grep{ ! $fail{$_} } @$batch;
+    return map{ $_ => 1 }keys %succ;
 };
