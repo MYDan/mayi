@@ -28,14 +28,14 @@ sub new
 sub insert
 {
     my ( $this, %param ) = @_;
-    $this->{db}->insert( @param{qw( user attr user level)} );
+    $this->{db}->insert( @param{qw( name attr user level)} );
 }
 
 sub select
 {
     my ( $this, %param, %query ) = @_;
 
-    map{ $query{$_} = [ 1, $param{$_} ] if $param{$_} }qw( user attr user level);
+    map{ $query{$_} = [ 1, $param{$_} ] if $param{$_} }qw( name attr user level);
     $this->{db}->select( '*', %query );
 }
 
@@ -43,7 +43,7 @@ sub delete
 {
     my ( $this, %param, %query ) = @_;
 
-    map{ $query{$_} = [ 1, $param{$_} ] if $param{$_} }qw( user attr user level);
+    map{ $query{$_} = [ 1, $param{$_} ] if $param{$_} }qw( name attr user level);
     $this->{db}->delete( %query );
 }
 
