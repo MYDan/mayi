@@ -46,4 +46,10 @@
   goon: 25%
   param:
     bin: 'echo {}abc'
+-
+  title: check
+  code: m.check
+  goon: 25%
+  param:
+    check: [ 'project1' ]
 

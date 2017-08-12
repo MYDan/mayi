@@ -6,7 +6,8 @@ batch:
       - 1
       - 1:2
     target:
-      - 'localhost{1~10}'
+#      - 'localhost{1~10}'
+      - '127.0.0.1'
 
 maint:
   mould: apps.test
