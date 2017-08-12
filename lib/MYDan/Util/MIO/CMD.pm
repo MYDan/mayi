@@ -143,6 +143,8 @@ sub run
             unless ( -- $busy{$node}[1] )
             {
                 waitpid $busy{$node}[0], WNOHANG;
+                my $stat = $? == -1 ? 110 : $? & 127 ? 112 : $? >> 8;
+                push @{ $result{status}{$stat} }, $node;
                 delete $busy{$node};
                 print $log "$node done.\n" if $run{verbose};
             }
