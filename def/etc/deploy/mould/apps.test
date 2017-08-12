@@ -15,6 +15,6 @@
     bin: 'echo a b c d version: 011.1'
     sp: /tmp/adas/a/sda/
     user: search
-    porxy: foo
+    proxy: foo
     cont: '(version:.+)'
 

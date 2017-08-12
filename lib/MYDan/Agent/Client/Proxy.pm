@@ -29,7 +29,7 @@ use Time::HiRes qw(time);
 
 use MYDan::API::Agent;
 use MYDan::Util::Percent;
-use MYDan::Agent::Porxy;
+use MYDan::Agent::Proxy;
 
 our %RUN = ( user => 'root', max => 128, timeout => 300 );
 

@@ -36,6 +36,7 @@ use MYDan::Agent::Query;
 use MYDan::Util::Percent;
 use MYDan::API::Agent;
 use Fcntl qw(:flock SEEK_END);
+use MYDan::Agent::Proxy;
 
 sub new
 {
@@ -62,7 +63,7 @@ sub run
 
     unless( $query = $run{query} )
     {
-        my %query = ( code => 'load', user => $run{user}, sudo=> $run{sudo}, argv => [ $sp, $position ] );
+        my %query = ( code => 'load', user => $run{user}, sudo => $run{sudo}, argv => [ $sp, $position ] );
 
         my $isc = $run{role} && $run{role} eq 'client' ? 1 : 0;
 
@@ -73,6 +74,32 @@ sub run
 
         die "encryption fail:$@" if $@;
 
+        my %proxy;
+        if( $run{proxy} )
+        {
+            my $proxy =  MYDan::Agent::Proxy->new( $run{proxy} );
+            %proxy = $proxy->search( $node );
+        }
+        else { %proxy  = ( $node => undef ); }
+
+        if( my $rnode = $proxy{$node} )
+        {
+            my %rquery = ( 
+                code => 'proxy', 
+                single => 1,
+                argv => [ $node, +{ query => $query, map{ $_ => $run{$_} }grep{ $run{$_} }qw( timeout max port ) } ],
+	        map{ $_ => $run{$_} }grep{ $run{$_} }qw( user sudo env ) 
+            );
+
+            $rquery{node} = [ $rnode ] if $isc;
+
+            $query = MYDan::Agent::Query->dump(\%rquery);
+    
+            eval{ $query = MYDan::API::Agent->new()->encryption( $query ) if $isc };
+	    die "encryption fail:$@" if $@;
+
+            $node = $rnode;
+        }
     }
 
     my ( $cv, $len, %keepalive )

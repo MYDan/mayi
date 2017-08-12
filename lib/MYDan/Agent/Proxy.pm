@@ -1,21 +1,21 @@
-package MYDan::Agent::Porxy;
+package MYDan::Agent::Proxy;
 
 =head1 NAME
 
-MYDan::Agent::Porxy
+MYDan::Agent::Proxy
 
 =head1 SYNOPSIS
 
- use MYDan::Agent::Porxy;
+ use MYDan::Agent::Proxy;
 
- my $porxy = MYDan::Agent::Porxy->new( '/conf/file' );
+ my $proxy = MYDan::Agent::Proxy->new( '/conf/file' );
 
- my %r = $porxy->search( 'node1', 'node2', '10.10.0.1', '10.10.0.2' );
+ my %r = $proxy->search( 'node1', 'node2', '10.10.0.1', '10.10.0.2' );
  
  %r = (
       node1 => undef, node2 => undef,
-      '10.10.0.1' => 'porxyip',
-      '10.10.0.2' => 'porxyip',
+      '10.10.0.1' => 'proxyip',
+      '10.10.0.2' => 'proxyip',
   );
 
 =cut
@@ -36,7 +36,7 @@ sub new
     for my $c ( @conf )
     {
         next unless $c =~ /^\s*(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\/(\d{1,2})\s*:\s*(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\s*$/;
-        push @c, +{ ip => $1, mask=> $2, porxy => $3, net => substr(unpack("B32",pack("C4", (split/\./,$1))),0,$2) };
+        push @c, +{ ip => $1, mask=> $2, proxy => $3, net => substr(unpack("B32",pack("C4", (split/\./,$1))),0,$2) };
     }
 
     untie @conf;
@@ -58,7 +58,7 @@ sub search
         for my $conf ( @conf )
         {
              next unless substr(unpack("B32",pack("C4", (split/\./,$node))),0,$conf->{mask})  == $conf->{net};
-             $result{$node} = $conf->{porxy};
+             $result{$node} = $conf->{proxy};
              last;
         }
     }

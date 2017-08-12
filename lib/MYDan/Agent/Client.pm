@@ -29,7 +29,7 @@ use Time::HiRes qw(time);
 
 use MYDan::API::Agent;
 use MYDan::Util::Percent;
-use MYDan::Agent::Porxy;
+use MYDan::Agent::Proxy;
 
 our %RUN = ( user => 'root', max => 128, timeout => 300 );
 
@@ -47,13 +47,13 @@ sub run
 
     my $percent =  MYDan::Util::Percent->new( scalar @node, 'run ..' );
 
-    my %porxy;
-    if( $run{porxy} )
+    my %proxy;
+    if( $run{proxy} )
     {
-        my $porxy =  MYDan::Agent::Porxy->new( $run{porxy} );
-        %porxy = $porxy->search( @node );
+        my $proxy =  MYDan::Agent::Proxy->new( $run{proxy} );
+        %proxy = $proxy->search( @node );
     }
-    else { %porxy  = map{ $_ => undef }@node; }
+    else { %proxy  = map{ $_ => undef }@node; }
 
     my $isc = $run{role} && $run{role} eq 'client' ? 1 : 0;
     $run{query}{node} = \@node if $isc;
@@ -69,7 +69,7 @@ sub run
 
     @node = (); my %node;
 
-    while( my( $n, $p ) = each %porxy )
+    while( my( $n, $p ) = each %proxy )
     {
         if( $p ) { push @{$node{$p}}, $n; }
         else { push @node, $n; }
