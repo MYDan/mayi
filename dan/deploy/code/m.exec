@@ -1,19 +1,18 @@
-#!# perl: deploy/code/b.node
+#!# perl: deploy/code/m.exec
 use strict;
 use File::Spec;
 use Sys::Hostname;
-
-use Data::Dumper;
 use MYDan::Agent::Client;
 use MYDan::Node;
+use YAML::XS;
 
-my $conf;
+my %agent;
 BEGIN{
-    my %agent = MYDan::Util::OptConf->load()->dump('agent');
-    $conf = $agent{conf};
+    %agent = MYDan::Util::OptConf->load()->dump('agent');
 };
 
-my %run = ( timeout => 86400, max => 500, user => 'root' );
+my %run = ( timeout => 300, max => 128, sudo => 'root' );
+
 return sub
 {
     my %param = @_;
@@ -30,31 +29,27 @@ return sub
     my %query = ( 
         code => 'exec',
         user => $param->{user}||'root', 
-        argv => $bin );
+        argv => $bin 
+    );
 
     my $client = MYDan::Agent::Client->new( @$batch );
 
-    $client->proxy( "$conf/proxy/$param->{proxy}" ) if $param->{proxy};
+    my ( %result, %re, %mesg ) = $client->run(  
+        query => \%query, %agent, map{ $_ => $param->{$_} ||$run{$_} }qw( timeout sudo max ) );
 
-    my %result = $client->run(  
-        input => \%query, map{ $_ => $param->{$_} ||$run{$_} }qw( timeout user max ) );
-
-    my $cont = $param->{cont};
-    while ( my ( $type, $mesg ) = each %result )
+    while( my( $node, $mesg ) = each %result )
     {
-        while ( my ( $mesg, $node ) = each %$mesg )
-        {
-            my $stat = $1 if $mesg =~ s/--- (\d+)\n$//;
-           
-            printf "[%s]:%s\n", scalar @$node,  $range->load( $node )->dump();
-
-            print "[$type]:$mesg\nstat:$stat\n";
-            my @m;
-            my $content = ( $cont && ( @m = $mesg =~ /$cont/) ) ? join '|', @m : 1;
-
-            map{ $succ{$_} = $content }@$node if $type eq 'mesg' && defined $stat && $stat == 0;
-        }
+        $succ{$node} = 1 if $mesg && $mesg =~ /--- 0\n$/;
+        push @{$re{$mesg}}, $node;
     }
+    while( my( $mesg, $node ) = each %re )
+    {
+        $mesg =~ s/--- \d+\n$//;
+        $node = $range->load( $node );
+        $node = sprintf "%s[%d]", $node->dump(), scalar $node->list;
+        $mesg{$node} = $mesg;
+    }
+    YAML::XS::DumpFile \*STDOUT, \%mesg if %mesg;
 
     print "=" x 30,"\n";
     return %succ;
