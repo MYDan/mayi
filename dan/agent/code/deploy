@@ -22,4 +22,6 @@ if( $@ )
    print "ERROR: $@";
    exit 1;
 }
+print 'done.';
+
 exit 0;
