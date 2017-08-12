@@ -24,13 +24,14 @@ use warnings;
 
 use Carp;
 use Tie::File;
+use Fcntl 'O_RDONLY';
 
 sub new
 {
     my ( $class, $conf ) = @_;
     confess "no conf" unless $conf && -e $conf;
 
-    die "tie fail: $!" unless tie my @conf, 'Tie::File', $conf;
+    die "tie fail: $!" unless tie my @conf, 'Tie::File', $conf, mode => O_RDONLY;
     
     my @c;
     for my $c ( @conf )
