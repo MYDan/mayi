@@ -6,5 +6,4 @@ return sub
 {
     print "lock OK\n";
     die "lock OK\n";
-    return map{ $_ => 1 }@{$param{batch}};
 };
