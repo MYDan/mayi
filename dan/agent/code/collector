@@ -16,6 +16,6 @@ exit 1 unless my $param = shift @{$param{argv}};
 
 YAML::XS::DumpFile "$o{conf}/config", $param->{conf};
 my $x = YAML::XS::LoadFile "$o{data}/output";
-YAML::XS::DumpFile \*STDOUT, $x;
+YAML::XS::DumpFile \*STDOUT, [ grep{ $_->[0][0] eq 'TEST' }@{$x->{stat}} ];
 
 exit 0;
