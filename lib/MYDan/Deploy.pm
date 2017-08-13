@@ -60,18 +60,17 @@ sub run
         print "deploy: killed.\n";
         exit 1;
     };
-#    $SIG{PIPE} = sub
-#    {
-#        print "deploy: Broken pipe.\n";
-#     #   exit 1;
-#    };
-#
-#    $SIG{QUIT} = sub
-#    {
-#        print "deploy: quit.\n";
-#     #   exit 1;
-#    };
-#
+    $SIG{PIPE} = sub
+    {
+        print "deploy: Broken pipe.\n";
+        exit 1;
+    };
+
+    $SIG{QUIT} = sub
+    {
+        print "deploy: quit.\n";
+        exit 1;
+    };
 
     my @batch;
     if( -e $cache_path )
