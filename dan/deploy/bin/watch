@@ -47,7 +47,7 @@ do
         if( $o{subscribe} )
         {
             my $x = keys %data ? join( ',', keys %data ) : 'unkown';
-            MYDan::Subscribe->new()->input( $x, 'mydan_deploy_stuck', $name );
+            MYDan::Subscribe->new()->input( $x, $name, 'mydan_deploy_stuck' );
         }
         print "-" x 75, "\nname: $name\n";
         YAML::XS::DumpFile \*STDOUT, \%data;
