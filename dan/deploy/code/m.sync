@@ -1,4 +1,4 @@
-#!# perl: deploy/code/b.sync
+#!# perl: deploy/code/m.sync
 use strict;
 use File::Spec;
 use Sys::Hostname;
