@@ -2,6 +2,7 @@
 use strict;
 use warnings;
 use YAML::XS;
+use File::Temp qw( tempfile );
 
 local $/ = undef;
 
@@ -12,7 +13,16 @@ map
     my ( $name, $cmd ) = @$_;
     printf "$name [%d]: [$cmd]\n", ++ $i;
 
-    system $cmd;
+    if( $cmd =~ /^#!/ )
+    {
+        my ( $fh, $filename ) = tempfile();
+        print $fh $cmd;
+        close $fh;
+        chmod 0755, $filename;
+        system $filename;
+        unlink $filename;
+    }
+    else { system $cmd; }
 
     if( $? == -1 )
     {
