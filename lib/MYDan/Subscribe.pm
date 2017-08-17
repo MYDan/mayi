@@ -35,7 +35,7 @@ sub input
 
     $param{time} ||= POSIX::strftime( "%Y-%m-%d_%H:%M:%S", localtime );
 
-    my @s = $this->{conf}->select( map{ $_ => $param{$_} }qw( name attr) );
+    my @s = $this->{conf}->get( map{ $_ => $param{$_} }qw( name attr) );
 
     my $file = sprintf "$o{logs}/%s", join '.', gettimeofday;
     
