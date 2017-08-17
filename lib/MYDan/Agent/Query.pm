@@ -64,7 +64,7 @@ sub dump
             $query->{user} = $ENV{MYDan_username} if $ENV{MYDan_username};
         }
 
-        die "user unkown" unless $user && $user =~ /^[\-A-Za-z0-9_\.]+$/;
+        die "user unkown" unless $user && $user =~ /^[A-Za-z_][\-A-Za-z0-9_\.]+$/;
         $query->{peri} = join '#', $time - $CA, $time + $CA;
 
         $query->{auth} = MYDan::Agent::Auth->new( 
