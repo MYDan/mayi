@@ -25,14 +25,27 @@ sub mysystem
 
 sub repl
 {
-    my $type = shift;
+    my ( $type, %reg ) = @_;
     for my $file ( `find $type -type f` )
     {
         chomp $file;
         tie my ( @file ), 'Tie::File', $file;
     
-        next unless @file && $file[0] =~ /#![^#]*perl(.*$)/o;
-        $file[0] = "#!$perl$1";
+        if( @file )
+        {
+            if( %reg )
+            {
+                while( my ( $k, $v ) = each %reg )
+                {
+                    map{ $_ =~ s/$k/$v/g }@file;
+                }
+            }
+            else
+            {
+                $file[0] = "#!$perl$1" if $file[0] =~ /#![^#]*perl(.*$)/o;
+            }
+        }
+
         warn "$file\n";
         untie @file;
     }
@@ -103,6 +116,11 @@ if( $ENV{box} )
     }
 }
 
-mysystem( "rsync -av def/ ../" ) if $ENV{def};
+if( $ENV{def} )
+{
+    mysystem( "rsync -av def/ def.i/" );
+    repl( 'def.i', MYDanROOT => $mydan );
+    mysystem( "rsync -av def.i/ ../" );
+}
 
 exit 0;
