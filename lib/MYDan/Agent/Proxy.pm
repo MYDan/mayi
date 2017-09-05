@@ -27,6 +27,7 @@ use Carp;
 use YAML::XS;
 use Net::IP::Match::Regexp qw( match_ip create_iprange_regexp_depthfirst );
 use Data::Validate::IP qw( is_ipv4 );
+use MYDan::Util::OptConf;
 use MYDan::Node;
 use Socket;
 
@@ -80,8 +81,10 @@ sub search
                     last;
                 }
 
-                if ( grep { $node eq $_ }
-                    MYDan::Node->new()->load( $conf )->list() )
+                if (grep { $node eq $_ } MYDan::Node->new(
+                        MYDan::Util::OptConf->load()->dump( 'range' )
+                    )->load( $conf )->list()
+                    )
                 {
                     $result{ $node } = $conf{ $conf };
                     last;
