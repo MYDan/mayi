@@ -37,6 +37,8 @@ our %PREREQ_PM =
     'IO::Pty' => 1.12,
     'Term::Size' => 0,
     'File::Temp' => 0,
+    'Data::Validate::IP' => 0,
+    'Net::IP::Match::Regexp' => 0,
 );
 
 our $PKG_NAME = 'mydan';

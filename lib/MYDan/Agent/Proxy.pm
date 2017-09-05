@@ -19,48 +19,86 @@ MYDan::Agent::Proxy
   );
 
 =cut
+
 use strict;
 use warnings;
 
 use Carp;
-use Tie::File;
-use Fcntl 'O_RDONLY';
+use YAML::XS;
+use Net::IP::Match::Regexp qw( match_ip create_iprange_regexp_depthfirst );
+use Data::Validate::IP qw( is_ipv4 );
+use MYDan::Node;
+use Socket;
 
 sub new
 {
     my ( $class, $conf ) = @_;
     confess "no conf" unless $conf && -e $conf;
 
-    die "tie fail: $!" unless tie my @conf, 'Tie::File', $conf, mode => O_RDONLY;
-    
-    my @c;
-    for my $c ( @conf )
-    {
-        next unless $c =~ /^\s*(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\/(\d{1,2})\s*:\s*(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\s*$/;
-        push @c, +{ ip => $1, mask=> $2, proxy => $3, net => substr(unpack("B32",pack("C4", (split/\./,$1))),0,$2) };
-    }
+    eval { $conf = YAML::XS::LoadFile( $conf ) };
 
-    untie @conf;
+    confess "error: $@" if $@;
+    confess "error: not HASH" if ref $conf ne 'HASH';
 
-    bless [ sort{ $a->{mask} <=> $b->{mask} }@c ], ref $class || $class;
+    bless $conf, ref $class || $class;
 }
 
 sub search
 {
     my ( $this, @node, %result ) = @_;
 
-    my @conf = @$this;
+    my %conf = %$this;
+
+    my ( %ip_innet, $ip_regexp );
+
+    for my $conf ( keys %conf )
+    {
+        my ( $addr, $netmask );
+        if ( $conf
+            =~ /^\s*(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\/(\d{1,2})\s*/ )
+        {
+            ( $addr, $netmask ) = split /\//, $conf;
+        }
+        if ( is_ipv4( $addr ) && $netmask >= 0 && $netmask <= 32 )
+        {
+            $ip_innet{ $conf } = delete $conf{ $conf };
+        }
+    }
+
+    $ip_regexp = create_iprange_regexp_depthfirst( \%ip_innet ) if %ip_innet;
 
     for my $node ( @node )
     {
-        $result{$node} = undef;
-        next unless $node =~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
-
-        for my $conf ( @conf )
+        $result{ $node } = undef;
+        if ( !is_ipv4( $node ) )
         {
-             next unless substr(unpack("B32",pack("C4", (split/\./,$node))),0,$conf->{mask})  == $conf->{net};
-             $result{$node} = $conf->{proxy};
-             last;
+            for my $conf ( keys %conf )
+            {
+                if ( $conf =~ m{\(\?\^u:}xms )
+                {
+                    $result{ $node } = $conf{ $conf } if $node =~ $conf;
+                    last;
+                }
+
+                if ( grep { $node eq $_ }
+                    MYDan::Node->new()->load( $conf )->list() )
+                {
+                    $result{ $node } = $conf{ $conf };
+                    last;
+                }
+            }
+        }
+
+        if ( !is_ipv4( $node ) && !defined $result{ $node } )
+        {
+            my $node_ip = inet_ntoa( my $packed_ip = gethostbyname $node )
+                if gethostbyname $node;
+            $result{ $node } = match_ip( $node_ip, $ip_regexp );
+        }
+
+        if ( is_ipv4( $node ) )
+        {
+            $result{ $node } = match_ip( $node, $ip_regexp );
         }
     }
 
