@@ -31,7 +31,7 @@ use FindBin qw( $Script );
 use base qw( MYDan::Util::MIO );
 
 our %RUN = %MYDan::Util::MIO::RUN;
-our $SSH = 'ssh -o StrictHostKeyChecking=no -o NumberOfPasswordPrompts=1';
+our $SSH = 'ssh -t -o StrictHostKeyChecking=no -o NumberOfPasswordPrompts=1';
 
 local $| = 1;
 
