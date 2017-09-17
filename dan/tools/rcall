@@ -21,12 +21,13 @@ $MYDan::Util::OptConf::ARGC = -1;
      [--user username (default `logname`)]
      [--timeout seconds (default 500)] 
      [--max number ( default 128 )]
+     [--port number ( default from .config )]
      [--env "A=123;B=abc" ]
 
 =cut
 my $option = MYDan::Util::OptConf->load();
 my %o = $option->get(
-     qw( range=s sudo=s timeout=i max=i verbose env=s user=s )
+     qw( range=s sudo=s timeout=i max=i verbose env=s user=s port=s )
 )->dump();
 
 $option->assert( 'range' );
