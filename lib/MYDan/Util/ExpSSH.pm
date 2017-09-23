@@ -7,6 +7,7 @@ use Expect;
 use MYDan::Node;
 use MYDan::Util::OptConf;
 use MYDan::Util::Pass;
+use MYDan::Util::Hosts;
 
 our $TIMEOUT = 20;
 our $SSH = 'ssh -o StrictHostKeyChecking=no -o NumberOfPasswordPrompts=1 -t';
@@ -82,7 +83,9 @@ sub conn
     }
     else
     {
-        $ssh = sprintf "$SSH %s $host[$i]", $conn{user} ? "-l $conn{user}" : '';
+        my $node = $host[$i];
+        my %node = MYDan::Util::Hosts->new()->match( $node );
+        $ssh = sprintf "$SSH %s $node{$node}", $conn{user} ? "-l $conn{user}" : '';
     }
 
     my $prompt = '::sudo::';
