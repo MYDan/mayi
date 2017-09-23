@@ -88,7 +88,7 @@ if( $ENV{box} )
 
     mysystem "rsync -a box/ box.i/";
     mysystem "rsync -a dan/node/ box.i/node/";
-    map { mysystem "rsync -a dan/tools/$_ box.i/tools/" } qw(range mcmd mssh expect vssh go mrsync);
+    map { mysystem "rsync -a dan/tools/$_ box.i/tools/" } qw(range mcmd mssh expect vssh go mrsync srsync);
     
     my %sed = (
         'box.i/tools/vssh' => [ 'MYDan::VSSH::Execute::dan=1', 'MYDan::VSSH::Execute::dan=0' ],

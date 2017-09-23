@@ -19,7 +19,8 @@ our $SSH = 'ssh -o StrictHostKeyChecking=no -o NumberOfPasswordPrompts=1 -t';
 
  $ssh->conn( host => 'foo', user => 'joe', 
              pass => '/conf/file', 
-             sudo => 'user1' 
+             sudo => 'user1',
+             rsync => '-aP /tmp/foo user@host:/tmp/bar', #if rsync
            );
 
 =cut
@@ -72,7 +73,18 @@ sub conn
 
     $pass .= "\n" if defined $pass;
 
-    my $ssh = sprintf "$SSH %s $host[$i]", $conn{user} ? "-l $conn{user}" : '';
+    my $ssh;
+    if ( defined $conn{rsync} )
+    {
+        $ssh = sprintf "rsync -e '$SSH %s ' $conn{rsync}",
+            $conn{user} ? "-l $conn{user}" : '';
+        print $ssh, "\n";
+    }
+    else
+    {
+        $ssh = sprintf "$SSH %s $host[$i]", $conn{user} ? "-l $conn{user}" : '';
+    }
+
     my $prompt = '::sudo::';
     if ( my $sudo = $conn{sudo} ) { $ssh .= " sudo -p '$prompt' su - $sudo" }
 

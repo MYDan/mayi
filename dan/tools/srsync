@@ -1,0 +1,47 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use YAML::XS;
+use File::Spec;
+
+use MYDan::Util::ExpSSH;
+use MYDan::Util::OptConf;
+
+$|++;
+
+$MYDan::Util::OptConf::THIS = 'util';
+$MYDan::Util::ExpSSH::TIMEOUT = 86400;
+$MYDan::Util::ExpSSH::SSH = 'ssh -o StrictHostKeyChecking=no -o NumberOfPasswordPrompts=1';
+
+=head1 SYNOPSIS
+
+ $0 -aP /tmp/foo user@host:/tmp/bar
+
+=cut
+
+my $option = MYDan::Util::OptConf->load();
+my %o      = $option->dump();
+
+my $cmd = join ' ', @ARGV;
+
+if ( $cmd =~ /\@/ )
+{
+    @o{qw( user host )} = $cmd =~ m{\s+([^\s]*?)\@([^\s]*?):}xms;
+}
+else
+{
+    $o{user} = `logname`;
+    chomp $o{user};
+    ( $o{host} ) = $cmd =~ m{\s+([^\s]*?):}xms;
+}
+
+map { die "no $_" unless defined $o{$_} } qw( host user );
+
+MYDan::Util::ExpSSH->new()->conn(
+    pass  => "$o{conf}/pass",
+    user  => $o{user},
+    host  => $o{host},
+    rsync => $cmd,
+);
