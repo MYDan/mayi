@@ -69,6 +69,7 @@ sub insl
     
 }
 
+
 if( $ENV{dan} )
 {
     mysystem "rsync -a dan/ dan.i/";
@@ -114,6 +115,13 @@ if( $ENV{box} )
 
          insl( keys %m );
     }
+}
+
+if( $ENV{dan} || $ENV{box} || $ENV{bin} )
+{
+    mysystem "rsync -a bin/ bin.i/";
+    repl( 'bin.i' );
+    mysystem "rsync -a bin.i/ '$mydan/bin/'";
 }
 
 if( $ENV{def} )
