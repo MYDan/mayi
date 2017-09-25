@@ -117,7 +117,7 @@ sub host
 {
     my ( $self, $host ) = splice @_;
 
-    return $host unless system "host $host > /dev/null";
+    return $host if $host =~ /^\d+\.\d+\.\d+\.\d+$/ || `host $host` =~ /\b\d+\.\d+\.\d+\.\d+\b/;
 
     my $range = MYDan::Node->new( MYDan::Util::OptConf->load()->dump( 'range') );
     my $db = $range->db;
