@@ -28,10 +28,17 @@ use Fcntl qw( :flock );
 use POSIX qw( :sys_wait_h );
 use FindBin qw( $Script );
 
+use MYDan::Util::Alias;
+
 use base qw( MYDan::Util::MIO );
 
 our %RUN = %MYDan::Util::MIO::RUN;
-our $SSH = 'ssh -t -o StrictHostKeyChecking=no -o NumberOfPasswordPrompts=1';
+
+our $SSH;
+BEGIN{
+    my $x = MYDan::Util::Alias->new()->alias( 'ssh' ) || 'ssh';
+    $SSH = $x . ' -o StrictHostKeyChecking=no -o NumberOfPasswordPrompts=1 -t';
+};
 
 local $| = 1;
 
