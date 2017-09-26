@@ -8,9 +8,14 @@ use MYDan::Node;
 use MYDan::Util::OptConf;
 use MYDan::Util::Pass;
 use MYDan::Util::Hosts;
+use MYDan::Util::Alias;
 
 our $TIMEOUT = 20;
-our $SSH = 'ssh -o StrictHostKeyChecking=no -o NumberOfPasswordPrompts=1 -t';
+our $SSH;
+BEGIN{
+    my $x = MYDan::Util::Alias->new()->alias( 'ssh' ) || 'ssh';
+    $SSH = $x . ' -o StrictHostKeyChecking=no -o NumberOfPasswordPrompts=1 -t';
+};
 
 =head1 SYNOPSIS
 
