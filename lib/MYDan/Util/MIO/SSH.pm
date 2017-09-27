@@ -129,6 +129,8 @@ sub run
             my @i = grep { $log[$_] =~ /$prompt/ } 0 .. $#log;
             splice @log, 0, $i[-1] + 1 if @i;
 	    @log = grep { $_ !~ m{Connection\ to.*?closed}xms } @log;
+	    @log = grep { $_ !~ m{Warning: Permanently added .+ to the list of known hosts\.}m } @log;
+            @log = grep { $_ !~ m{Pseudo-terminal will not be allocated because stdin is not a terminal\.}m } @log;
 
             push @{ $result{output}{ join "\n", map{my $t=$_;$t=~s/$node/{}/;$t}@log, '' } }, $node if @log;
             unlink $log;
