@@ -91,12 +91,14 @@ if( $ENV{box} )
     mysystem "rsync -a dan/node/ box.i/node/";
     map { mysystem "rsync -a dan/tools/$_ box.i/tools/" } qw(range mcmd mssh expect vssh go mrsync srsync alias unalias );
     
-    my %sed = (
+
+    my @sed = (
+        'box.i/tools/vssh' => [ 'sudo=s ', '' ],
+        'box.i/tools/vssh' => [ '\[--sudo sudoer \]', '' ],
         'box.i/tools/vssh' => [ 'MYDan::VSSH::Execute::dan=1', 'MYDan::VSSH::Execute::dan=0' ],
         'box.i/tools/mrsync' => [ 'MYDan::Agent::Mrsync', 'MYDan::Util::Mrsync' ],
     );
-
-    while( my ( $f, $s ) = each %sed )
+    while( my ( $f, $s ) = splice @sed, 0, 2  )
     {
         tie my ( @file ), 'Tie::File', $f;
         map{ s/$s->[0]/$s->[1]/g }@file;
