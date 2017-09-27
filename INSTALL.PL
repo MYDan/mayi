@@ -93,6 +93,7 @@ if( $ENV{box} )
     
 
     my @sed = (
+        'box.i/tools/vssh' => [ 'logname', 'id -un' ],
         'box.i/tools/vssh' => [ 'sudo=s ', '' ],
         'box.i/tools/vssh' => [ '\[--sudo sudoer \]', '' ],
         'box.i/tools/vssh' => [ 'MYDan::VSSH::Execute::dan=1', 'MYDan::VSSH::Execute::dan=0' ],
