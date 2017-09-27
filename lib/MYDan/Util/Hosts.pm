@@ -30,5 +30,11 @@ sub match
     map{ $_ => $this->{$_} || $_ }@_;
 }
 
+sub hosts
+{
+    my $this = shift;
+    return keys %$this;
+}
+
 1;
 __END__

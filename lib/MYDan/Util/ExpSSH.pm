@@ -42,7 +42,8 @@ sub conn
     my ( $self, %conn ) = splice @_;
     my $i = 0;
 
-    return unless my @host = $self->host( $conn{host} );
+    my $hosts = MYDan::Util::Hosts->new();
+    return unless my @host = $self->host( $hosts, $conn{host} );
 
 
     if ( @host > 1 )
@@ -89,7 +90,7 @@ sub conn
     else
     {
         my $node = $host[$i];
-        my %node = MYDan::Util::Hosts->new()->match( $node );
+        my %node = $hosts->match( $node );
         $ssh = sprintf "$SSH %s $node{$node}", $conn{user} ? "-l $conn{user}" : '';
     }
 
@@ -120,7 +121,7 @@ sub conn
 
 sub host
 {
-    my ( $self, $host ) = splice @_;
+    my ( $self, $hosts, $host ) = splice @_;
 
     return $host if $host =~ /^\d+\.\d+\.\d+\.\d+$/ || `host $host` =~ /\b\d+\.\d+\.\d+\.\d+\b/;
 
@@ -130,6 +131,7 @@ sub host
     my %node = map{ $_ => 1 }grep{ /$host/ && /^[\w.-]+$/ }
                    map{ @$_ }$db->select( 'node' );
 
+    map{ $node{$_} = 1 }grep{ /$host/ && /^[\w.-]+$/ }$hosts->hosts();
     return %node ? sort keys %node : $host;
 }
 
