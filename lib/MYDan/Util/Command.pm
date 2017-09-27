@@ -18,7 +18,7 @@ sub do
 
     $this->help() and return unless $c;
 
-    map{ exec join( ' ', "$MYDan::PATH/$_", @argv ) if -e "$MYDan::PATH/$_" }splice @$c, 2;
+    map{ exec join( ' ', "$MYDan::PATH/$_", map{"'$_'"}@argv ) if -e "$MYDan::PATH/$_" }splice @$c, 2;
     print "$cmd is not installed\n";
 }
 
