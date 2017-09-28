@@ -6,7 +6,8 @@ use MYDan::Util::Command;
 
 my @cmd =
 (
-    [ 'dump', 'dump出当前所有机器', 'dan/node/bin/dump', 'box/node/bin/dump' ],
+    [ 'show', 'show出cache中的机器', 'dan/node/bin/show', 'box/node/bin/show' ],
+    [ 'dump', 'dump出data中的机器', 'dan/node/bin/dump', 'box/node/bin/dump' ],
     [ 'cache', '生成cache', 'dan/node/bin/cache', 'box/node/bin/cache' ],
     [ 'load', 'load数据到数据库', 'dan/node/bin/load', 'box/node/bin/load' ],
     [ 'motify', '修改数据', 'dan/node/bin/motify', 'box/node/bin/motify' ],
