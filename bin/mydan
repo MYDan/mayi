@@ -27,6 +27,7 @@ my @cmd =
     [ 'alias', "mydan内部使用的alias.", 'dan/tools/alias', 'box/tools/alias' ],
     [ 'unalias', "mydan内部使用的unalias.\n", 'dan/tools/unalias', 'box/tools/unalias' ],
 
+    [ 'sync', "同步mydan的配置", 'dan/tools/sync', 'box/tools/sync' ],
     [ 'xtar', '脚本和数据压缩工具.', 'dan/tools/xtar' ],
     [ 'alarm', '设置超时闹钟运行命令.', 'dan/tools/alarm' ],
     [ 'bigest', '查找大文件.', 'dan/tools/bigest' ],
