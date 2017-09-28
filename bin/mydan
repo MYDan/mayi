@@ -8,7 +8,7 @@ my @cmd =
 (
     [ 'go', "登陆服务器.\n", 'dan/tools/go', 'box/tools/go' ],
 
-    [ 'range', "操作对象描述.\n", 'dan/tools/range' ],
+    [ 'range', "操作对象描述.\n", 'dan/tools/range', 'box/tools/range' ],
 
     [ 'rcall', '远程调用mydan的agent.', 'dan/tools/rcall' ],
     [ 'vssh',  '虚拟登陆多个机器.', 'dan/tools/vssh', 'box/tools/vssh' ],
