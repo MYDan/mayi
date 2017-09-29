@@ -23,6 +23,22 @@ sub new
     my $conf = $path && -e $path ? eval{ YAML::XS::LoadFile $path } : +{};
     die "load $path fail:$@" if $@;
 
+    my $range = MYDan::Node->new( MYDan::Util::OptConf->load()->dump( 'range') );
+    my $hosts = MYDan::Util::Hosts->new();
+    for my $k ( keys %$conf  )
+    {
+        my $v = $conf->{$k};
+        next unless my $node = delete  $v->{range};
+        delete $conf->{$k};
+        map{
+            my %v = %$v;
+            my %h = $hosts->match( $_ );
+            my $n = $h{$_} || $_;
+            $v{go} =~ s/{}/$n/g;
+            $conf->{"$k:$_"} = \%v;
+        }$range->load( $node )->list;
+    }
+
     bless $conf, ref $class || $class;
 }
 
