@@ -37,6 +37,8 @@ our %PREREQ_PM =
     'IO::Pty' => 1.12,
     'Term::Size' => 0,
     'File::Temp' => 0,
+    'Authen::OATH' => 0,#box
+    'Convert::Base32' => 0,#box
 );
 
 our $PKG_NAME = 'mydan';
