@@ -16,7 +16,6 @@ $MYDan::Util::OptConf::THIS = 'util';
 
 =head1 SYNOPSIS
 
- $0
  $0 host [user]
  $0 --user dan host [user]
 
@@ -27,6 +26,7 @@ my %o = $option->get( qw( user=s ) )->dump();
 
 unless( @ARGV )
 {
+    $option->assert() unless "$o{conf}/go" && -e "$o{conf}/go";
     MYDan::Util::Go->new( "$o{conf}/go" )->go();
     exit;
 }
