@@ -64,6 +64,7 @@ sub go
     ( 
         $TIMEOUT, 
         [ qr/[#\$%] $/ => sub { $exp->interact; } ],
+        [ qr/yes\/no/ => sub { $exp->send( "yes\n" ); exp_continue; } ],
 	map{ my $v = $conf->{expect}{$_};[ qr/$_/ => sub { $exp->send( "$v\n" ); exp_continue; } ] }keys %{ $conf->{expect} }
     );
 }

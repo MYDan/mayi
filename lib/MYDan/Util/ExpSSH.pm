@@ -114,6 +114,7 @@ sub conn
     ( 
         $TIMEOUT, 
         [ qr/[Pp]assword: *$/ => sub { $exp->send( $pass ); exp_continue; } ],
+	[ qr/yes\/no/ => sub { $exp->send( "yes\n" ); exp_continue; } ],
         [ qr/[#\$%] $/ => sub { $exp->interact; } ],
         [ qr/$prompt$/ => sub { $exp->send( $pass ); $exp->interact; } ],
     );
