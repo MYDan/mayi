@@ -15,4 +15,15 @@ board2:
   expect:
     assword: 123456
 
+board.range:
+  go: 'ssh lijinfeng2011@{}' 
+  range: 'node1,node2'
+  expect:
+    assword: 123456
+
+board.goto:
+  go: 'ssh lijinfeng2011@board.mydan.org -t "ssh -t -i ~/user1key user1@10.10.10.10 sudo su - root"' 
+  expect:
+    assword: 123456
+
 
