@@ -39,18 +39,25 @@ sub new
 
 sub conn
 {
-    my ( $self, %conn ) = splice @_;
-    my $i = 0;
+    my ( $self, %conn, $grep ) = splice @_;
 
     my $hosts = MYDan::Util::Hosts->new();
-    return unless my @host = $self->host( $hosts, $conn{host} );
+    my @host = $self->host( $hosts, $conn{host} );
 
+    GOTO:
 
+    @host = grep{ $_ =~ /$grep/ }@host if defined $grep;
+    return unless @host;
+
+    my $i = 0;
     if ( @host > 1 )
     {
         my @host = map { sprintf "[ %d ] %s", $_ + 1, $host[$_] } 0 .. $#host; 
         print STDERR join "\n", @host, "please select: [ 1 ] ";
-        $i = $1 - 1 if <STDIN> =~ /(\d+)/ && $1 && $1 <= @host;
+
+        my $x = <STDIN>;
+        if( $x && $x =~ s/^\/// ) { $grep = $x; chomp $grep; goto GOTO; }
+        $i = $1 - 1 if $x =~ /(\d+)/ && $1 && $1 <= @host;
     }
 
     my ( undef, $pass ) = MYDan::Util::Pass->new( conf => $conn{pass} )
