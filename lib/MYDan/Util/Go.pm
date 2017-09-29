@@ -23,6 +23,11 @@ sub new
     my $conf = $path && -e $path ? eval{ YAML::XS::LoadFile $path } : +{};
     die "load $path fail:$@" if $@;
 
+    $conf = YAML::XS::Dump $conf;
+    map{ $conf =~ s/\$ENV{$_}/$ENV{$_}/g; }keys %ENV;
+    $conf = eval{ YAML::XS::Load $conf };
+    die "load conf fail:$@" if $@;
+
     my $range = MYDan::Node->new( MYDan::Util::OptConf->load()->dump( 'range') );
     my $hosts = MYDan::Util::Hosts->new();
     for my $k ( keys %$conf  )
