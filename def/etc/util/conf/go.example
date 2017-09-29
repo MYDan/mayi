@@ -1,0 +1,18 @@
+board:
+  go: 'ssh lijinfeng2011@board.mydan.org' 
+  expect:
+    code: 'googlecode:QWIUHIUGUYGINIUBI'
+    assword: 123456
+
+board-user1:
+  go: 'ssh lijinfeng2011@board.mydan.org -t sudo -p "::sudo::" su - user1' 
+  expect:
+    code: 'googlecode:QWIUHIUGUYGINIUBI'
+    assword: 123456
+
+board2:
+  go: 'ssh lijinfeng2011@board2.mydan.org' 
+  expect:
+    assword: 123456
+
+
