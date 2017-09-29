@@ -53,6 +53,9 @@ sub go
     my ( $this, $grep ) = @_;
 
     my @host = sort keys %$this;
+
+    GOTO:
+
     @host = grep{ $_ =~ /$grep/ }@host if defined $grep;
 
     return unless @host;
@@ -62,7 +65,10 @@ sub go
     {
         my @host = map { sprintf "[ %d ] %s", $_ + 1, $host[$_] } 0 .. $#host; 
         print STDERR join "\n", @host, "please select: [ 1 ] ";
-        $i = $1 - 1 if <STDIN> =~ /(\d+)/ && $1 && $1 <= @host;
+
+        my $x = <STDIN>;
+        if( $x && $x =~ s/^\/// ) { $grep = $x; chomp $grep; goto GOTO; }
+        $i = $1 - 1 if $x =~ /(\d+)/ && $1 && $1 <= @host;
     }
 
     my $conf = $this->{$host[$i]};
