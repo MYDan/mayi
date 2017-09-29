@@ -12,7 +12,7 @@ our $TIMEOUT = 20;
 =head1 SYNOPSIS
 
  use MYDan::Util::Go;
- MYDan::Util::Go->new( '/path/go')->go();
+ MYDan::Util::Go->new( '/path/go')->go( 'grep' );
 
 =cut
 
@@ -44,9 +44,13 @@ sub new
 
 sub go
 {
-    my $this = shift;
 
-    return unless my @host = sort keys %$this;
+    my ( $this, $grep ) = @_;
+
+    my @host = sort keys %$this;
+    @host = grep{ $_ =~ /$grep/ }@host if defined $grep;
+
+    return unless @host;
 
     my $i = 0;
     if( @host > 1 )

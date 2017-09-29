@@ -24,10 +24,11 @@ $MYDan::Util::OptConf::THIS = 'util';
 my $option = MYDan::Util::OptConf->load();
 my %o = $option->get( qw( user=s ) )->dump();
 
-unless( @ARGV )
+
+if( ! @ARGV || $ARGV[0] =~ s/^\/// )
 {
     $option->assert() unless "$o{conf}/go" && -e "$o{conf}/go";
-    MYDan::Util::Go->new( "$o{conf}/go" )->go();
+    MYDan::Util::Go->new( "$o{conf}/go" )->go( $ARGV[0] );
     exit;
 }
 
