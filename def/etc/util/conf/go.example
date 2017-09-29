@@ -26,4 +26,9 @@ board.goto:
   expect:
     assword: 123456
 
+board.env:
+  go: 'ssh lijinfeng2011@board.mydan.org -t "ssh -t -i ~/user1key user1@10.10.10.10 sudo su - root"' 
+  expect:
+    assword: $ENV{PASSWD}
+
 
