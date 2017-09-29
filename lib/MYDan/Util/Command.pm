@@ -29,7 +29,12 @@ sub help
     my ( $name, $cmd ) = @$this{qw( name cmd )};
 
     print "Usage: $name COMMAND [arg...]\n\nCommands:\n";
-    map{ print "\t$_->[0]\t$_->[1]\n"; }@$cmd;
+
+    map{
+        my $x = grep{ -e "$MYDan::PATH/$_" }splice @$_, 2;
+        printf "\t%s $_->[0]\t$_->[1]\n", $x ? '*': ' ';
+    }@$cmd;
+
     print "\nRun '$name COMMAND --help' for more information on a command.\n"
 }
 
