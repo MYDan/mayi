@@ -17,11 +17,13 @@ sub sync
 
     die "addr nofind" unless my $addr = $this->{api}{addr};
 
-    my ( $hosts, $hostt ) = ( "$MYDan::PATH/etc/hosts", "$MYDan::PATH/etc/hosts.tmp" );
+    my ( $hosts, $hostt, $private ) = map{ "$MYDan::PATH/etc/hosts$_"}( '', '.tmp','.private' );
+
     unlink $hostt if -e $hostt;
     die "sync hosts fail.\n" if system "wget -O '$hostt' $addr/download/sync/hosts";
     die "rename hosts fail.\n" if system "mv '$hostt' '$hosts'";
 
+    die "add hosts.private fail" if -e $private && system "cat '$private' >> '$hosts'";
 
     die "range.cache nofeind" unless my $cache = $this->{range}{cache};
 
