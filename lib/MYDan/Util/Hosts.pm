@@ -36,5 +36,11 @@ sub hosts
     return keys %$this;
 }
 
+sub dump
+{
+    my $this = shift;
+    return %$this;
+}
+
 1;
 __END__
