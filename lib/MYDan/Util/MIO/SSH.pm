@@ -135,7 +135,7 @@ sub run
 	    @log = grep { $_ !~ m{Warning: Permanently added .+ to the list of known hosts\.}m } @log;
             @log = grep { $_ !~ m{Pseudo-terminal will not be allocated because stdin is not a terminal\.}m } @log;
 
-            push @{ $result{output}{ join "\n", map{my $t=$_;$t=~s/$hosts{$node}/{}/;$t}@log, '' } }, $node if @log;
+            push @{ $result{output}{ join "\n", @log, '' } }, $node if @log;
             unlink $log;
         }
     }
