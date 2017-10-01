@@ -32,7 +32,7 @@ sub run
         my %query = ( code => 'exec', argv => [ $run{cmd} ], map{ $_ => $run{$_} }qw( user sudo ) );
 
         my $client = MYDan::Agent::Client->new( @{$this->{node}} );
-        return $client->run( %o, query => \%query, verbose => 1 );
+        return $client->run( %o, %run, query => \%query, verbose => 1 );
     }
     else
     {
@@ -41,7 +41,7 @@ sub run
         @input = ( $run{sudo} ? ( "sudo su - '$run{sudo}';" ) : (), $run{cmd}, 'echo --- $?' );
 
         my ( %result, %re )= MYDan::Util::MIO::SSH->new( map{ $_ => [] }@{$this->{node}} )
-            ->run( user => $run{user}, pass => $pass, input => $input );
+            ->run( %run, pass => $pass, input => $input );
 
         unlink $input;
 
