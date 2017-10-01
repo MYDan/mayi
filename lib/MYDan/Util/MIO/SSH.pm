@@ -30,6 +30,7 @@ use FindBin qw( $Script );
 
 use MYDan::Util::Alias;
 use MYDan::Util::Hosts;
+use MYDan::Util::Percent;
 
 use base qw( MYDan::Util::MIO );
 
@@ -73,6 +74,8 @@ sub run
     my ( $ext, $prompt ) = ( "$Script.$$", 'password:' );
     my ( $max, $timeout, $user, $sudo, $pass, $input ) =
         @run{ qw( max timeout user sudo pass input ) };
+
+    my $percent =  MYDan::Util::Percent->new( scalar @node, 'run ..' );
 
     $SIG{INT} = $SIG{TERM} = sub
     {
@@ -120,6 +123,9 @@ sub run
             next if $pid <= 0;
 
             next unless my $data = delete $busy{$pid};
+
+            $percent->add()->print();
+
             my ( $log, $node ) = @$data;
             tie my @log, 'Tie::File', $log;
 
@@ -137,7 +143,7 @@ sub run
 
     kill 9, keys %busy;
 
-    push @{ $result{output}{killed} }, map{ $busy{$_}[1] }keys %busy;
+    push @{ $result{output}{killed} }, map{ $busy{$_}[1]}keys %busy;
     push @{ $result{output}{norun} }, @node;
 
     unlink glob "/tmp/*.$ext";
