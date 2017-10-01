@@ -27,6 +27,7 @@ use IPC::Open3;
 use Time::HiRes qw( time );
 use POSIX qw( :sys_wait_h );
 use IO::Poll qw( POLLIN POLLHUP POLLOUT );
+use MYDan::Util::Hosts;
 
 use base qw( MYDan::Util::MIO );
 
@@ -64,6 +65,9 @@ sub run
 
     my $self = shift;
     my @node = keys %$self;
+
+    my %hosts = MYDan::Util::Hosts->new()->match( @node );
+
     my ( %run, %result, %buffer, %busy ) = ( %RUN, @_ );
     my ( $log, $max, $timeout, $interchange ) = @run{ qw( log max timeout interchange ) };
     my %node = map { $_ => {} } qw( stdout stderr );
@@ -89,7 +93,7 @@ sub run
         {
             my $node = shift @node;
             my $cmd = $self->{$node};
-            my @cmd = map { my $t = $_; $t =~ s/$interchange/$node/g; $t } @$cmd;
+            my @cmd = map { my $t = $_; $t =~ s/$interchange/$hosts{$node}/g; $t } @$cmd;
 
             if ( $run{noop} )
             {
