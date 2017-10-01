@@ -17,7 +17,7 @@ sub new
 
     if( -f $path )
     {
-        die "tie fail: $!" unless tie my @host, 'Tie::File', $path, mode => O_RDONLY;
+        die "tie fail: $!" unless tie my @host, 'Tie::File', $path, mode => O_RDONLY, recsep => "\n";
 
         for my $host ( @host )
         {
