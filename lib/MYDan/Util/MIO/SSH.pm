@@ -69,22 +69,15 @@ sub run
 
     my $self = shift;
     my @node = keys %$self;
-    my ( %run, %result, %busy ) = ( %RUN, @_ );
+    my ( $run, %run, %result, %busy ) = ( 1, %RUN, @_ );
     my ( $ext, $prompt ) = ( "$Script.$$", 'password:' );
     my ( $max, $timeout, $user, $sudo, $pass, $input ) =
         @run{ qw( max timeout user sudo pass input ) };
 
     $SIG{INT} = $SIG{TERM} = sub
     {
-        local $SIG{INT} = $SIG{INT};
-
-        kill 9, keys %busy;
-        unlink glob "/tmp/*.$ext";
-
-        unlink $input if $input && -f $input;
-
         print STDERR "killed\n";
-        exit 1;
+        $run = 0;
     };
 
     my %hosts = MYDan::Util::Hosts->new()->match( @node );
@@ -126,7 +119,8 @@ sub run
             my $pid = waitpid( -1, WNOHANG );
             next if $pid <= 0;
 
-            my ( $log, $node ) = @{ delete $busy{$pid} };
+            next unless my $data = delete $busy{$pid};
+            my ( $log, $node ) = @$data;
             tie my @log, 'Tie::File', $log;
 
             my @i = grep { $log[$_] =~ /$prompt/ } 0 .. $#log;
@@ -139,7 +133,15 @@ sub run
             unlink $log;
         }
     }
-    while @node || %busy;
+    while $run && ( @node || %busy );
+
+    kill 9, keys %busy;
+
+    push @{ $result{output}{killed} }, map{ $busy{$_}[1] }keys %busy;
+    push @{ $result{output}{norun} }, @node;
+
+    unlink glob "/tmp/*.$ext";
+    unlink $input if $input && -f $input;
 
     return wantarray ? %result : \%result;
 }
