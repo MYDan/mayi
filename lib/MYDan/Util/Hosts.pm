@@ -13,14 +13,19 @@ sub new
 {
     my ( $class, $path, %host ) = splice @_, 0, 2;
 
-    die "tie fail: $!" unless tie my @host, 'Tie::File', $path || "$MYDan::PATH/etc/hosts", mode => O_RDONLY;
+    $path ||= "$MYDan::PATH/etc/hosts";
 
-    for my $host ( @host )
+    if( -f $path )
     {
-        next unless $host =~ /^\s*(\d+\.\d+\.\d+\.\d+)\s+([a-zA-Z][\w\s\.\-]+)/;
-        map{$host{$_} = $1 }split /\s+/, $2;
+        die "tie fail: $!" unless tie my @host, 'Tie::File', $path, mode => O_RDONLY;
+
+        for my $host ( @host )
+        {
+            next unless $host =~ /^\s*(\d+\.\d+\.\d+\.\d+)\s+([a-zA-Z][\w\s\.\-]+)/;
+            map{$host{$_} = $1 }split /\s+/, $2;
+        }
     }
-    
+
     bless \%host, ref $class || $class;
 }
 
