@@ -99,10 +99,10 @@ sub run
         tcp_connect $node, $run{port}, sub {
              my ( $fh ) = @_;
              unless( $fh ){
-                 $cv->end;
 		 $percent->add()->print() if $run{verbose};
                  $result{$node} = "tcp_connect: $!";
                  $work->();
+                 $cv->end;
                  return;
              }
              if( $stop )
@@ -125,8 +125,8 @@ sub run
                   on_eof => sub{
                       undef $hdl;
 		      $percent->add()->print() if $run{verbose};
-                      $cv->end;
                       $work->();
+                      $cv->end;
                   }
              );
              $hdl->push_write($query);
