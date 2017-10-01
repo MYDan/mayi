@@ -29,6 +29,7 @@ use POSIX qw( :sys_wait_h );
 use FindBin qw( $Script );
 
 use MYDan::Util::Alias;
+use MYDan::Util::Hosts;
 
 use base qw( MYDan::Util::MIO );
 
@@ -86,6 +87,8 @@ sub run
         exit 1;
     };
 
+    my %hosts = MYDan::Util::Hosts->new()->match( @node );
+
     do
     {
         while ( @node && keys %busy < $max )
@@ -93,7 +96,7 @@ sub run
             my $node = shift @node;
             my $cmd = $self->{$node};
             my $log = "/tmp/$node.$ext";
-            my $ssh = $user ? "$SSH -l $user $node " : "$SSH $node ";
+            my $ssh = $user ? "$SSH -l $user $hosts{$node} " : "$SSH $hosts{$node} ";
 
             if( @$cmd )
             {
@@ -132,7 +135,7 @@ sub run
 	    @log = grep { $_ !~ m{Warning: Permanently added .+ to the list of known hosts\.}m } @log;
             @log = grep { $_ !~ m{Pseudo-terminal will not be allocated because stdin is not a terminal\.}m } @log;
 
-            push @{ $result{output}{ join "\n", map{my $t=$_;$t=~s/$node/{}/;$t}@log, '' } }, $node if @log;
+            push @{ $result{output}{ join "\n", map{my $t=$_;$t=~s/$hosts{$node}/{}/;$t}@log, '' } }, $node if @log;
             unlink $log;
         }
     }
