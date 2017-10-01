@@ -141,8 +141,7 @@ sub run
             my ( $io, $node ) = @{ delete $node{$fh} };
 
             push @{ $result{$io}{ delete $buffer{$fh} } }, $node
-                if defined $buffer{$fh} && length $buffer{$fh} 
-                    && ( $buffer{$fh} =~ s/$node/$interchange/g || 1 );
+                if defined $buffer{$fh} && length $buffer{$fh};
 
             unless ( -- $busy{$node}[1] )
             {
