@@ -4,11 +4,13 @@ use strict;
 use warnings;
 
 use Expect;
+use MYDan;
 use MYDan::Node;
 use MYDan::Util::OptConf;
 use MYDan::Util::Pass;
 use MYDan::Util::Hosts;
 use MYDan::Util::Alias;
+use MYDan::Util::Proxy;
 
 our $TIMEOUT = 20;
 our $SSH;
@@ -98,7 +100,14 @@ sub conn
     {
         my $node = $host[$i];
         my %node = $hosts->match( $node );
-        $ssh = sprintf "$SSH %s $node{$node}", $conn{user} ? "-l $conn{user}" : '';
+
+	my $p = MYDan::Util::Proxy->new( "$MYDan::PATH/etc/util/conf/proxy" );
+	my %x = $p->search( $node{$node} );
+
+        $ssh = $SSH. sprintf " %s $node{$node} %s", $conn{user} ? "-l $conn{user}" : '', 
+	   $x{$node{$node}} ? " -o ProxyCommand='nc -X 5 -x $x{$node{$node}} %h %p'":'';
+
+	warn "debug:$ssh\n" if $ENV{MYDan_DEBUG};
     }
 
     my $prompt = '::sudo::';
@@ -131,7 +140,7 @@ sub host
 {
     my ( $self, $hosts, $host ) = splice @_;
 
-    return $host if $host =~ /^\d+\.\d+\.\d+\.\d+$/ || `host $host` =~ /\b\d+\.\d+\.\d+\.\d+\b/;
+    return $host if $host =~ /^\d+\.\d+\.\d+\.\d+$/;
 
     my $range = MYDan::Node->new( MYDan::Util::OptConf->load()->dump( 'range') );
     my $db = $range->db;
