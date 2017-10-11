@@ -31,6 +31,7 @@ use FindBin qw( $Script );
 use MYDan::Util::Alias;
 use MYDan::Util::Hosts;
 use MYDan::Util::Percent;
+use MYDan::Util::Proxy;
 
 use base qw( MYDan::Util::MIO );
 
@@ -84,6 +85,7 @@ sub run
     };
 
     my %hosts = MYDan::Util::Hosts->new()->match( @node );
+    my $p = MYDan::Util::Proxy->new( "$MYDan::PATH/etc/util/conf/proxy" );
 
     do
     {
@@ -92,7 +94,11 @@ sub run
             my $node = shift @node;
             my $cmd = $self->{$node};
             my $log = "/tmp/$node.$ext";
+
+	    my %x = $p->search( $hosts{$node} );
+
             my $ssh = $user ? "$SSH -l $user $hosts{$node} " : "$SSH $hosts{$node} ";
+	    $ssh.= " -o ProxyCommand='nc -X 5 -x $x{$hosts{$node}} %h %p' " if $x{$hosts{$node}};
 
             if( @$cmd )
             {
