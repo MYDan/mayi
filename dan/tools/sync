@@ -11,4 +11,4 @@ use MYDan::Util::Sync;
     
 =cut
 
-MYDan::Util::Sync->new(  MYDan::Util::OptConf->load() )->sync();
+MYDan::Util::Sync->new(  MYDan::Util::OptConf->load() )->sync( @ARGV );

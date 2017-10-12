@@ -13,26 +13,38 @@ sub new
 
 sub sync
 {
-    my $this = shift;
+    my ( $this, @name ) = @_;
 
     die "addr nofind" unless my $addr = $this->{api}{addr};
 
-    my ( $hosts, $hostt, $private ) = map{ "$MYDan::PATH/etc/hosts$_"}( '', '.tmp','.private' );
+    my %sync = (
+        'node.cache' =>  +{ path => $this->{range}{cache},    source => 'node.cache', private => 0 },
+         hosts        => +{ path => "$MYDan::PATH/etc/hosts", source => 'hosts', private => 1 },
+        'util.proxy' => +{ path => "$MYDan::PATH/etc/util/conf/proxy", source => 'util.proxy', private => 1 },
+        'go' =>         +{ path => "$MYDan::PATH/etc/util/conf/go", source => 'go', private => 1 },
+        'gateway' =>    +{ path => "$MYDan::PATH/etc/util/conf/gateway", source => 'gateway', private => 1 },
+    );
 
-    unlink $hostt if -e $hostt;
-    die "sync hosts fail.\n" if system "wget -O '$hostt' $addr/download/sync/hosts";
-    die "rename hosts fail.\n" if system "mv '$hostt' '$hosts'";
+    @name = keys %sync unless @name;
+    printf "sync: %s\n", join ',', @name;
 
-    die "add hosts.private fail" if -e $private && system "cat '$private' >> '$hosts'";
+    for my $k ( @name )
+    {
+	next unless my $v = $sync{$k};
+        warn "sync $k ...\n";
 
-    die "range.cache nofeind" unless my $cache = $this->{range}{cache};
+	die "sync $k fail: path undef\n" unless $v->{path};
 
-    my $cachet = "$cache.tmp";
+        my ( $path, $tmp, $private ) = map{ "$v->{path}$_"}( '', '.tmp','.private' );
 
-    unlink $cachet if -e $cachet;
+	unlink $tmp if -e $tmp;
 
-    die "sync range.cache fail.\n" if system "wget -O '$cachet' $addr/download/sync/node.cache";
-    die "rename range.cache fail.\n" if system "mv '$cachet' '$cache'";
+        die "sync $k fail.\n" if system "wget -O '$tmp' $addr/download/sync/$v->{source}";
+
+        die "add $k.private fail" if $v->{private} && -e $private && system "cat '$private' >> '$tmp'";
+
+        die "rename $k fail.\n" if system "mv '$tmp' '$path'";
+    }
 }
 
 1;
