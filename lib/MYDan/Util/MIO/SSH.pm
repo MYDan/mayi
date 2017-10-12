@@ -145,6 +145,8 @@ sub run
             my $pid = waitpid( -1, WNOHANG );
             next if $pid <= 0;
 
+	    my $stat = $? >> 8;
+
             next unless my $data = delete $busy{$pid};
 
             $percent->add()->print();
@@ -158,7 +160,8 @@ sub run
 	    @log = grep { $_ !~ m{Warning: Permanently added .+ to the list of known hosts\.}m } @log;
             @log = grep { $_ !~ m{Pseudo-terminal will not be allocated because stdin is not a terminal\.}m } @log;
 
-            push @{ $result{output}{ join "\n", @log, '' } }, $node if @log;
+	    my $end = $input ? '' : "--- $stat\n";
+            push @{ $result{output}{ join "\n", @log, $end } }, $node if @log;
             unlink $log;
         }
     }
