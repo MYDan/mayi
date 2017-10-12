@@ -130,6 +130,7 @@ sub run
 
 	    $exp->log_stdout(0); #disable output to stdion (password: )
             $exp->log_file( $log, 'w' );
+	    warn "debug:$ssh\n" if $ENV{MYDan_DEBUG};
             if ( $exp->spawn( $ssh ) )
             {
                 $exp->expect( $timeout, 
