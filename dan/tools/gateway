@@ -19,6 +19,7 @@ $MYDan::Util::OptConf::THIS = 'util';
  $0 on | off
  $0 on abc 
  $0 off foo bar
+ $0 restart
  $0 --help 
 
 =cut
@@ -32,6 +33,7 @@ unless( @ARGV ) { $gateway->status(); exit; }
 
 my $ctrl = shift @ARGV;
 
-$option->assert() unless $ctrl eq 'on' || $ctrl eq 'off';
+$option->assert() unless $ctrl eq 'on' || $ctrl eq 'off' || $ctrl eq 'restart';
 
-$ctrl eq 'on' ? $gateway->on( @ARGV ) : $gateway->off( @ARGV );
+$gateway->off( @ARGV ) if $ctrl eq 'off'  || $ctrl eq 'restart';;
+$gateway->on( @ARGV )  if $ctrl eq 'on'   || $ctrl eq 'restart';
