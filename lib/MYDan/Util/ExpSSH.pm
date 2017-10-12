@@ -12,6 +12,9 @@ use MYDan::Util::Hosts;
 use MYDan::Util::Alias;
 use MYDan::Util::Proxy;
 
+use Authen::OATH;
+use Convert::Base32 qw( decode_base32 ); 
+
 our $TIMEOUT = 20;
 our $SSH;
 our $RSYNC;
@@ -90,7 +93,20 @@ sub conn
         }
     }
 
-    $pass .= "\n" if defined $pass;
+    my %expect;
+    if ( $pass && ref $pass )
+    {
+        %expect = %$pass;
+	for( keys %expect ) 
+	{
+            next unless $expect{$_} =~ /googlecode\s*:\s*(\w+)/;  
+	    $expect{$_} = Authen::OATH->new->totp(  decode_base32( $1 ));
+	}
+    }
+    elsif( defined $pass )
+    {
+        $expect{assword} = $pass;
+    }
 
     my $ssh;
     my $node = $host[$i];
@@ -132,10 +148,10 @@ sub conn
     $exp->expect
     ( 
         $TIMEOUT, 
-        [ qr/[Pp]assword: *$/ => sub { $exp->send( $pass ); exp_continue; } ],
 	[ qr/yes\/no/ => sub { $exp->send( "yes\n" ); exp_continue; } ],
         [ qr/[#\$%] $/ => sub { $exp->interact; } ],
         [ qr/$prompt$/ => sub { $exp->send( $pass ); $exp->interact; } ],
+	map{ my $v = $expect{$_};[ qr/$_/ => sub { $exp->send( "$v\n" ); exp_continue; } ] }keys %expect        
     );
 }
 
