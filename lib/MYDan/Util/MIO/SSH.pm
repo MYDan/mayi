@@ -27,6 +27,8 @@ use Tie::File;
 use Fcntl qw( :flock );
 use POSIX qw( :sys_wait_h );
 use FindBin qw( $Script );
+use Authen::OATH;
+use Convert::Base32 qw( decode_base32 ); 
 
 use MYDan::Util::Alias;
 use MYDan::Util::Hosts;
@@ -110,16 +112,31 @@ sub run
             if ( $run{noop} ) { warn "$ssh\n"; next }
             if ( my $pid = fork() ) { $busy{$pid} = [ $log, $node ]; next }
             
-            my $exp = Expect->new();
-            my $login = sub { $exp->send( $pass->{$node} ? "$pass->{$node}\n" : "\n" ); exp_continue };
+            my ( $exp, %expect ) = Expect->new();
+
+	    if( $pass->{$node} && ref $pass->{$node} )
+	    {
+		%expect = %{$pass->{$node}};
+                for( keys %expect )
+		{
+                    next unless $expect{$_} =~ /googlecode\s*:\s*(\w+)/;
+		    $expect{$_} = Authen::OATH->new->totp(  decode_base32( $1 ));
+		}
+	    }
+	    elsif( $pass->{$node} )
+	    {
+                $expect{assword} = $pass->{$node};
+	    }
 
 	    $exp->log_stdout(0); #disable output to stdion (password: )
             $exp->log_file( $log, 'w' );
-
             if ( $exp->spawn( $ssh ) )
             {
-                $exp->expect( $timeout, [ qr/$prompt\s*$/ => $login ] );
+                $exp->expect( $timeout, 
+	        map{ my $v = $expect{$_};[ qr/$_/ => sub { $exp->send( "$v\n" ); exp_continue; } ] }keys %expect        
+		);
             }
+ 
             exit 0;
         }
 
