@@ -14,9 +14,12 @@ use MYDan::Util::Proxy;
 
 our $TIMEOUT = 20;
 our $SSH;
+our $RSYNC;
+
 BEGIN{
-    my $x = MYDan::Util::Alias->new()->alias( 'ssh' ) || 'ssh';
-    $SSH = $x . ' -o StrictHostKeyChecking=no -o NumberOfPasswordPrompts=1 -t';
+    my $alias = MYDan::Util::Alias->new();
+    $RSYNC = $alias->alias( 'rsync' ) || 'rsync';
+    $SSH =  $alias->alias( 'ssh' ) || 'ssh' . ' -o StrictHostKeyChecking=no -o NumberOfPasswordPrompts=1';
 };
 
 =head1 SYNOPSIS
@@ -44,7 +47,7 @@ sub conn
     my ( $self, %conn, $grep ) = splice @_;
 
     my $hosts = MYDan::Util::Hosts->new();
-    my @host = $self->host( $hosts, $conn{host} );
+    my @host = $conn{rsync} ? ( $conn{host} ) : $self->host( $hosts, $conn{host} );
 
     GOTO:
 
@@ -90,25 +93,25 @@ sub conn
     $pass .= "\n" if defined $pass;
 
     my $ssh;
-    if ( defined $conn{rsync} )
+    my $node = $host[$i];
+    my %node = $hosts->match( $node );
+    
+    my $p = MYDan::Util::Proxy->new( "$MYDan::PATH/etc/util/conf/proxy" );
+    my %x = $p->search( $node{$node} );
+    
+    $ssh = $SSH. sprintf " %s %s", $conn{user} ? "-l $conn{user}" : '', 
+       $x{$node{$node}} ? " -o ProxyCommand='nc -X 5 -x $x{$node{$node}} %h %p'":'';
+    
+    if ($conn{rsync} )
     {
-        $ssh = sprintf "rsync -e '$SSH %s ' $conn{rsync}",
-            $conn{user} ? "-l $conn{user}" : '';
-        print $ssh, "\n";
+	$conn{rsync} =~ s/$node:/$node{$node}:/g;
+        $ssh = "$RSYNC -e \"$ssh\" $conn{rsync}"
     }
     else
     {
-        my $node = $host[$i];
-        my %node = $hosts->match( $node );
-
-	my $p = MYDan::Util::Proxy->new( "$MYDan::PATH/etc/util/conf/proxy" );
-	my %x = $p->search( $node{$node} );
-
-        $ssh = $SSH. sprintf " %s $node{$node} %s", $conn{user} ? "-l $conn{user}" : '', 
-	   $x{$node{$node}} ? " -o ProxyCommand='nc -X 5 -x $x{$node{$node}} %h %p'":'';
-
-	warn "debug:$ssh\n" if $ENV{MYDan_DEBUG};
+        $ssh = "$ssh -t $node{$node}";
     }
+    warn "debug:$ssh\n" if $ENV{MYDan_DEBUG};
 
     my $prompt = '::sudo::';
     if ( my $sudo = $conn{sudo} ) { $ssh .= " sudo -p '$prompt' su - $sudo" }
