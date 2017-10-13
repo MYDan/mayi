@@ -23,6 +23,7 @@ sub sync
         'util.proxy' => +{ path => "$MYDan::PATH/etc/util/conf/proxy", source => 'util.proxy', private => 1 },
         'go' =>         +{ path => "$MYDan::PATH/etc/util/conf/go", source => 'go', private => 1 },
         'gateway' =>    +{ path => "$MYDan::PATH/etc/util/conf/gateway", source => 'gateway', private => 1 },
+        'pass' =>       +{ path => "$MYDan::PATH/etc/util/conf/pass", source => 'pass', private => 1 },
     );
 
     @name = keys %sync unless @name;
