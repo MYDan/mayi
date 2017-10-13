@@ -24,7 +24,7 @@ sub new
     die "load $path fail:$@" if $@;
 
     $conf = YAML::XS::Dump $conf;
-    map{ $conf =~ s/\$ENV{$_}/$ENV{$_}/g; }keys %ENV;
+    map{ $conf =~ s/\$ENV\{$_\}/$ENV{$_}/g; }keys %ENV;
     $conf = eval{ YAML::XS::Load $conf };
     die "load conf fail:$@" if $@;
 

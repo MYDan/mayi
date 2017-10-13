@@ -57,7 +57,7 @@ sub new
     my $conf = eval{ YAML::XS::Dump YAML::XS::LoadFile $self{conf} };
     confess "error $self{conf}:$@" if $@;
 
-    map{ $conf =~ s/\$ENV{$_}/$ENV{$_}/g; }keys %ENV;
+    map{ $conf =~ s/\$ENV\{$_\}/$ENV{$_}/g; }keys %ENV;
     $self{pass} =  eval{ YAML::XS::Load $conf };
 
     die "load conf fail:$@" if $@;
