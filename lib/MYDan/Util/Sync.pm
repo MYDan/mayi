@@ -36,7 +36,9 @@ sub sync
 
 	die "sync $k fail: path undef\n" unless $v->{path};
 
-        my ( $path, $tmp, $private ) = map{ "$v->{path}$_"}( '', '.tmp','.private' );
+        my ( $path, $tmp, $private, $lock ) = map{ "$v->{path}$_"}( '', '.tmp','.private', '.lock' );
+
+        next if -e $lock && warn "sync $k skip.\n";
 
 	unlink $tmp if -e $tmp;
 
