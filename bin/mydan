@@ -24,7 +24,7 @@ my @cmd =
     [ 'access', '给远程机器添加用户.', 'dan/tools/access' ],
     [ 'keys',   "给运程机器添加key信任.\n", 'dan/tools/keys' ],
 
-    [ 'config', "mydan配置.\n", 'dan/tools/config' ],
+    [ 'config', "mydan配置.\n", 'dan/tools/config', 'box/tools/config' ],
 
     [ 'shell', "获取远程机器反弹shell.\n", 'dan/tools/shell' ],
 
