@@ -19,7 +19,7 @@ $MYDan::Util::OptConf::THIS = 'util';
  $0 on | off
  $0 on abc 
  $0 off foo bar
- $0 restart
+ $0 restart | oo # oo and restart are the same, oo == off on
  $0 --help 
 
 =cut
@@ -32,6 +32,8 @@ my $gateway = MYDan::Util::Gateway->new( "$o{conf}/gateway" );
 unless( @ARGV ) { $gateway->status(); exit; }
 
 my $ctrl = shift @ARGV;
+
+$ctrl = 'restart' if $ctrl eq 'oo';
 
 $option->assert() unless $ctrl eq 'on' || $ctrl eq 'off' || $ctrl eq 'restart';
 
