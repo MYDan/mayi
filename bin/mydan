@@ -43,4 +43,4 @@ my @cmd =
     [ 'node', '机器管理.', 'bin/mydan.node' ],
 );
 
-MYDan::Util::Command->new( mydan => @cmd )->do( @ARGV );
+MYDan::Util::Command->new( mydan => \@cmd, +{ gw => 'gateway' } )->do( @ARGV );

@@ -14,4 +14,4 @@ my @cmd =
     [ 'purge', '删除数据', 'dan/node/bin/purge', 'box/node/bin/purge' ],
 );
 
-MYDan::Util::Command->new( 'mydan.node' => @cmd )->do( @ARGV );
+MYDan::Util::Command->new( 'mydan.node' => \@cmd )->do( @ARGV );

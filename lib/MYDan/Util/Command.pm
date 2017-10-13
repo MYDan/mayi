@@ -6,13 +6,15 @@ use MYDan;
 
 sub new
 {
-    my ( $class, $name, @cmd ) = @_;
-    bless +{ name => $name, cmd => \@cmd }, ref $class || $class;
+    my ( $class, $name, $cmd, $alias ) = @_;
+    bless +{ name => $name, cmd => $cmd, alias => $alias || +{} }, ref $class || $class;
 }
 
 sub do
 {
     my ( $this, $cmd, @argv )= @_;
+
+    $cmd = $this->{alias}{$cmd} if $cmd && $this->{alias}{$cmd};
 
     my ( $c ) = grep{ $cmd && $_->[0] eq $cmd }@{$this->{cmd}};
 
