@@ -38,7 +38,7 @@ sub run
     {
         $pass = +{ MYDan::Util::Pass->new()->pass( $this->{node} => $run{user} )}unless defined $pass;
         tie my @input, 'Tie::File', my $input = "/tmp/mssh.".time.".$$";
-        @input = ( $run{sudo} ? ( "sudo su - '$run{sudo}';" ) : (), $run{cmd}, 'echo --- $?' );
+        @input = ( $run{sudo} ? ( "sudo su - '$run{sudo}' || exit 1" ) : (), $run{cmd}, 'echo --- $?' );
 
         my ( %result, %re )= MYDan::Util::MIO::SSH->new( map{ $_ => [] }@{$this->{node}} )
             ->run( %run, pass => $pass, input => $input );
