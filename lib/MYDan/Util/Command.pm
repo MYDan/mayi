@@ -35,7 +35,7 @@ sub do
 
     $this->help() and return unless $c;
 
-    my @x = splice @$_, 2;
+    my @x = splice @$c, 2;
     @x = reverse @x if -f "$MYDan::PATH/dan/.ignore";
     map{ exec join( ' ', "$MYDan::PATH/$_", map{"'$_'"}@argv ) if -e "$MYDan::PATH/$_" }@x;
     print "$cmd is not installed\n";
