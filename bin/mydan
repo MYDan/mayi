@@ -19,6 +19,7 @@ my @cmd =
     [ 'mssh',  '批量ssh命令.', 'dan/tools/mssh', 'box/tools/mssh' ],
     [ 'mcmd',  '批量命令.', 'dan/tools/mcmd', 'box/tools/mcmd' ],
     [ 'load',  '从远程机器下载文件.', 'dan/tools/load' ],
+    [ 'rsync', "同步文件.\n", 'dan/tools/rsync', 'box/tools/rsync' ],
     [ 'mrsync', "批量同步文件.\n", 'dan/tools/mrsync', 'box/tools/mrsync' ],
 
     [ 'access', '给远程机器添加用户.', 'dan/tools/access' ],
