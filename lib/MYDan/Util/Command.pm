@@ -14,7 +14,7 @@ sub do
 {
     my ( $this, $cmd, @argv )= @_;
 
-    $ENV{MYDan_DEBUG} = 1 && $cmd = lc( $cmd ) if $cmd && $cmd =~ /^[A-Z][a-z]+$/;
+    $ENV{MYDan_DEBUG} = 1 && $cmd = lc( $cmd ) if $cmd && $cmd =~ /^[A-Z][a-z]*$/;
 
     $cmd = $this->{alias}{$cmd} if $cmd && $this->{alias}{$cmd};
 
