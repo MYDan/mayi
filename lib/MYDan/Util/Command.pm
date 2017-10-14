@@ -36,7 +36,14 @@ sub help
 
     map{
         my $x = grep{ -e "$MYDan::PATH/$_" }splice @$_, 2;
-        printf "\t%s $_->[0]\t$_->[1]\n", $x ? '*': ' ';
+	if( $ENV{MYDan_DEBUG} )
+	{
+            printf "\t%s $_->[0]\t$_->[1]\n", $x ? $x =~ /^dan/ ? 'dan' : 'box' : 'nil';
+	}
+	else
+	{
+            printf "\t%s $_->[0]\t$_->[1]\n", $x ? '*': ' ';
+	}
     }@$cmd;
 
     print "\nRun '$name COMMAND --help' for more information on a command.\n"
