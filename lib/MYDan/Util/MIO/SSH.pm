@@ -157,10 +157,14 @@ sub run
 
             my @i = grep { $log[$_] =~ /$prompt/ } 0 .. $#log;
             splice @log, 0, $i[-1] + 1 if @i;
-	    @log = grep { $_ !~ m{Connection\ to.*?closed}xms } @log;
-	    @log = grep { $_ !~ m{Warning: Permanently added .+ to the list of known hosts\.}m } @log;
-            @log = grep { $_ !~ m{Pseudo-terminal will not be allocated because stdin is not a terminal\.}m } @log;
-	    pop @log if @log && $log[-1] =~ /^Last login: .*\d+:\d+:\d+/;
+
+	    unless( $ENV{MYDan_DEBUG} )
+	    {
+	        @log = grep { $_ !~ m{Connection\ to.*?closed}xms } @log;
+	        @log = grep { $_ !~ m{Warning: Permanently added .+ to the list of known hosts\.}m } @log;
+                @log = grep { $_ !~ m{Pseudo-terminal will not be allocated because stdin is not a terminal\.}m } @log;
+	        pop @log if @log && $log[-1] =~ /^Last login: .*\d+:\d+:\d+/;
+            }
 
 	    my $end = $input ? '' : "--- $stat\n";
             push @{ $result{output}{ join "\n", @log, $end } }, $node if @log;
