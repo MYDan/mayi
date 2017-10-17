@@ -30,6 +30,7 @@ use Time::HiRes qw(time);
 use MYDan::API::Agent;
 use MYDan::Util::Percent;
 use MYDan::Agent::Proxy;
+use MYDan::Util::Hosts;
 
 our %RUN = ( user => 'root', max => 128, timeout => 300 );
 
@@ -91,12 +92,13 @@ sub run
         map{ $cv->end; } 1 .. $cv->{_ae_counter}||0;
     };
 
+    my %hosts = MYDan::Util::Hosts->new()->match( @node );
     my $work;$work = sub{
         return unless my $node = shift @node;
         $result{$node} = '';
         
         $cv->begin;
-        tcp_connect $node, $run{port}, sub {
+        tcp_connect $hosts{$node}, $run{port}, sub {
              my ( $fh ) = @_;
              unless( $fh ){
 		 $percent->add()->print() if $run{verbose};
