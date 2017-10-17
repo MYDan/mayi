@@ -21,7 +21,7 @@ sub new
 
         for my $host ( @host )
         {
-            next unless $host =~ /^\s*(\d+\.\d+\.\d+\.\d+)\s+([a-zA-Z][\w\s\.\-]+)/;
+            next unless $host =~ /^\s*(\d+\.\d+\.\d+\.\d+)\s+([0-9a-zA-Z][\w\s\.\-]+)/;
             map{$host{$_} = $1 }split /\s+/, $2;
         }
     }
