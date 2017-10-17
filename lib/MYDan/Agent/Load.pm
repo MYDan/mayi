@@ -37,6 +37,7 @@ use MYDan::Util::Percent;
 use MYDan::API::Agent;
 use Fcntl qw(:flock SEEK_END);
 use MYDan::Agent::Proxy;
+use MYDan::Util::Hosts;
 
 sub new
 {
@@ -109,8 +110,10 @@ sub run
 
     my $percent =  MYDan::Util::Percent->new()->add( $position );
     
+    my %hosts = MYDan::Util::Hosts->new()->match( $node );
+
     my ( $size, $filemd5, $uid, $gid, $mode );
-    tcp_connect $node, $run{port}, sub {
+    tcp_connect $hosts{$node}, $run{port}, sub {
         my ( $fh ) = @_  or die "tcp_connect: $!";
         my $hdl; $hdl = new AnyEvent::Handle(
            fh => $fh,
