@@ -124,7 +124,7 @@ sub run
     
     my %hosts = MYDan::Util::Hosts->new()->match( $node );
 
-    my ( $size, $filemd5, $uid, $gid, $mode );
+    my ( $size, $filemd5, $uid, $gid, $mode, $ok );
     tcp_connect $hosts{$node}, $run{port}, sub {
         my ( $fh ) = @_  or die "tcp_connect: $!";
         my $hdl; $hdl = new AnyEvent::Handle(
@@ -147,6 +147,20 @@ sub run
                            {
                                ( $size, $filemd5, $uid, $gid, $mode ) = ( $1, $2, $3, $4, $5 );
 			       
+			       if( -f $dp )
+			       {
+				   if( open my $DP, '<', $dp )
+				   {
+				       my $x = Digest::MD5->new()->addfile( $DP )->hexdigest();
+				       if( $x && $filemd5 && $x eq $filemd5 )
+				       {
+				           chmod oct($mode), $dp;
+					   chown $uid, $gid, $dp;
+                                           undef $hdl; $cv->send; $ok = $size;
+				       }
+			           }
+			       }
+
 			       $percent->renew( $size )->add( length $keepalive{cont}  );
                                print $TEMP delete $keepalive{cont};
                                $keepalive{save} = 1;
@@ -167,6 +181,14 @@ sub run
     };
 
     $cv->recv;
+
+    if( $ok )
+    {
+	$percent->add( $ok );
+	$percent->print('Load ..') if $run{verbose};
+        unlink $temp;
+        return;
+    }
 
     seek $TEMP, -6, SEEK_END;
     sysread $TEMP, my $end, 6;
