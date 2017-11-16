@@ -32,6 +32,7 @@ use AnyEvent::Impl::Perl;
 use AnyEvent::Socket;
 use AnyEvent::Handle;
 use Digest::MD5;
+use MYDan;
 use MYDan::Agent::Query;
 use MYDan::Util::Percent;
 use MYDan::API::Agent;
@@ -56,7 +57,18 @@ sub run
 
     my ( $node, $sp, $dp, $query ) = @$this{qw( node sp dp )};
 
+    my $path = "$MYDan::PATH/tmp";
+    unless( -d $path ){ mkdir $path;chmod 0777, $path; }
+    $path .= '/load.data.';
+
+    for my $f ( grep{ -f } glob "$path*" )
+    {
+	my $t = ( stat $f )[9];
+        unlink $f if $t && $t < time - 3600;
+    }
+
     my $temp = sprintf "$dp.%stmp", $run{continue} ? '' : time.'.'.$$.'.';
+    $temp  = $path. Digest::MD5->new->add( $temp )->hexdigest;
 
     my $position = -f $temp ? ( stat $temp )[7] : 0;
 
