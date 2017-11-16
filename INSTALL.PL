@@ -122,6 +122,8 @@ if( $ENV{dan} || $ENV{box} || $ENV{bin} )
 {
     mysystem "rsync -a bin/ bin.i/";
     repl( 'bin.i' );
+    mysystem( "ln -fsn mydan bin.i/$ENV{nickname}" )
+        if $ENV{nickname} && $ENV{nickname} =~ /^[a-z0-9]+$/;
     mysystem "rsync -a bin.i/ '$mydan/bin/'";
 }
 

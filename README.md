@@ -12,6 +12,7 @@
             II. make install dan=1 安装模块和所有mydan平台
             IV. make install def=1 安装模块和默认配置
             V.  make install dan=1 box=1 def=1 全安装
+            VI. make install dan=1 box=1 def=1 nickname=abc 全安装 + 为mydan添加别名abc
 
             a. make install dan=1 cpan=/path/to/your/cpan 指定cpan工具路径
 
