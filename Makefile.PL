@@ -39,6 +39,8 @@ our %PREREQ_PM =
     'File::Temp' => 0,
     'Authen::OATH' => 0,#box
     'Convert::Base32' => 0,#box
+    'Net::IP::Match::Regexp' => 0,#box
+    'Data::Validate::IP' => 0,#box
 );
 
 our $PKG_NAME = 'mydan';
