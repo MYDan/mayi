@@ -96,6 +96,7 @@ sub run
     {
         for my $sync ( @{$task{sync}} )
         {
+	    next unless @{$sync->{dst}};
             my $mrsync = MYDan::Agent::Mrsync->new( %$sync, %path);
             map{ $failed{$_} = 1 } $mrsync->run( %o )->failed();
         }
@@ -190,10 +191,10 @@ sub run
         {
             if( $todo->{ok} )
             {
+		my @dst = grep{ $_ ne $todo->{ok} }@{$todo->{dst}};
+		next unless @dst;
                 my $mrsync = MYDan::Agent::Mrsync->new( 
-                    src => [ $todo->{ok} ], 
-                    dst => [ grep{ $_ ne $todo->{ok} }@{$todo->{dst}} ], 
-                   %path );
+                    src => [ $todo->{ok} ], dst => \@dst, %path );
                 map{ $failed{$_} = 1 }$mrsync->run( %o )->failed();
             }
             else { map{ $failed{$_} = 1 }@{$todo->{dst}}; } 
