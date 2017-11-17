@@ -3,14 +3,14 @@ use warnings;
 use FindBin qw( $Bin $RealBin );
 use Tie::File;
 
-exit 0 unless $ENV{dan} || $ENV{box};
-
 my @p = split /\//, $RealBin; pop @p;
 
-die "path no in mydan" unless $p[-1] eq 'mydan';
-
 my $mydan = join '/', @p;
+$ENV{dan} = $ENV{box} = $ENV{def} = $mydan = '/opt/mydan' unless $p[-1] eq 'mydan';
 
+system "mkdir -p '$mydan'" unless -e $mydan;
+
+exit 0 unless $ENV{dan} || $ENV{box};
 
 my $perl = $ENV{PERL_PATH} || $^X;
 my $cpan = $perl;$cpan =~ s/perl$/cpan/;
