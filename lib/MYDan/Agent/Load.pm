@@ -124,7 +124,7 @@ sub run
     
     my %hosts = MYDan::Util::Hosts->new()->match( $node );
 
-    my ( $size, $filemd5, $uid, $gid, $mode, $ok );
+    my ( $size, $filemd5, $own, $mode, $ok );
     tcp_connect $hosts{$node}, $run{port}, sub {
         my ( $fh ) = @_  or die "tcp_connect: $!";
         my $hdl; $hdl = new AnyEvent::Handle(
@@ -143,10 +143,9 @@ sub run
                        {
                            $keepalive{cont} .= $_[1];
                            $keepalive{cont} =~ s/^\*+//g;
-                           if( $keepalive{cont} =~ s/\**#\*keepalive\*#(\d+):([a-z0-9]+):(\d+):(\d+):(\d+):// )
+                           if( $keepalive{cont} =~ s/\**#\*keepalive\*#(\d+):([a-z0-9]+):(\w+):(\d+):// )
                            {
-                               ( $size, $filemd5, $uid, $gid, $mode ) = ( $1, $2, $3, $4, $5 );
-			       
+                               ( $size, $filemd5, $own, $mode ) = ( $1, $2, $3, $4 );
 			       if( -f $dp )
 			       {
 				   if( open my $DP, '<', $dp )
@@ -155,7 +154,8 @@ sub run
 				       if( $x && $filemd5 && $x eq $filemd5 )
 				       {
 				           chmod oct($mode), $dp;
-					   chown $uid, $gid, $dp;
+					   my $cnt = chown( ( getpwnam $own )[2,3], $dp );
+					   die "chown fail\n" unless $cnt;
                                            undef $hdl; $cv->send; $ok = $size;
 				       }
 			           }
@@ -208,7 +208,8 @@ sub run
     }
 
     chmod oct($mode), $temp;
-    chown $uid, $gid, $temp;
+    my $cnt = chown( ( getpwnam $own )[2,3], $temp );
+    die "chown fail\n" unless $cnt;
     die "rename temp file\n" unless rename $temp, $dp;
 }
 
