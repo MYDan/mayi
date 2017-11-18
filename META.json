@@ -50,5 +50,16 @@
       }
    },
    "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/mydan/mayi/issues"
+      },
+      "homepage" : "https://github.com/mydan/mayi",
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/mydan/mayi.git",
+         "web" : "https://github.com/mydan/mayi"
+      }
+   },
    "version" : "0.1.6"
 }
