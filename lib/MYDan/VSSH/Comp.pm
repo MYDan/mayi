@@ -1,6 +1,6 @@
 package MYDan::VSSH::Comp;
 
-#use strict;
+use strict;
 use warnings;
 
 use MYDan::VSSH::History;
