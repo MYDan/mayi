@@ -53,7 +53,6 @@ dan/deploy/lib/.gitkeep
 dan/deploy/service/watch2subscribe
 dan/monitor/bin/collector
 dan/monitor/conf/collect/project1
-dan/monitor/conf/collect/project1:dic1
 dan/monitor/conf/collect/project2
 dan/monitor/conf/subscribe
 dan/multicast/bin/recv
