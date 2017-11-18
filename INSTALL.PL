@@ -3,14 +3,13 @@ use warnings;
 use FindBin qw( $Bin $RealBin );
 use Tie::File;
 
-my @p = split /\//, $RealBin; pop @p;
+exit 0 unless $ENV{dan} || $ENV{box} || $ENV{def};
 
-my $mydan = join '/', @p;
-$ENV{dan} = $ENV{box} = $ENV{def} = $mydan = '/opt/mydan' unless $p[-1] eq 'mydan';
+my @p = split /\//, $RealBin;
+while ( @p ) { $p[-1] eq 'mydan' ? last : pop @p; }
+my $mydan = @p ? join( '/', @p ) : '/opt/mydan';
 
 system "mkdir -p '$mydan'" unless -e $mydan;
-
-exit 0 unless $ENV{dan} || $ENV{box};
 
 my $perl = $ENV{PERL_PATH} || $^X;
 my $cpan = $perl;$cpan =~ s/perl$/cpan/;
