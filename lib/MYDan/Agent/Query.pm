@@ -51,6 +51,9 @@ sub dump
 {
     my ( $class, $query ) = splice @_;
 
+    my $data = 'data:' . length( $query->{data} ) . ':'. delete $query->{data} 
+        if $query->{data} && ! ref $query->{data};
+
     confess "invalid query" unless $query
         && ref $query eq 'HASH' && defined $query->{code};
 
@@ -72,7 +75,7 @@ sub dump
         )->sign( YAML::XS::Dump $query );
     }
     
-    return Compress::Zlib::compress( YAML::XS::Dump $query );
+    return $data . Compress::Zlib::compress( YAML::XS::Dump $query );
 }
 
 =head3 load( $query )
@@ -82,7 +85,13 @@ Inverse of dump().
 =cut
 sub load
 {
-    my ( $class, $query, $yaml ) = splice @_;
+    my ( $class, $query, $yaml, $data ) = splice @_;
+
+    if ( $query =~ s/^data:(\d+):// )
+    {
+        $data = substr( $query, 0, $1 );
+        substr( $query, 0, $1 ) = '';
+    }
 
     die "invalid $query\n" unless
         ( $yaml = Compress::Zlib::uncompress( $query ) )
@@ -104,6 +113,8 @@ sub load
     }
 
     idie( "auth fail.access\n" ) if $query->{node} && 0 == grep { $query->{node}{$_} } @myip;
+
+    $query->{data} = $data if $data;
 
     bless { yaml => $yaml, query => $query }, ref $class || $class;
 }
