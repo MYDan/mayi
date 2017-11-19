@@ -75,7 +75,7 @@ sub dump
         )->sign( YAML::XS::Dump $query );
     }
     
-    return $data . Compress::Zlib::compress( YAML::XS::Dump $query );
+    return ( $data || '' ) . Compress::Zlib::compress( YAML::XS::Dump $query );
 }
 
 =head3 load( $query )
