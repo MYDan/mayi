@@ -10,7 +10,7 @@ use Getopt::Long;
 return sub
 {
     local $/;
-    my ( $file, %o, $data ) = shift;
+    my ( $file, %o ) = shift;
     return [ %o ] unless $file && -f $file;
 
     
@@ -20,6 +20,6 @@ return sub
     ( $o{chown}, $o{chmod} ) = ( ( getpwuid($uid) )[0], $mode );
 
     Getopt::Long::GetOptionsFromArray( \@_, \%o, qw( path=s chmod=s chown=s ) );
-    $o{md5} = Digest::MD5->new()->add( $data = `cat $file` )->hexdigest();
-    return ( \%o, data => $data );
+    $o{md5} = Digest::MD5->new()->add( $o{file} = `cat $file` )->hexdigest();
+    return [ \%o ];
 };
