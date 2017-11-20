@@ -5,10 +5,26 @@ use Tie::File;
 
 exit 0 unless $ENV{dan} || $ENV{box} || $ENV{def};
 
-my @p = split /\//, $RealBin;
-while ( @p ) { $p[-1] eq 'mydan' ? last : pop @p; }
-my $mydan = @p ? join( '/', @p ) : '/opt/mydan';
+sub mydanpath
+{
+    if ( my $path = $ENV{mydan} )
+    {
+        my @p = split /\//, $path;
+        die "The directory name must be mydan. example: /tmp/abc/mydan\n"
+            unless $p[-1] eq 'mydan';
+        return $path;
+    }
+    for ( $RealBin, $ENV{PERL_PATH}, $^X )
+    {
+        next unless $_;
+        my @p = split /\//, $_;
+        while ( @p ) { $p[-1] eq 'mydan' ? last : pop @p; }
+        return join( '/', @p ) if @p;
+    }
+    return '/opt/mydan';
+}
 
+my $mydan = mydanpath();
 system "mkdir -p '$mydan'" unless -e $mydan;
 
 my $perl = $ENV{PERL_PATH} || $^X;
