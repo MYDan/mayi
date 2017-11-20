@@ -194,7 +194,7 @@ sub run
 		my @dst = grep{ $_ ne $todo->{ok} }@{$todo->{dst}};
 		next unless @dst;
                 my $mrsync = MYDan::Agent::Mrsync->new( 
-                    src => [ $todo->{ok} ], dst => \@dst, %path );
+                    src => [ $todo->{ok} ], dst => \@dst, map{ $_ => $path{dp} }qw( sp dp ) );
                 map{ $failed{$_} = 1 }$mrsync->run( %o )->failed();
             }
             else { map{ $failed{$_} = 1 }@{$todo->{dst}}; } 
