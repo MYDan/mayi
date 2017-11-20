@@ -146,6 +146,12 @@ sub run
                            if( $keepalive{cont} =~ s/\**#\*keepalive\*#(\d+):([a-z0-9]+):(\w+):(\d+):// )
                            {
                                ( $size, $filemd5, $own, $mode ) = ( $1, $2, $3, $4 );
+			       if( $run{cc} )
+			       {
+                                   $run{chown} ||= $own;
+				   $run{chmod} ||= $mode;
+			       }
+
 			       if( -f $dp )
 			       {
 				   if( open my $DP, '<', $dp )
@@ -153,9 +159,12 @@ sub run
 				       my $x = Digest::MD5->new()->addfile( $DP )->hexdigest();
 				       if( $x && $filemd5 && $x eq $filemd5 )
 				       {
-				           chmod oct($mode), $dp;
-					   my $cnt = chown( ( getpwnam $own )[2,3], $dp );
-					   die "chown fail\n" unless $cnt;
+				           die "chmod fail\n" if $run{chmod} && ! chmod oct($run{chmod}), $dp;
+					   if( $run{chown} )
+					   {
+                                               die "get $run{chown} uid fail\n" unless my @pw = getpwnam $run{chown};
+					       die "chown fail\n" unless chown @pw[2,3], $dp;
+					   }
                                            undef $hdl; $cv->send; $ok = $size;
 				       }
 			           }
@@ -207,9 +216,14 @@ sub run
         die "md5 nomatch\n";
     }
 
-    chmod oct($mode), $temp;
-    my $cnt = chown( ( getpwnam $own )[2,3], $temp );
-    die "chown fail\n" unless $cnt;
+   
+    die "chmod fail\n" if$run{chmod} && ! chmod oct($run{chmod}), $temp;
+    if( $run{chown} )
+    {
+        die "get $run{chown} uid fail\n" unless my @pw = getpwnam $run{chown};
+	die "chown fail\n" unless chown @pw[2,3], $temp;
+    }
+
     die "rename temp file\n" unless rename $temp, $dp;
 }
 
