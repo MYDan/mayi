@@ -117,7 +117,7 @@ sub new
                                    unless( $keepalive{skip} )
                                    {
                                        $keepalive{cont} =~ s/^\*+//g;
-                                       $keepalive{skip} = 1 if $keepalive{cont} =~ s/^#\*keepalive\*#//;
+                                       $keepalive{skip} = 1 if $keepalive{cont} =~ s/^#\*MYDan_\d+\*#//;
                                    }
                                }
                            );

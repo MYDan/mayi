@@ -143,7 +143,7 @@ sub run
                        {
                            $keepalive{cont} .= $_[1];
                            $keepalive{cont} =~ s/^\*+//g;
-                           if( $keepalive{cont} =~ s/\**#\*keepalive\*#(\d+):([a-z0-9]+):(\w+):(\d+):// )
+                           if( $keepalive{cont} =~ s/\**#\*MYDan_\d+\*#(\d+):([a-z0-9]+):(\w+):(\d+):// )
                            {
                                ( $size, $filemd5, $own, $mode ) = ( $1, $2, $3, $4 );
 			       if( $run{cc} )

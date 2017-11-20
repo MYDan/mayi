@@ -195,7 +195,7 @@ sub run
 		      $percent->add(scalar @node)->print() if $run{verbose};
                       $cv->end;
 
-                      $rresult{$node}  =~ s/^\**#\*keepalive\*#//;
+                      $rresult{$node}  =~ s/^\**#\*MYDan_\d+\*#//;
                       my @c = eval{ YAML::XS::Load $rresult{$node} };
 
                       my $error = $@ ? "\$@ = $@" :
@@ -237,7 +237,7 @@ sub run
     $cv->recv;
     undef $w;
 
-    map{ $_ =~ s/^\**#\*keepalive\*#//;}values %result;
+    map{ $_ =~ s/^\**#\*MYDan_\d+\*#//;}values %result;
     return %result;
 }
 
