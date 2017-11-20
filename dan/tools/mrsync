@@ -17,7 +17,7 @@
 
     The following parameters are valid only in dan
 
-    [--user username(default `logname`)] 
+    [--user username(default `id -un`)] 
     [--sudo user1 ] 
 
 =cut
@@ -40,7 +40,7 @@ my %o = $option->set( retry => 2, timeout => 300, gave => 3, src => hostname() )
 
 $option->assert( qw( src dst sp ) );
 
-$o{user} = `logname` and chop $o{user} unless $o{user};
+$o{user} = `id -un` and chop $o{user} unless $o{user};
 
 my $range = MYDan::Node->new( $option->dump( 'range' ) );
 my $mrsync = MYDan::Agent::Mrsync->new
