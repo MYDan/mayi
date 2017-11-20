@@ -94,7 +94,7 @@ sub new
 
             my %query = ( 
                 argv => [ +{ load => $load, src => $src, port => $agent{port}, sp => $sp, dp => $dp } ],
-		code => 'download', map{ $_ => $param{$_} }qw( user sudo )
+		code => 'download', map{ $_ => $param{$_} }qw( user sudo chown chmod cc )
             );
 
             $query{node} = [ $dst ] if $isc;
