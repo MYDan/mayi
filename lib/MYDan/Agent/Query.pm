@@ -49,10 +49,13 @@ BEGIN{
 
 sub dump
 {
-    my ( $class, $query ) = splice @_;
+    my ( $class, $query, $data ) = splice @_, 0, 2;
 
-    my $data = 'data:' . length( $query->{data} ) . ':'. delete $query->{data} 
-        if $query->{data} && ! ref $query->{data};
+    if( $query->{data}  )
+    {
+         $data = Compress::Zlib::compress( YAML::XS::Dump delete $query->{data} );
+         $data = 'data:' . length( $data ) . ':'. $data;
+    }
 
     confess "invalid query" unless $query
         && ref $query eq 'HASH' && defined $query->{code};
@@ -91,6 +94,8 @@ sub load
     {
         $data = substr( $query, 0, $1 );
         substr( $query, 0, $1 ) = '';
+        $data = eval{ YAML::XS::Load Compress::Zlib::uncompress( $data ) };
+        die "invalid data" if $@;
     }
 
     die "invalid $query\n" unless
