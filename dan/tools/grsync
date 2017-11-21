@@ -29,7 +29,7 @@ use warnings;
 use Sys::Hostname;
 
 use MYDan::Node;
-use MYDan::Agent::Grsync;
+use MYDan::Agent::Grsync::V1;
 use MYDan::Util::OptConf;
 
 $| ++;
@@ -46,7 +46,7 @@ $option->assert( qw( dst sp ) );
 $o{user} = `id -un` and chop $o{user} unless $o{user};
 
 my $range = MYDan::Node->new( $option->dump( 'range' ) );
-my $grsync = MYDan::Agent::Grsync->new
+my $grsync = MYDan::Agent::Grsync::V1->new
 (
     ( map { $_ => [ $range->load( delete $o{$_} || [] )->list ] } qw( src dst ) ),
     agent => +{ $option->dump( 'agent' ) }
