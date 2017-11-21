@@ -164,9 +164,13 @@ sub run
                     ? &$code( @_ ) : \@_;
             };
 
+	    my @argv;
+	    map{ push( @argv, "--$_", $o{$_} ) if defined $o{$_} }qw( chown chmod );
+	    push( @argv, "--cc" ) if $o{cc};
+
             my %query = ( 
                 code => 'dump',
-                argv => &$argv( 'dump',$load || $path{sp} , '-path', $path{dp} ),
+                argv => &$argv( 'dump',$load || $path{sp} , '--path', $path{dp}, @argv ),
                  map{ $_ => $o{$_} }qw( user sudo ) 
             );
 
