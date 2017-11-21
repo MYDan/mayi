@@ -195,6 +195,12 @@ sub run
 		      $percent->add(scalar @node)->print() if $run{verbose};
                       $cv->end;
 
+                      unless( $rresult{$node} )
+                      {
+                          map{ $result{$_} = "proxy $node result null" }@node;
+                          return;
+                      }
+
                       $rresult{$node}  =~ s/^\**#\*MYDan_\d+\*#//;
                       my @c = eval{ YAML::XS::Load $rresult{$node} };
 
