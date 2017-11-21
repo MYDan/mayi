@@ -79,7 +79,7 @@ sub new
         $task{load} = \@load if @load;
     }
 
-    bless +{ agent => $self{agent}, task => \%task }, ref $class || $class;
+    bless +{ agent => $self{agent}, task => \%task, proxy => \%node }, ref $class || $class;
 }
 
 sub run
