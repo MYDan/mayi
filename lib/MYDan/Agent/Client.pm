@@ -237,7 +237,12 @@ sub run
     $cv->recv;
     undef $w;
 
-    map{ $_ =~ s/^\**#\*MYDan_\d+\*#//;}values %result;
+    if( $run{version} )
+    {
+        map{ $_ =~ s/^\**#\*MYDan_(\d+)\*#/runtime version:$1\n/;}values %result;
+    }
+    else { map{ $_ =~ s/^\**#\*MYDan_\d+\*#//;}values %result; }
+
     return %result;
 }
 
