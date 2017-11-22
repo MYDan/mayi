@@ -8,14 +8,8 @@
     [--retry number(default 2)]
     [--gave number(default 3)]
 
-    [--user username(default `id -un`)] 
-    [--sudo user1 ] 
-    [--chown root]
-    [--chmod 777]
-    [--cc]
-
-     -1      Forces mrsync to try protocol version 1
-     -2      Forces mrsync to try protocol version 2
+    [--nice number] 
+    [rsync options] 
 
 =cut
 use strict;
@@ -23,7 +17,7 @@ use warnings;
 use Sys::Hostname;
 
 use MYDan::Node;
-use MYDan::Agent::Mrsync;
+use MYDan::Util::Mrsync;
 use MYDan::Util::OptConf;
 
 $| ++;
@@ -32,7 +26,7 @@ $| ++;
 
 my $option = MYDan::Util::OptConf->load();
 my %o = $option->set( retry => 2, timeout => 300, gave => 3, src => hostname() )
-    ->get( qw( src=s dst=s sp=s dp=s timeout=i max=i retry=i nice=i user=s sudo=s gave=i chown=s chmod=s cc 1 2 ) )
+    ->get( qw( src=s dst=s sp=s dp=s timeout=i max=i retry=i nice=i user=s sudo=s gave=i chown=s chmod=s cc ) )
     ->dump();
 
 $option->assert( qw( src dst sp ) );
@@ -40,14 +34,14 @@ $option->assert( qw( src dst sp ) );
 $o{user} = `id -un` and chop $o{user} unless $o{user};
 
 my $range = MYDan::Node->new( $option->dump( 'range' ) );
-
-map { $o{$_} = [ $range->load( delete $o{$_} || [] )->list ] } qw( src dst );
-
-my $mrsync = MYDan::Agent::Mrsync->new
+my $mrsync = MYDan::Util::Mrsync->new
 (
-    ( map { $_ => delete $o{$_} } qw( sp dp src dst 1 2 ) ),
-    ( map { $_ => $o{$_} } qw( user sudo ) )
+    ( map { $_ => delete $o{$_} } qw( sp dp ) ),
+    map { $_ => [ $range->load( delete $o{$_} || [] )->list ] } qw( src dst )
 );
 
+$o{opt} = join ' ', @ARGV if @ARGV;
+
 exit 0 unless my @failed = $mrsync->run( %o )->failed();
+system 'stty echo';
 die $range->load( \@failed )->dump . ": failed.\n\n";
