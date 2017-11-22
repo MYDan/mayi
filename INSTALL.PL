@@ -93,7 +93,7 @@ if( $ENV{dan} )
 
     my %m;
     tie my ( @file ), 'Tie::File', 'Makefile.PL';
-    map{ $m{$1} = 1 if $_ =~ /\s+'?([:\w]+)'? => [\d\.]+/ }@file;
+    map{ $m{$1} = 1 if $_ =~ /\s+'?([:\w]+)'? => [\d\.]+,\s*#/ }@file;
     untie @file;
 
     insl( keys %m );   
