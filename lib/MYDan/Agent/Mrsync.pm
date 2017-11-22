@@ -55,9 +55,10 @@ sub new
     my ( $sp, $dp ) = delete @param{ qw( sp dp ) };
     my %src = map { $_ => 1 } @{ $param{src} };
 
+    $queryx = $param{queryxdata} if $param{queryxdata};
     $queryx = queryx( node => [ map{ @{ $param{$_} }}qw( src dst )], map{ $_ => $param{$_} } qw( user sudo ) ) if $param{2};
 
-    map{ delete $param{$_} }qw( 1 2 user sudo );
+    map{ delete $param{$_} }qw( 1 2 user sudo queryxdata );
 
     $sp = $dp unless $sp;
     $dp = $sp unless $dp;
