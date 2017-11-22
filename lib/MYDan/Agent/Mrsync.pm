@@ -46,7 +46,7 @@ use MYDan::Util::OptConf;
 use MYDan::API::Agent;
 use MYDan::Agent::Client;
 
-our %agent; 
+our ( %agent, $queryx ); 
 BEGIN{ %agent = MYDan::Util::OptConf->load()->dump( 'agent' ); };
 
 sub new
@@ -54,6 +54,10 @@ sub new
     my ( $class, %param ) = splice @_;
     my ( $sp, $dp ) = delete @param{ qw( sp dp ) };
     my %src = map { $_ => 1 } @{ $param{src} };
+
+    $queryx = queryx( node => [ map{ @{ $param{$_} }}qw( src dst )], map{ $_ => $param{$_} } qw( user sudo ) ) if $param{2};
+
+    map{ delete $param{$_} }qw( 1 2 user sudo );
 
     $sp = $dp unless $sp;
     $dp = $sp unless $dp;
@@ -73,35 +77,57 @@ sub new
 
     my $rsync = sub
     {
-        my ( $src, $dst, %param ) = splice @_;
+        my ( $src, $dst, %param, %result ) = splice @_;
         my $sp = $src{$src} ? $sp : $dp;
 
-
         eval{
+	    if( $queryx )
+	    {
+                my $load = [ $sp ];
+                $load = Compress::Zlib::compress( YAML::XS::Dump $load );
+                $load = 'data:' . length( $load ) . ':'. $load;
+                $load .= $queryx->{load};
 
 
-            my $isc = $agent{role} && $agent{role} eq 'client' ? 1 : 0;
+                my $dl =  +{ load => $load, src => $src, port => $agent{port}, sp => $sp, dp => $dp, map{ $_ => $param{$_} }qw( chown chmod cc ) };
+                my $download = Compress::Zlib::compress( YAML::XS::Dump $dl );
+                $download = 'data:' . length( $download ) . ':'. $download;
+                $download .= $queryx->{download};
 
-            my %load = ( 
-                argv => [ $sp ],
-                code => 'load', map{ $_ => $param{$_} }qw( user sudo )
-            );
-            $load{node} = [ $src ] if $isc;
+                my %query = ( 
+                    argv => $dl,
+	            code => 'download', map{ $_ => $param{$_} }qw( user sudo )
+                );
 
-            my $load = MYDan::Agent::Query->dump(\%load);
-            eval{ $load = MYDan::API::Agent->new()->encryption( $load ) if $isc };
-            die "encryption fail:$@" if $@;
+	        %result = MYDan::Agent::Client->new(
+	                $dst
+	            )->run( %agent, query => \%query, queryx => $download );
+	    }
+	    else
+	    {
+                my $isc = $agent{role} && $agent{role} eq 'client' ? 1 : 0;
+
+                my %load = ( 
+                    argv => [ $sp ],
+                    code => 'load', map{ $_ => $param{$_} }qw( user sudo )
+                );
+                $load{node} = [ $src ] if $isc;
+
+                my $load = MYDan::Agent::Query->dump(\%load);
+                eval{ $load = MYDan::API::Agent->new()->encryption( $load ) if $isc };
+                die "encryption fail:$@" if $@;
 
 
-            my %query = ( 
-                argv => +{ load => $load, src => $src, port => $agent{port}, sp => $sp, dp => $dp, map{ $_ => $param{$_} }qw( chown chmod cc ) },
-		code => 'download', map{ $_ => $param{$_} }qw( user sudo )
-            );
+                my %query = ( 
+                    argv => +{ load => $load, src => $src, port => $agent{port}, sp => $sp, dp => $dp, map{ $_ => $param{$_} }qw( chown chmod cc ) },
+	            code => 'download', map{ $_ => $param{$_} }qw( user sudo )
+                );
 
+	        %result = MYDan::Agent::Client->new(
+	                $dst
+	            )->run( %agent, query => \%query );
 
-	    my %result = MYDan::Agent::Client->new(
-		    $dst
-		)->run( %agent, query => \%query );
+            }
 
             my $result = $result{$dst}||'';
 	    die $result unless $result =~ /--- 0\n$/;
@@ -113,6 +139,27 @@ sub new
 
     bless $class->SUPER::new( %param, weight => $w8, code => $rsync ),
         ref $class || $class;
+}
+
+sub queryx
+{
+    my ( %param, %queryx ) = @_; #user sudo node
+
+    my $isc = $agent{role} && $agent{role} eq 'client' ? 1 : 0;
+
+    for my $type ( qw( load download ) )
+    {
+        my %query = (
+            code => $type, map{ $_ => $param{$_} }qw( user sudo )
+        );
+
+        $query{node} = $param{node} if $isc;
+        my $query = MYDan::Agent::Query->dump(\%query);
+        eval{ $query = MYDan::API::Agent->new()->encryption( $query ) if $isc };
+        die "encryption fail:$@" if $@;
+        $queryx{$type} = $query;
+    }
+    return \%queryx;
 }
 
 sub run
