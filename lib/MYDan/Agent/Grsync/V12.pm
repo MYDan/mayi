@@ -1,4 +1,4 @@
-package MYDan::Agent::Grsync::V1;
+package MYDan::Agent::Grsync::V12;
 
 =head1 NAME
 
@@ -27,13 +27,19 @@ sub run
     my %path = map { $_ => delete $o{$_} } qw( sp dp );
     $path{dp} ||= $path{sp};
 
+    $MYDan::Agent::Mrsync::queryx = MYDan::Agent::Mrsync::queryx( 
+	    node => [ keys %{$this->{proxy}} ], 
+	    map{ $_ => $o{$_} }qw( user sudo )
+    ) if delete $o{2};
+    delete $o{1};
+
     my %failed;
     if( $task{sync} )
     {
         for my $sync ( @{$task{sync}} )
         {
 	    next unless @{$sync->{dst}};
-            my $mrsync = MYDan::Agent::Mrsync->new( %$sync, %path);
+            my $mrsync = MYDan::Agent::Mrsync->new( %$sync, %path );
             map{ $failed{$_} = 1 } $mrsync->run( %o )->failed();
         }
     }
