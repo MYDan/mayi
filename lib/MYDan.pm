@@ -5,7 +5,7 @@ use warnings;
 
 =head1 NAME
 
-mydan - A suite of cluster administration tools and platforms
+MYDan - A suite of cluster administration tools and platforms
 
 http://www.mydan.org
 

@@ -3,6 +3,26 @@ use strict;
 use warnings;
 use ExtUtils::MakeMaker;
 
+my %META_MERGE = 
+(
+    'meta-spec' => { version => 2 },
+    dynamic_config => 0,
+    no_index => {
+        directory => [ 'xt' ],
+    },
+    resources => {
+        "bugtracker" => +{
+           "web" => "https://github.com/mydan/mayi/issues"
+        },
+        "homepage" => "https://github.com/mydan/mayi",
+        repository => {
+            type => 'git',
+            url  => 'https://github.com/mydan/mayi.git',
+            web  => 'https://github.com/mydan/mayi',
+        },
+    }
+);
+
 our %PREREQ_PM =
 (
     DBI => 1.625,#box
@@ -43,21 +63,19 @@ our %PREREQ_PM =
     'Data::Validate::IP' => 0,#box
 );
 
-our $PKG_NAME = 'mydan';
+our $PKG_NAME = 'MYDan';
 our $PKG_FILE = "lib/MYDan.pm";
 
 WriteMakefile
 (
-    AUTHOR        => 'Lijinfeng <lijinfeng2011@gmail.com>',
+    AUTHOR        => 'Li Jinfeng <lijinfeng2011@gmail.com>',
     NAME          => $PKG_NAME,
     VERSION_FROM  => $PKG_FILE,
     ABSTRACT_FROM => $PKG_FILE,
     PREREQ_PM     => \%PREREQ_PM, 
+    META_MERGE    => \%META_MERGE,
     dist          => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean         => { FILES => [ "$PKG_NAME-*", qw( dan.i box.i bin.i def.i *.in *.ex ) ] },
     ( $ExtUtils::MakeMaker::VERSION >= 6.3002 ? ( LICENSE => 'perl' ) : () ),
 );
-
-
-
 
