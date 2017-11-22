@@ -57,15 +57,20 @@ sub run
     else { %proxy  = map{ $_ => undef }@node; }
 
     my $isc = $run{role} && $run{role} eq 'client' ? 1 : 0;
-    $run{query}{node} = \@node if $isc;
 
-    my $query = MYDan::Agent::Query->dump($run{query});
-
-    eval{ $query = MYDan::API::Agent->new()->encryption( $query ) if $isc };
-    if( $@ )
+    my $query;
+    unless( $query = $run{queryx} )
     {
-        warn "ERROR:$@\n";
-        return map{ $_ => "norun --- 1\n" }@node;
+        $run{query}{node} = \@node if $isc;
+
+        $query = MYDan::Agent::Query->dump($run{query});
+
+        eval{ $query = MYDan::API::Agent->new()->encryption( $query ) if $isc };
+        if( $@ )
+        {
+            warn "ERROR:$@\n";
+            return map{ $_ => "norun --- 1\n" }@node;
+        }
     }
 
     @node = (); my %node;
