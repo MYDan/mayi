@@ -35,6 +35,8 @@ my %o = $option->set( retry => 2, timeout => 300, gave => 3, src => hostname() )
     ->get( qw( src=s dst=s sp=s dp=s timeout=i max=i retry=i nice=i user=s sudo=s gave=i chown=s chmod=s cc 1 2 ) )
     ->dump();
 
+$o{delete $o{ProtocolVersion}} = 1 unless $o{ProtocolVersion} && $o{ProtocolVersion} =~ /^\d$/ && grep{ $o{$_} }1..2;
+
 $option->assert( qw( src dst sp ) );
 
 $o{user} = `id -un` and chop $o{user} unless $o{user};
