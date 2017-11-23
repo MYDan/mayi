@@ -10,13 +10,14 @@ my %param = %{ YAML::XS::Load( <> ) };
 
 my %o = %{$param{argv}};
 
+
 my $mrsync = MYDan::Agent::Mrsync->new
 (
      map { $_ => delete $o{$_} } qw( sp dp src dst queryxdata ) 
 );
 
-my @failed = $mrsync->run( %o )->failed();
+my @failed = $mrsync->run( %o, log => \*STDOUT , )->failed();
 
-YAML::XS::DumpFile \*STDOUT, \@failed;
+print "###mrsync_failed:", join( ',',@failed ), ":mrsync_failed###";
 
 exit 0;
