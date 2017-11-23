@@ -42,7 +42,6 @@ our %PREREQ_PM =
     'AnyEvent' => 0,#box
     'Crypt::PK::RSA' => 0,#
     'Term::Completion' => 0,#box
-    'Mail::Sendmail' => 0,#
     'Data::UUID' => 0,#
     'Time::HiRes' => 0,#box
     'Compress::Zlib' => 0,#box
