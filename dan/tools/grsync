@@ -16,6 +16,7 @@
 
      -1      Forces grsync to try protocol version 1
      -2      Forces grsync to try protocol version 2
+     -3      Forces grsync to try protocol version 3
 
 =cut
 use strict;
@@ -24,6 +25,7 @@ use Sys::Hostname;
 
 use MYDan::Node;
 use MYDan::Agent::Grsync::V12;
+use MYDan::Agent::Grsync::V3;
 use MYDan::Util::OptConf;
 
 $| ++;
@@ -32,7 +34,7 @@ $| ++;
 
 my $option = MYDan::Util::OptConf->load();
 my %o = $option->set( retry => 2, timeout => 300, gave => 3 )
-    ->get( qw( src=s dst=s sp=s dp=s timeout=i max=i retry=i nice=i user=s sudo=s gave=i chown=s chmod=s cc 1 2 ) )
+    ->get( qw( src=s dst=s sp=s dp=s timeout=i max=i retry=i nice=i user=s sudo=s gave=i chown=s chmod=s cc 1 2 3 ) )
     ->dump();
 
 $option->assert( qw( dst sp ) );
@@ -40,11 +42,15 @@ $option->assert( qw( dst sp ) );
 $o{user} = `id -un` and chop $o{user} unless $o{user};
 
 my $range = MYDan::Node->new( $option->dump( 'range' ) );
-my $grsync = MYDan::Agent::Grsync::V12->new
-(
+
+my %sync = (
     ( map { $_ => [ $range->load( delete $o{$_} || [] )->list ] } qw( src dst ) ),
     agent => +{ $option->dump( 'agent' ) }
 );
+
+my $grsync = $o{3} 
+  ? MYDan::Agent::Grsync::V3->new ( %sync ) 
+  : MYDan::Agent::Grsync::V12->new ( %sync );
 
 exit 0 unless my @failed = $grsync->run( %o )->failed();
 die $range->load( \@failed )->dump . ": failed.\n\n";
