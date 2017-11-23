@@ -145,7 +145,7 @@ if( $ENV{def} )
 {
     mysystem( "rsync -av def/ def.i/" );
     repl( 'def.i', MYDanROOT => $mydan );
-    mysystem( "rsync -av def.i/ ../" );
+    mysystem( "rsync -av def.i/ '$mydan/'" );
 }
 
 exit 0;
