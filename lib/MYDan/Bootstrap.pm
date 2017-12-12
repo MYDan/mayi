@@ -45,7 +45,6 @@ sub run
 
     our ( $logf, $logH ) = ( "$logs/current" );
     
-    print "log $logs/current\n";
     confess "open log: $!" unless open $logH, ">>$logf"; 
     $logH->autoflush;
 
