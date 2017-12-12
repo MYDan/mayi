@@ -23,6 +23,9 @@ sub new
     my ( $class, %this ) = @_;
 
     map{ die "$_ unkown" unless $this{$_} && $this{$_} =~ /^\d+$/ }qw( port max );
+
+    $0 = 'mydan.tcpserver.'.$this{port};
+
     die "no file:$this{'exec'}\n" unless $this{'exec'} && -e $this{'exec'};
 
     $this{tmp} ||= sprintf "%s/var/run/agent", $MYDan::PATH;      
