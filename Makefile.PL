@@ -60,6 +60,7 @@ our %PREREQ_PM =
     'Convert::Base32' => 0,
     'Net::IP::Match::Regexp' => 0,
     'Data::Validate::IP' => 0,
+    'LWP::Protocol::https' => 0,
 );
 
 our $PKG_NAME = 'MYDan';

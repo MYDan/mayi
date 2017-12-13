@@ -1,0 +1,25 @@
+#!/usr/bin/env perl
+
+=head1 SYNOPSIS
+
+ $0 [--url https://raw.githubusercontent.com/MYDan/key/master/keyupdate] 
+    [--interval number(default 3600)]
+
+=cut
+
+use strict;
+use warnings;
+
+use MYDan::Util::OptConf;
+use MYDan::Agent::KeyUpdate;
+
+$MYDan::Util::OptConf::THIS = 'agent';
+
+$0 = 'mydan.keyupdate';
+
+my $option = MYDan::Util::OptConf->load();
+my %o = $option->set( interval => 3600 )->get( qw( url=s interval=i ) )->dump();
+
+$option->assert( 'url' );
+
+MYDan::Agent::KeyUpdate->new( %o )->run();
