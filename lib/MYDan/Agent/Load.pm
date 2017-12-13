@@ -32,10 +32,13 @@ use AnyEvent::Impl::Perl;
 use AnyEvent::Socket;
 use AnyEvent::Handle;
 use Digest::MD5;
+use MYDan;
 use MYDan::Agent::Query;
 use MYDan::Util::Percent;
 use MYDan::API::Agent;
 use Fcntl qw(:flock SEEK_END);
+use MYDan::Agent::Proxy;
+use MYDan::Util::Hosts;
 
 sub new
 {
@@ -54,15 +57,26 @@ sub run
 
     my ( $node, $sp, $dp, $query ) = @$this{qw( node sp dp )};
 
+    my $path = "$MYDan::PATH/tmp";
+    unless( -d $path ){ mkdir $path;chmod 0777, $path; }
+    $path .= '/load.data.';
+
+    for my $f ( grep{ -f } glob "$path*" )
+    {
+	my $t = ( stat $f )[9];
+        unlink $f if $t && $t < time - 3600;
+    }
+
     my $temp = sprintf "$dp.%stmp", $run{continue} ? '' : time.'.'.$$.'.';
+    $temp  = $path. Digest::MD5->new->add( $temp )->hexdigest;
 
     my $position = -f $temp ? ( stat $temp )[7] : 0;
 
-    open my $TEMP, '+>', $temp or die "Can't open '$temp': $!";
+    open my $TEMP, '+>>', $temp or die "Can't open '$temp': $!";
 
     unless( $query = $run{query} )
     {
-        my %query = ( code => 'load', user => $run{user}, sudo=> $run{sudo}, argv => [ $sp, $position ] );
+        my %query = ( code => 'load', user => $run{user}, sudo => $run{sudo}, argv => [ $sp, $position ] );
 
         my $isc = $run{role} && $run{role} eq 'client' ? 1 : 0;
 
@@ -73,6 +87,32 @@ sub run
 
         die "encryption fail:$@" if $@;
 
+        my %proxy;
+        if( $run{proxy} )
+        {
+            my $proxy =  MYDan::Agent::Proxy->new( $run{proxy} );
+            %proxy = $proxy->search( $node );
+        }
+        else { %proxy  = ( $node => undef ); }
+
+        if( my $rnode = $proxy{$node} )
+        {
+            my %rquery = ( 
+                code => 'proxy', 
+                single => 1,
+                argv => [ $node, +{ query => $query, map{ $_ => $run{$_} }grep{ $run{$_} }qw( timeout max port ) } ],
+	        map{ $_ => $run{$_} }grep{ $run{$_} }qw( user sudo env ) 
+            );
+
+            $rquery{node} = [ $rnode ] if $isc;
+
+            $query = MYDan::Agent::Query->dump(\%rquery);
+    
+            eval{ $query = MYDan::API::Agent->new()->encryption( $query ) if $isc };
+	    die "encryption fail:$@" if $@;
+
+            $node = $rnode;
+        }
     }
 
     my ( $cv, $len, %keepalive )
@@ -82,8 +122,10 @@ sub run
 
     my $percent =  MYDan::Util::Percent->new()->add( $position );
     
-    my ( $size, $filemd5 );
-    tcp_connect $node, $run{port}, sub {
+    my %hosts = MYDan::Util::Hosts->new()->match( $node );
+
+    my ( $size, $filemd5, $own, $mode, $ok );
+    tcp_connect $hosts{$node}, $run{port}, sub {
         my ( $fh ) = @_  or die "tcp_connect: $!";
         my $hdl; $hdl = new AnyEvent::Handle(
            fh => $fh,
@@ -101,9 +143,32 @@ sub run
                        {
                            $keepalive{cont} .= $_[1];
                            $keepalive{cont} =~ s/^\*+//g;
-                           if( $keepalive{cont} =~ s/\**#\*keepalive\*#(\d+):([a-z0-9]+):// )
+                           if( $keepalive{cont} =~ s/\**#\*MYDan_\d+\*#(\d+):([a-z0-9]+):(\w+):(\d+):// )
                            {
-                               ( $size, $filemd5 ) = ( $1, $2 );
+                               ( $size, $filemd5, $own, $mode ) = ( $1, $2, $3, $4 );
+			       if( $run{cc} )
+			       {
+                                   $run{chown} ||= $own;
+				   $run{chmod} ||= $mode;
+			       }
+
+			       if( -f $dp )
+			       {
+				   if( open my $DP, '<', $dp )
+				   {
+				       my $x = Digest::MD5->new()->addfile( $DP )->hexdigest();
+				       if( $x && $filemd5 && $x eq $filemd5 )
+				       {
+				           die "chmod fail\n" if $run{chmod} && ! chmod oct($run{chmod}), $dp;
+					   if( $run{chown} )
+					   {
+                                               die "get $run{chown} uid fail\n" unless my @pw = getpwnam $run{chown};
+					       die "chown fail\n" unless chown @pw[2,3], $dp;
+					   }
+                                           undef $hdl; $cv->send; $ok = $size;
+				       }
+			           }
+			       }
 
 			       $percent->renew( $size )->add( length $keepalive{cont}  );
                                print $TEMP delete $keepalive{cont};
@@ -126,6 +191,14 @@ sub run
 
     $cv->recv;
 
+    if( $ok )
+    {
+	$percent->add( $ok );
+	$percent->print('Load ..') if $run{verbose};
+        unlink $temp;
+        return;
+    }
+
     seek $TEMP, -6, SEEK_END;
     sysread $TEMP, my $end, 6;
 
@@ -141,6 +214,14 @@ sub run
     {
         unlink $temp;
         die "md5 nomatch\n";
+    }
+
+   
+    die "chmod fail\n" if$run{chmod} && ! chmod oct($run{chmod}), $temp;
+    if( $run{chown} )
+    {
+        die "get $run{chown} uid fail\n" unless my @pw = getpwnam $run{chown};
+	die "chown fail\n" unless chown @pw[2,3], $temp;
     }
 
     die "rename temp file\n" unless rename $temp, $dp;

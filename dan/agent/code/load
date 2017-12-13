@@ -9,11 +9,15 @@ eval
     local $/ = undef;
     my (  %param, $i ) = %{ YAML::XS::Load( <> ) };
 
-    my ( $file, $position ) = @{$param{argv}} or "file undef";
+    my ( $file, $position ) = $param{argv} ? @{$param{argv}} : @{$param{data}};
+    die "file undef" unless $file;
 
     die "Can't open '$file': $!" unless open my  $fh, '+<', $file;
 
-    printf "%d:%s:", (stat $file)[7], Digest::MD5->new()->addfile( $fh )->hexdigest();
+    my ( $uid, $mode, $size ) = (stat $file)[4,2,7];
+    $mode  = sprintf( "%04o", $mode & 07777 );
+    printf "%d:%s:%s:%s:", 
+        $size, Digest::MD5->new()->addfile( $fh )->hexdigest(),( getpwuid($uid) )[0], $mode;
 
     seek $fh, $position || 0, 0;
     while( <$fh> ) { print $_; }

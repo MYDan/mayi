@@ -1,4 +1,4 @@
-#!# perl: deploy/code/b.node
+#!# perl: deploy/code/m.sync
 use strict;
 use File::Spec;
 use Sys::Hostname;
@@ -32,7 +32,7 @@ return sub
     my $mrsync = MYDan::Agent::Mrsync->new ( sp => $sp, dp => $dp, dst => $batch,
         src => [ $range->load( $param->{src} || hostname() )->list ]
     );
-    
+
     my %succ = map{ $_ => 'sync ok' }@$batch;
     map{ delete $succ{$_} }my @failed = $mrsync->run( %run, %$param )->failed();
 

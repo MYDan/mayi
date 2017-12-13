@@ -5,11 +5,13 @@ use warnings;
 
 =head1 NAME
 
-mydan - A suite of cluster administration tools and platforms
+MYDan - A suite of cluster administration tools and platforms
+
+http://www.mydan.org
 
 =cut
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.1.21';
 our $PATH;
 
 require 5.000;

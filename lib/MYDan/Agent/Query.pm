@@ -49,7 +49,13 @@ BEGIN{
 
 sub dump
 {
-    my ( $class, $query ) = splice @_;
+    my ( $class, $query, $data ) = splice @_, 0, 2;
+
+    if( $query->{data}  )
+    {
+         $data = Compress::Zlib::compress( YAML::XS::Dump delete $query->{data} );
+         $data = 'data:' . length( $data ) . ':'. $data;
+    }
 
     confess "invalid query" unless $query
         && ref $query eq 'HASH' && defined $query->{code};
@@ -64,7 +70,7 @@ sub dump
             $query->{user} = $ENV{MYDan_username} if $ENV{MYDan_username};
         }
 
-        die "user unkown" unless $user && $user =~ /^\w+$/;
+        die "user unkown" unless $user && $user =~ /^[A-Za-z_][\-A-Za-z0-9_\.]+$/;
         $query->{peri} = join '#', $time - $CA, $time + $CA;
 
         $query->{auth} = MYDan::Agent::Auth->new( 
@@ -72,7 +78,7 @@ sub dump
         )->sign( YAML::XS::Dump $query );
     }
     
-    return Compress::Zlib::compress( YAML::XS::Dump $query );
+    return ( $data || '' ) . Compress::Zlib::compress( YAML::XS::Dump $query );
 }
 
 =head3 load( $query )
@@ -82,7 +88,15 @@ Inverse of dump().
 =cut
 sub load
 {
-    my ( $class, $query, $yaml ) = splice @_;
+    my ( $class, $query, $yaml, $data ) = splice @_;
+
+    if ( $query =~ s/^data:(\d+):// )
+    {
+        $data = substr( $query, 0, $1 );
+        substr( $query, 0, $1 ) = '';
+        $data = eval{ YAML::XS::Load Compress::Zlib::uncompress( $data ) };
+        die "invalid data" if $@;
+    }
 
     die "invalid $query\n" unless
         ( $yaml = Compress::Zlib::uncompress( $query ) )
@@ -104,6 +118,8 @@ sub load
     }
 
     idie( "auth fail.access\n" ) if $query->{node} && 0 == grep { $query->{node}{$_} } @myip;
+
+    $query->{data} = $data if $data;
 
     bless { yaml => $yaml, query => $query }, ref $class || $class;
 }
