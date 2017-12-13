@@ -36,6 +36,9 @@ our %PREREQ_PM =
     'AnyEvent::Impl::Perl' => 0,
     'IO::Pty' => 1.12,
     'Term::Size' => 0,
+    'List::MoreUtils' => 0,
+    'Module::Runtime' => 0,
+    'URI::Escape' => 0,
 );
 
 our $PKG_NAME = 'mydan';
