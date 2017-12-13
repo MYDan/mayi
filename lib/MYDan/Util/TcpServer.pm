@@ -22,16 +22,31 @@ sub new
 {
     my ( $class, %this ) = @_;
 
-    map{ die "$_ unkown" unless $this{$_} && $this{$_} =~ /^\d+$/ }qw( port max );
+    map{ die "$_ unkown" unless $this{$_} && $this{$_} =~ /^\d+$/ }
+        qw( port max ReservedSpaceCount ReservedSpaceSize );
 
     $0 = 'mydan.tcpserver.'.$this{port};
 
     die "no file:$this{'exec'}\n" unless $this{'exec'} && -e $this{'exec'};
 
-    $this{tmp} ||= sprintf "%s/var/run/agent", $MYDan::PATH;      
+    map{ 
+        $this{$_} ||= "$MYDan::PATH/var/run/tcpserver.$this{port}/$_";
+        system( "mkdir -p '$this{$_}'" ) unless -d $this{$_};
+        map{ unlink $_ if $_ =~ /\/\d+$/ || $_ =~ /\/\d+\.out$/ }glob "$this{$_}/*";
+     }qw( tmp ReservedSpace );
 
-    system( "mkdir -p '$this{tmp}'" ) unless -d $this{tmp};
-    map{ unlink $_ if $_ =~ /\/\d+$/ || $_ =~ /\/\d+\.out$/ }glob "$this{tmp}/*";
+
+    my ( $c, $s, $r ) = map{ $this{$_} }qw( ReservedSpaceCount ReservedSpaceSize ReservedSpace );
+    $c = $this{max} if $c > $this{max};
+
+    open my $H, '>', "$r/tmp" or die "Can't open '$r/tmp': $!";
+    map{ print $H "\0" x 1024; } 1 .. $s;
+    close $H;
+
+    for my $i ( 1 .. $c )
+    {
+        map{ system "cp '$r/tmp' '$r/$i$_'"; }('', '.out');
+    }
 
     map{ $this{$_} ||= $this{buf} }qw( rbuf wbuf );
 
@@ -109,9 +124,17 @@ sub run
        my $tmp_handle;
        unless( open $tmp_handle, '>', "$tmp/$index" )
        {
-           print "open '$tmp/$index' fail:$!\n";
-           close $fh;
-           return;
+           my $rs = $this->space();
+           unless( $rs ) { close $fh; return; }
+
+           map{ system "ln '$this->{ReservedSpace}/$rs$_' '$tmp/$index$_'" }( '', '.out' );
+           unless( open $tmp_handle, '+<', "$tmp/$index" )
+           {
+	       print "open '$tmp/$index' fail:$!\n";
+               map{ unlink "$tmp/$rs$_" }( '', '.out' );
+               close $fh;
+               return;
+           }
        }
 
        my $handle; $handle = new AnyEvent::Handle( 
@@ -133,7 +156,8 @@ sub run
                    $ENV{TCPREMOTEPORT} = $port;
       
                    open STDIN, '<', "$tmp/$index" or die "Can't open '$tmp/$index': $!";
-                   open STDOUT, '>', "$tmp/$index.out" or die "Can't open '$tmp/$index.out': $!";
+                   my $m = -f "$tmp/$index.out" ? '+<' : '>';
+                   open STDOUT, $m, "$tmp/$index.out" or die "Can't open '$tmp/$index.out': $!";
                    exec $exec;
                }
            },
@@ -176,6 +200,28 @@ sub run
     ); 
  
     $cv->recv;
+}
+
+sub space
+{
+    my $path = shift->{ReservedSpace};
+
+    for ( glob "$path/*" )
+    {
+        next unless $_ =~ /\/(\d+)$/;
+        my $id = $1;
+
+        next unless rsok( $_ ) && rsok( "$_.out" );
+        map{ system "cp '$path/tmp' '$path/$id$_'" }( '', '.out' );
+        return $id;
+    }
+    return undef;
+}
+
+sub rsok
+{
+    my $file = shift;
+    return ( $file && -f $file && ( stat $file )[3] == 1 ) ? 1 : 0;
 }
 
 1;
