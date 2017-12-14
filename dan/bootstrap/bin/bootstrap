@@ -45,7 +45,7 @@ elsif( $o{install} )
 }
 elsif( $o{uninstall} )
 {
-    unlink '/etc/cron.d/mydan.bootstrap.cron';
+    unlink '/etc/cron.d/mydan_bootstrap_cron';
     system "killall mydan.bootstrap.master";
 }
 elsif( $o{run} )
