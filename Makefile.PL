@@ -61,6 +61,9 @@ our %PREREQ_PM =
     'Net::IP::Match::Regexp' => 0,
     'Data::Validate::IP' => 0,
     'LWP::Protocol::https' => 0,
+    'List::MoreUtils' => 0,
+    'Module::Runtime' => 0,
+    'URI::Escape' => 0,
 );
 
 our $PKG_NAME = 'MYDan';
