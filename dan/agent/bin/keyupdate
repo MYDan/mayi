@@ -3,7 +3,7 @@
 =head1 SYNOPSIS
 
  $0 [--url https://raw.githubusercontent.com/MYDan/key/master/keyupdate] 
-    [--interval number(default 3600)]
+    [--interval number]
 
 =cut
 
@@ -18,8 +18,10 @@ $MYDan::Util::OptConf::THIS = 'agent';
 $0 = 'mydan.keyupdate';
 
 my $option = MYDan::Util::OptConf->load();
-my %o = $option->set( interval => 3600 )->get( qw( url=s interval=i ) )->dump();
+my %o = $option->get( qw( url=s interval=i ) )->dump();
 
 $option->assert( 'url' );
 
 MYDan::Agent::KeyUpdate->new( %o )->run();
+
+print "done.\n";

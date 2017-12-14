@@ -26,7 +26,7 @@ sub new
 {
     my ( $class, %self ) = @_;
 
-    map{ die "$_ undef" unless $self{$_} }qw( url auth interval );
+    map{ die "$_ undef" unless $self{$_} }qw( url auth );
 
     die "noauth" unless -e $self{auth};
 
@@ -36,9 +36,11 @@ sub new
 sub run
 {
     my $this = shift;
-    my $interval = $this->{interval};
 
     $this->update();
+
+    return unless my $interval = $this->{interval};
+
     sleep int 3 + rand $interval;
 
     while(1)
