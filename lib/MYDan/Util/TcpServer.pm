@@ -6,6 +6,8 @@ use Carp;
 
 use Data::Dumper;
 
+use Tie::File;
+use Fcntl 'O_RDONLY';
 use POSIX ":sys_wait_h";
 use Time::HiRes qw(time);
 use AnyEvent;
@@ -104,6 +106,7 @@ sub run
 
     my ( $i, $cv ) = ( 0, AnyEvent->condvar );
 
+    my $whitelist;
    
     tcp_server undef, $port, sub {
        my ( $fh, $tip, $tport ) = @_ or die "tcp_server: $!";
@@ -113,6 +116,14 @@ sub run
 
        my $len = keys %index;
        printf "tcpserver: status: $len/$max\n";
+
+       if( $this->{whitelist} && ! $whitelist->{$tip} )
+       {
+           printf "connection not allow, from %s:%s\n", $tip, $tport;
+           close $fh;   
+           return;
+       }
+
 
        if( $len >= $max )
        {
@@ -198,6 +209,27 @@ sub run
             }values %index; 
         }
     ); 
+
+    my $mtime = 0;
+    my $wl = AnyEvent->timer(
+        after => 1, 
+        interval => 30,
+        cb => sub { 
+            if( -f $this->{whitelist} )
+            {
+                my ( $mt, @ip ) = ( stat $this->{whitelist} )[9];
+                return if $mtime == $mt;
+                unless( tie @ip, 'Tie::File', $this->{whitelist}, mode => O_RDONLY )
+                {
+                    print "tie fail: $!\n";
+                    return;
+                }
+                $whitelist = +{ map{ $_ => 1 }@ip };
+                $mtime = $mt;
+            }
+
+        }
+    ) if $this->{whitelist}; 
  
     $cv->recv;
 }
