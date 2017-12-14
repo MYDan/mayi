@@ -56,7 +56,7 @@ sub run
         }
     };
 
-
+    my ( $rand, %time ) = int rand time;
     my $t = AnyEvent->timer(
         after => 2,
         interval => 3,
@@ -65,6 +65,14 @@ sub run
             for my $name ( keys %name )
             {
                 next if $proc{$name};
+
+                if( $name =~ /^(\d+)_/ )
+                {
+                    my $t = int( ( time + $rand ) / $1 );
+                    next if $time{$name} && $time{$name} eq $t;
+                    $time{$name} = $t;
+                }
+
                 my ( $err, $wtr, $rdr ) = gensym;
                 my $pid = IPC::Open3::open3( undef, $rdr, $err, "$exec/$name" );
            
