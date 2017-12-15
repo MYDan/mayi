@@ -1,3 +1,16 @@
 #!/bin/sh
 ulimit -n 655350;ulimit -u 102400;ulimit -s 10240;
-exec $MYDanPATH/dan/tools/fileupdate  --output $MYDanPATH/etc/agent/whitelist --url https://raw.githubusercontent.com/MYDan/openapi/master/config/whitelist 2>&1
+
+if [ ! -f $MYDanPATH/etc/env ];then 
+    echo "on env file"
+    exit;
+fi
+
+source $MYDanPATH/etc/env
+
+if [ -z $MYDAN_WHITELIST_UPDATE ];then
+    echo "not MYDAN_WHITELIST_UPDATE"
+    exit;
+fi
+
+exec $MYDanPATH/dan/tools/fileupdate  --output $MYDanPATH/etc/agent/whitelist --url $MYDAN_WHITELIST_UPDATE 2>&1
