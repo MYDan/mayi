@@ -1,3 +1,18 @@
 #!/bin/sh
 ulimit -n 655350;ulimit -u 102400;ulimit -s 10240;
-exec $MYDanPATH/dan/bootstrap/bin/procupdate  --url https://raw.githubusercontent.com/MYDan/proc/master/procupdate 2>&1
+
+if [ ! -f $MYDanPATH/etc/env ];then
+    echo "on env file"
+    exit;
+fi
+
+source $MYDanPATH/etc/env
+
+if [ -z $MYDAN_PROC_UPDATE ];then
+    echo "not MYDAN_PROC_UPDATE"
+    exit
+fi
+
+echo update: $MYDAN_PROC_UPDATE
+
+exec $MYDanPATH/dan/bootstrap/bin/procupdate  --url $MYDAN_PROC_UPDATE 2>&1
