@@ -1,3 +1,19 @@
 #!/bin/sh
 ulimit -n 655350;ulimit -u 102400;ulimit -s 10240;
-curl https://raw.githubusercontent.com/MYDan/openapi/master/scripts/mydan/update.sh|bash
+
+if [ ! -f $MYDanPATH/etc/env ];then
+    echo "on env file"
+    exit;
+fi
+
+source $MYDanPATH/etc/env
+
+if [ -z $MYDAN_UPDATE ];then
+    echo "not MYDAN_UPDATE"
+    exit
+fi
+
+echo update: $MYDAN_UPDATE
+
+
+curl -s $MYDAN_UPDATE|bash
