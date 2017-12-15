@@ -6,6 +6,7 @@ use MYDan;
 use File::Basename;
 use MYDan::Util::Sudo;
 use MYDan::Util::OptConf;
+use Digest::MD5;
 
 use MYDan::Bootstrap;
 MYDan::Util::Sudo->sudo();
@@ -30,7 +31,8 @@ my %o = MYDan::Util::OptConf->load()->get( qw( install uninstall run reload ) )-
 
 my $bootstrap = MYDan::Bootstrap->new( %o );
 
-$ENV{MYDanPATH} = $MYDan::PATH;
+my $uuid = substr Digest::MD5->new->add( $ENV{MYDanPATH} = $MYDan::PATH )->hexdigest, 0, 7;
+
 if( $o{reload} )
 {
     for my $name ( map{  $_ =~ /\*/ ? ( map{ basename $_ }glob "$o{lock}/$_" ): "$_.lock"} @ARGV ? @ARGV : ( '*' ) )
@@ -41,12 +43,12 @@ if( $o{reload} )
 }
 elsif( $o{install} )
 {
-    system "echo '* * * * * root $MYDan::PATH/dan/bootstrap/bin/bootstrap --run' > /etc/cron.d/mydan_bootstrap_cron";
+    system "echo '* * * * * root $MYDan::PATH/dan/bootstrap/bin/bootstrap --run' > /etc/cron.d/mydan_bootstrap_cron_$uuid";
 }
 elsif( $o{uninstall} )
 {
-    unlink '/etc/cron.d/mydan_bootstrap_cron';
-    system "killall mydan.bootstrap.master";
+    unlink "/etc/cron.d/mydan_bootstrap_cron_$uuid";
+    system "killall $uuid.mydan.bootstrap.master";
 }
 elsif( $o{run} )
 {
