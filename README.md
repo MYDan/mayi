@@ -41,30 +41,37 @@
 
 第二步:
 
-   把第一步的项目编辑好自己的公钥上传，私钥保留在自己电脑中
+    把第一步的项目编辑好自己的公钥上传，私钥保留在自己电脑中
 
 第三步:
 
    运行命令:
 
        export ORGANIZATION=lijinfeng2011  #其中MYDan为github账号
-       curl -s https://raw.githubusercontent.com/MYDan/openapi/master/scripts/mydan/update.sh|bash
+       curl -s https://raw.githubusercontent.com/MYDan/openapi/master/scripts/mydan/install.sh|bash
 
 
-变量解释:
+变量解释:(注:在没有以下5个参数的任何一个时，安装脚本不会把服务启动起来)
 
-   1.  export ORGANIZATION=MYDan
-       组织名，即githu上的组或者用户,在没配置MYDAN_KEY_UPDATE变量的情况下,用这个默认到github账号下的key项目
+   1.  组织名，即githu上的组或者用户,在没配置MYDAN_KEY_UPDATE变量的情况下,用这个默认到github账号下的key项目
 
-   2.  export MYDAN_KEY_UPDATE=https://raw.githubusercontent.com/MYDan/key/master/keyupdate
-       更新公钥的地址
+           export ORGANIZATION=MYDan
+
+   2.  更新公钥的地址
+
+           export MYDAN_KEY_UPDATE=https://raw.githubusercontent.com/MYDan/key/master/keyupdate
       
-   3.  export MYDAN_PROC_UPDATE=https://raw.githubusercontent.com/MYDan/proc/master/procupdate
-       更新服务列表的地址
+   3.  更新服务列表的地址 
 
-   4.  export MYDAN_WHITELIST_UPDATE=https://raw.githubusercontent.com/MYDan/openapi/master/config/whitelisto
-       更新白名单地址
+           export MYDAN_PROC_UPDATE=https://raw.githubusercontent.com/MYDan/proc/master/procupdate
+           
 
-   5.  export MYDAN_UPDATE=https://raw.githubusercontent.com/MYDan/openapi/master/scripts/mydan/update.sh
-       更新mydan脚本地址
+   4.  更新白名单地址
+
+           export MYDAN_WHITELIST_UPDATE=https://raw.githubusercontent.com/MYDan/openapi/master/config/whitelist
+
+   5.  更新mydan脚本地址
+
+           export MYDAN_UPDATE=https://raw.githubusercontent.com/MYDan/openapi/master/scripts/mydan/update.sh
+
 
