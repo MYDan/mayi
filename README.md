@@ -26,3 +26,8 @@
                       如果都没有，默认目录在/opt/mydan)
 
             (注：当前安装目录的上一层目录必须命名命名为 'mydan')
+
+安装方式3:
+
+    (安装最新版本到/opt/mydan下)
+    curl -s https://raw.githubusercontent.com/MYDan/openapi/master/scripts/mydan/update.sh|bash
