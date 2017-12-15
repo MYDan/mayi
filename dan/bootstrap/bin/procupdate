@@ -2,7 +2,7 @@
 
 =head1 SYNOPSIS
 
- $0 [--url https://raw.githubusercontent.com/MYDan/key/master/keyupdate] 
+ $0 [--url https://raw.githubusercontent.com/MYDan/proc/master/procupdate] 
     [--interval number]
 
 =cut
@@ -11,9 +11,9 @@ use strict;
 use warnings;
 
 use MYDan::Util::OptConf;
-use MYDan::Agent::KeyUpdate;
+use MYDan::Bootstrap::ProcUpdate;
 
-$MYDan::Util::OptConf::THIS = 'agent';
+$MYDan::Util::OptConf::THIS = 'bootstrap';
 
 
 my $option = MYDan::Util::OptConf->load();
@@ -21,8 +21,8 @@ my %o = $option->get( qw( url=s interval=i ) )->dump();
 
 $option->assert( 'url' );
 
-$0 = 'mydan.keyupdate';
+$0 = 'mydan.procupdate';
 
-MYDan::Agent::KeyUpdate->new( %o )->run();
+MYDan::Bootstrap::ProcUpdate->new( %o )->run();
 
 print "done.\n";

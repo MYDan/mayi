@@ -1,14 +1,14 @@
-package MYDan::Agent::KeyUpdate;
+package MYDan::Bootstrap::ProcUpdate;
 
 =head1 NAME
 
-MYDan::Agent::KeyUpdate
+MYDan::Bootstrap::ProcUpdate
 
 =head1 SYNOPSIS
 
- use MYDan::Agent::KeyUpdate;
+ use MYDan::Bootstrap::ProcUpdate;
 
- MYDan::Agent::KeyUpdate->new( auth => /path/, interval => 3600, url => 'https://xxx' )->run();
+ MYDan::Bootstrap::ProcUpdate->new( exec => /path/, interval => 3600, url => 'https://xxx' )->run();
 
 =cut
 
@@ -26,9 +26,9 @@ sub new
 {
     my ( $class, %self ) = @_;
 
-    map{ die "$_ undef" unless $self{$_} }qw( url auth );
+    map{ die "$_ undef" unless $self{$_} }qw( url exec );
 
-    die "noauth" unless -e $self{auth};
+    die "noexec" unless -e $self{exec};
 
     bless \%self, ref $class || $class;
 }
@@ -58,7 +58,7 @@ sub update
 
     print "update ...\n";
 
-    my ( $url, $auth ) = @$this{qw( url auth )};
+    my ( $url, $exec ) = @$this{qw( url exec )};
     return unless my $key = uaget( $url );
 
     my ( %d, %dd, $ddd ); 
@@ -66,14 +66,14 @@ sub update
     {
         my ( $md5, $url, $name );
 
-        unless( ( $md5, $url ) = $_ =~ /^([a-zA-Z0-9]{32}):(http.*\.pub)$/ )
+        unless( ( $md5, $url ) = $_ =~ /^([a-zA-Z0-9]{32}):(http.+)$/ )
         {
              $ddd = 1; next;
         }
 
         $dd{ $name = basename $url } = 1;
 
-        next if -e "$auth/$name";
+        next if -e "$exec/$name";
         next unless my $c = uaget( $url );
 
         my $TEMP = File::Temp->new();
@@ -82,15 +82,16 @@ sub update
         my $tmd5 = Digest::MD5->new()->addfile( $TEMP )->hexdigest();
 
         next unless lc( $md5 ) eq lc( $tmd5 );
-        rename $TEMP->filename, "$auth/$name";
+        chmod 0700, $TEMP->filename;
+        rename $TEMP->filename, "$exec/$name";
     }
 
     return if $ddd;
 
-    map{ $d{ basename $_ } = 1 }glob "$auth/*.pub";
+    map{ $d{ basename $_ } = 1 }glob "$exec/*";
     map{ delete $dd{$_} if delete $d{$_} }keys %dd;
     return if keys %dd;
-    map{ unlink "$auth/$_" }keys %d;
+    map{ unlink "$exec/$_" }keys %d;
     
 }
 
