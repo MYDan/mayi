@@ -1,9 +1,6 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-#!/usr/bin/env perl
-use strict;
-use warnings;
 
 use MYDan::Util::OptConf;
 use MYDan::Util::NTPSync;
@@ -17,52 +14,9 @@ use MYDan::Util::NTPSync;
 
 
 my $option = MYDan::Util::OptConf->load();
-my %o = $option->set( try => 3, interval => 3600 )->get( qw( daemon interval=i try=i  ) )->dump();
+my %o = $option->set( try => 3, interval => 3600 )
+    ->get(qw( daemon interval=i try=i  ))->dump();
 
 $0 = 'mydan.ntpsync';
 
-MYDan::Util::NTPSync->new( %o )->run();
-
-
-#------
-# use YAML::XS;
-# use Sys::Hostname;
-
-# use NS::Util::OptConf;
-# use NS::Util::Sudo;
-
-# our ( $OPS, @NTP ) = qw( ops ntp1 ntp2 );
-# our ( $TRY, $CYCLE ) = ( 3, 3600 );
-
-# NS::Util::Sudo->sudo();
-# my %o = NS::Util::OptConf->load()->get( qw( daemon interval=i ) )->dump();
-
-# my $cycle = $o{interval} || $CYCLE;
-# my $name = Sys::Hostname::hostname;
-# my $zone = $name; $zone =~ s/^([^\.]+\.){2}/.$OPS./;
-
-# print "start...\n";
-# do
-# {
-#     print "sync...\n";
-#     my $conf = eval { YAML::XS::LoadFile( $o{conf} ) };
-#     warn "$o{conf}: $@\n" if $@;
-
-#     my ( @ntp, $ok ) = map { $_ . $zone } @NTP;
-#     map { push @ntp, @{$conf->{$_}} if $name =~ /$_/; }
-#         sort{ length($b) <=> length($a) }keys %$conf;
-
-#     YAML::XS::DumpFile \*STDOUT, \@ntp;
-
-#     system '/etc/init.d/ntpd stop > /dev/null 2>&1';
-
-#     for my $ntp ( @ntp )
-#     {
-#         map { unless( system "/usr/sbin/ntpdate $ntp" ) { $ok = 1; last; } } 1 .. $TRY;
-#         warn "Failed to sync with $ntp\n";
-#     }
-
-#     warn sprintf "sync %s.\n", $ok ? 'ok' : 'fail';
-# } while $o{daemon} && sleep $cycle;
-
-# exit 0;
+MYDan::Util::NTPSync->new(%o)->run();
