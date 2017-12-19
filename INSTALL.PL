@@ -101,6 +101,7 @@ if( $ENV{dan} || $ENV{box} || $ENV{bin} )
     mysystem( "ln -fsn mydan bin.i/$ENV{nickname}" )
         if $ENV{nickname} && $ENV{nickname} =~ /^[a-z0-9]+$/;
     mysystem "rsync -a bin.i/ '$mydan/bin/'";
+    mysystem( "mkdir '$mydan/tmp'" ) unless -e "$mydan/tmp";
 }
 
 if( $ENV{def} )
