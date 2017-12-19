@@ -180,6 +180,7 @@ sub run
                    open STDIN, '<', "$tmp/$index" or die "Can't open '$tmp/$index': $!";
                    my $m = -f "$tmp/$index.out" ? '+<' : '>';
                    open STDOUT, $m, "$tmp/$index.out" or die "Can't open '$tmp/$index.out': $!";
+                   $ENV{UseReservedSpace} = 1 if $m eq '+<';
                    exec $exec;
                }
            },
