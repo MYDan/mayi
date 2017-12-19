@@ -43,6 +43,10 @@ if( $o{reload} )
 }
 elsif( $o{install} )
 {
+    my $rs = "$MYDan::PATH/var/ReservedSpace";
+    system( "mkdir -p '$rs'" ) unless -d $rs;
+    map{ system( "echo ReservedSpace > '$rs/$_'" ) unless -f "$rs/$_"; } 1..100;
+
     system "echo '* * * * * root $MYDan::PATH/dan/bootstrap/bin/bootstrap --run' > /etc/cron.d/mydan_bootstrap_cron_$uuid";
 }
 elsif( $o{uninstall} )
