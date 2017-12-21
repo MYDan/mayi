@@ -106,9 +106,9 @@ if( $ENV{dan} || $ENV{box} || $ENV{bin} )
 
 if( $ENV{def} )
 {
-    mysystem( "rsync -av def/ def.i/" );
+    mysystem( "rsync -a def/ def.i/" );
     repl( 'def.i', MYDanROOT => $mydan );
-    mysystem( "rsync -av def.i/ '$mydan/'" );
+    mysystem( "rsync -a def.i/ '$mydan/'" );
 }
 
 exit 0;
