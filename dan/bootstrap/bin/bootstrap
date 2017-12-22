@@ -4,9 +4,9 @@ use warnings;
 
 use MYDan;
 use File::Basename;
-use MYDan::Util::Sudo;
 use MYDan::Util::OptConf;
 use Digest::MD5;
+use MYDan::Bootstrap
 
 $| ++;
 
