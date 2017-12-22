@@ -1,8 +1,6 @@
 #!/bin/sh
-ulimit -n 655350;ulimit -u 102400;ulimit -s 10240;
-
 if [ ! -f $MYDanPATH/etc/env ];then
-    echo "on env file"
+    echo "on env file: $MYDanPATH/etc/env"
     exit;
 fi
 
