@@ -8,9 +8,6 @@ use MYDan::Util::Sudo;
 use MYDan::Util::OptConf;
 use Digest::MD5;
 
-use MYDan::Bootstrap;
-MYDan::Util::Sudo->sudo();
-
 $| ++;
 
 $MYDan::Util::OptConf::THIS = 'bootstrap';
