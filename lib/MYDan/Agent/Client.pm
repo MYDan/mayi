@@ -82,6 +82,8 @@ sub run
     }
 
     my $cv = AE::cv;
+    AnyEvent::Loop::now_update();
+
     my ( @work, $stop );
 
     $SIG{TERM} = $SIG{INT} = my $tocb = sub
