@@ -140,7 +140,7 @@ sub run
              );
              $hdl->push_write($query);
              $hdl->push_shutdown;
-          };
+          }, sub{ return 3; };
     };
 
     my $max = scalar @node > $run{max} ? $run{max} : scalar @node;
@@ -239,7 +239,7 @@ sub run
              );
              $hdl->push_write($rquery);
              $hdl->push_shutdown;
-          };
+          }, sub{ return 3; };
     };
 
     #Don't change it to map
