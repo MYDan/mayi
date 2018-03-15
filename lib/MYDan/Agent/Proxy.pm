@@ -29,26 +29,46 @@ use Socket;
 
 sub new
 {
-    my ( $class, $conf ) = @_;
-    confess "no conf" unless $conf && -e $conf;
+    my ( $class, $conf, %self ) = splice @_, 0, 2;
 
-    eval { $conf = YAML::XS::LoadFile( $conf ) };
 
-    confess "error: $@" if $@;
-    $conf = +{} unless defined $conf;
-    confess "error: not HASH" if ref $conf ne 'HASH';
+    if( my $addr =  $ENV{MYDan_Agent_Proxy_Addr} )
+    {
+        $self{addr} = $addr;
+    }
+    else
+    {
+        confess "no conf" unless $conf;
+        my %conf;
+        for my $c ( $conf, $ENV{MYDan_Agent_Proxy_Config} )
+        {
+            next unless $c;
+            confess "no conf: $c" unless  -e $c;
+            my $y = eval{ YAML::XS::LoadFile( $c ) };
+            confess "error: $@" if $@;
+            $y = +{} unless defined $y;
+            confess "error: not HASH" if ref $y ne 'HASH';
+            %conf = ( %conf, %$y );
+       }
 
-    bless $conf, ref $class || $class;
+        $self{conf} = \%conf;
+    }
+
+    bless \%self, ref $class || $class;
 }
 
 sub search
 {
     my ( $this, @node, %innet ) = @_;
 
-    for ( keys %$this )
+    return map{ $_ => $this->{addr} eq '0.0.0.0' ? undef : $this->{addr} }@node if $this->{addr};
+
+    my $conf = $this->{conf};
+
+    for ( keys %$conf )
     {
         next unless $_ =~ /^\s*(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\/(\d{1,2})\s*$/;
-	$innet{$_} = $this->{$_} if is_ipv4( $1 ) && $2 >=0 && $2 <= 32;
+        $innet{$_} = $conf->{$_} if is_ipv4( $1 ) && $2 >=0 && $2 <= 32;
     }
 
     return map{ $_ => undef }@node unless %innet;
