@@ -52,6 +52,15 @@ sub new
        }
 
         $self{conf} = \%conf;
+
+        if( my $cache = $ENV{MYDan_Agent_Proxy_Cache} )
+	{
+            $self{cache} = eval{ YAML::XS::LoadFile( $cache ) };
+	    confess "error: $@" if $@;
+	    confess "error: not HASH" if ref $self{cache} ne 'HASH';
+	}
+	$self{cache} = +{} unless defined $self{cache};
+
     }
 
     bless \%self, ref $class || $class;
@@ -59,11 +68,16 @@ sub new
 
 sub search
 {
-    my ( $this, @node, %innet ) = @_;
+    my ( $this, @node, %innet, %cache ) = @_;
 
     return map{ $_ => $this->{addr} eq '0.0.0.0' ? undef : $this->{addr} }@node if $this->{addr};
 
-    my $conf = $this->{conf};
+    my ( $conf, $cache )= @$this{qw( conf cache )};
+
+    map{ $cache{$_} = $cache->{$_} if defined $cache->{$_} }@node;
+    @node = grep{ ! defined $cache{$_} }@node;
+
+    return %cache unless @node;
 
     for ( keys %$conf )
     {
@@ -71,9 +85,10 @@ sub search
         $innet{$_} = $conf->{$_} if is_ipv4( $1 ) && $2 >=0 && $2 <= 32;
     }
 
-    return map{ $_ => undef }@node unless %innet;
+    return ( %cache, map{ $_ => undef }@node ) unless %innet;
 
     my $regexp = create_iprange_regexp_depthfirst( \%innet );
+
 
     my %hosts = MYDan::Util::Hosts->new()->match( @node );
     map{
@@ -81,7 +96,7 @@ sub search
 	    unless is_ipv4( $hosts{$_} )
     }keys %hosts;
 
-    return map{ $_ => match_ip( $hosts{$_}, $regexp )}@node;
+    return ( %cache, map{ $_ => match_ip( $hosts{$_}, $regexp )}@node );
 }
 
 1;
