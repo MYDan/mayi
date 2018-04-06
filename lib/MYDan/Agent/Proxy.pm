@@ -66,8 +66,7 @@ sub search
 {
     my ( $this, @node, %innet, %result ) = @_;
 
-    my ( $conf )= @$this{qw( conf )};
-    for ( @$conf )
+    for ( @{$this->{conf}} )
     {
         @node = grep{ ! defined $result{$_} }@node;
         my %r = $this->_search( $_ => @node );
