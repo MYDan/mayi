@@ -143,7 +143,7 @@ sub run
     idie( "already running $code\n" ) if ( $code =~ /\.mx$/ ) && !
         MYDan::Util::ProcLock->new( File::Spec->join( $path{run}, $code ) )->lock();
 
-    if ( ! $< && $sudo && $sudo ne ( getpwuid $< )[0] )
+    if ( $code ne 'proxy' && ! $< && $sudo && $sudo ne ( getpwuid $< )[0] )
     {
         idie( "invalid sudo $sudo\n" ) unless my @pw = getpwnam $sudo;
         @pw = map { 0 + sprintf '%d', $_ } @pw[2,3];
