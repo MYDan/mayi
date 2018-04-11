@@ -58,7 +58,7 @@ elsif( $o{install} )
     }
     else
     {
-        system "echo '* * * * * root $MYDan::PATH/dan/bootstrap/bin/bootstrap --run' > /etc/cron.d/mydan_bootstrap_cron_$uuid";
+        system "echo '* * * * * root flock -w 1 -x /etc/mydan.bootstrap.$uuid.lock $MYDan::PATH/dan/bootstrap/bin/bootstrap --run' > /etc/cron.d/mydan_bootstrap_cron_$uuid";
     }
 }
 elsif( $o{uninstall} )
