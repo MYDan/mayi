@@ -34,37 +34,45 @@ sub new
 {
     my ( $class, $conf, %self ) = splice @_, 0, 2;
 
-    if( my $addr =  $ENV{MYDan_Agent_Proxy_Addr} )
+    unless( $self{node} = $ENV{MYDan_Agent_Proxy_Node} )
     {
-        my ( $ua, $header, $res ) 
-            = ( LWP::UserAgent->new, $ENV{MYDan_Agent_Proxy_Header} );
-        $ua->default_header( map{ split /:/, $_ }split /,/, $header ) if $header;
-        $ua->timeout(5);
-        for( 0 .. 1 )
+        if( my $addr =  $ENV{MYDan_Agent_Proxy_Addr} )
         {
-            $res = $ua->get($addr);
-            last if $res->is_success;
+            my ( $ua, $header, $res ) 
+                = ( LWP::UserAgent->new, $ENV{MYDan_Agent_Proxy_Header} );
+            $ua->default_header( map{ split /:/, $_ }split /,/, $header ) if $header;
+            $ua->timeout(5);
+            for( 0 .. 1 )
+            {
+                $res = $ua->get($addr);
+                last if $res->is_success;
+            }
+    		my $data = eval{ JSON::from_json $res->content };
+            die "from_json fail: $@" if $@;
+            $self{conf} = $data->{stat} ? $data->{data} : die "stat fail";
+    
         }
-		my $data = eval{ JSON::from_json $res->content };
-        die "from_json fail: $@" if $@;
-        $self{conf} = $data->{stat} ? $data->{data} : die "stat fail";
-
+        else
+        {
+            confess "no conf" unless $conf && -e $conf;
+            $self{conf} = eval{ YAML::XS::LoadFile( $conf ) };
+            confess "error: $@" if $@;
+        }
+    
+        $self{conf} = [ $self{conf} ] if ref $self{conf} ne 'ARRAY';
+        map{ confess "error: not HASH" unless ref $_; }@{$self{conf}};
     }
-    else
-    {
-        confess "no conf" unless $conf && -e $conf;
-        $self{conf} = eval{ YAML::XS::LoadFile( $conf ) };
-        confess "error: $@" if $@;
-    }
-
-    $self{conf} = [ $self{conf} ] if ref $self{conf} ne 'ARRAY';
-    map{ confess "error: not HASH" unless ref $_; }@{$self{conf}};
     bless \%self, ref $class || $class;
 }
 
 sub search
 {
     my ( $this, @node, %innet, %result ) = @_;
+
+    if( my $node = $this->{node} )
+    {
+        return map{ $_ => $node }@node;
+    }
 
     for ( @{$this->{conf}} )
     {
