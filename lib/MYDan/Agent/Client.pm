@@ -129,7 +129,7 @@ sub run
                      my $self = shift;
                      $self->unshift_read (
                          chunk => length $self->{rbuf},
-                         sub { $result{$node} .= $_[1];}
+                         sub { $result{$node} .= $_[1] unless ! $result{$node} && $_[1] eq '*'; }
                      );
                   },
                   on_eof => sub{
@@ -195,7 +195,7 @@ sub run
                      my $self = shift;
                      $self->unshift_read (
                          chunk => length $self->{rbuf},
-                         sub { $rresult{$node} .= $_[1];}
+                         sub { $rresult{$node} .= $_[1] unless ! $rresult{$node} && $_[1] eq '*'; }
                      );
                   },
                   on_eof => sub{
