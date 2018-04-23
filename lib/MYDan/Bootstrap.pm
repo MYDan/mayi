@@ -45,6 +45,11 @@ sub run
     confess "open log: $!" unless open $logH, ">>$logf"; 
     $logH->autoflush;
 
+    $SIG{TERM} = $SIG{INT} = sub
+    {
+        map{ kill( 9, $_->{pid} ) if $_->{pid}; }values %proc;
+        exit 1;
+    };
 
     $SIG{'CHLD'} = sub {
         while((my $pid = waitpid(-1, WNOHANG)) >0)
