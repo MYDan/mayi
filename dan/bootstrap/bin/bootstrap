@@ -76,5 +76,6 @@ elsif( $o{uninstall} )
 }
 elsif( $o{run} )
 {
+    exit 0 if fork;
     $bootstrap->run();
 }
