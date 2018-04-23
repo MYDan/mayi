@@ -54,11 +54,11 @@ elsif( $o{install} )
         die "user undef" unless $user;
         my $path = "/var/cron/tabs/$user";
         system "sed -i '/mydan_bootstrap_cron_$uuid/d' $path";
-        system "echo '* * * * * $MYDan::PATH/dan/bootstrap/bin/bootstrap --run > /tmp/mydan_bootstrap_cron_$uuid.log 2>&1' >> $path"
+        system "echo '\@reboot $MYDan::PATH/dan/bootstrap/bin/bootstrap --run > /dev/null 2>&1' >> $path"
     }
     else
     {
-        system "echo '* * * * * root flock -w 1 -x /etc/mydan.bootstrap.$uuid.lock $MYDan::PATH/dan/bootstrap/bin/bootstrap --run' > /etc/cron.d/mydan_bootstrap_cron_$uuid";
+        system "echo '\@reboot root $MYDan::PATH/dan/bootstrap/bin/bootstrap --run >/dev/null 2>&1' > /etc/cron.d/mydan_bootstrap_cron_$uuid";
     }
 }
 elsif( $o{uninstall} )
