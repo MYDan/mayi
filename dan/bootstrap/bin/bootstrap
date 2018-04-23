@@ -78,6 +78,8 @@ elsif( $o{run} )
 {
     close STDOUT;close STDERR;
 
+    $0 = "$uuid.mydan.bootstrap.master";
+
     exit 0 if fork;
     $bootstrap->run();
 }

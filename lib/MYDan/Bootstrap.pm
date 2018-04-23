@@ -38,9 +38,6 @@ sub run
     my $flock = MYDan::Util::FLock->new( "$lock/lock" );
     die "Locked by other processes.\n" unless $flock->lock();
    
-    $0 = 'mydan.bootstrap.master';
-
-    
     my ( $i, $cv ) = ( 0, AnyEvent->condvar );
 
     our ( $logf, $logH ) = ( "$logs/current" );
