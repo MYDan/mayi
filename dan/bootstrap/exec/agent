@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 os=$(uname)
 _exit () { echo $1; sleep 60; exit 1; }
 
