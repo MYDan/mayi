@@ -113,7 +113,7 @@ sub run
              );
              $hdl->push_write($query);
              $hdl->push_shutdown;
-          };
+          }, sub{ return 3; };
     };
 
     my $max = scalar @node > $run{max} ? $run{max} : scalar @node;
