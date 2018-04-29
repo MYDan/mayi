@@ -19,7 +19,7 @@ use Filesys::Df;
 
 use MYDan;
 
-our %index;
+my ( %index, %w );
 
 sub new
 {
@@ -64,7 +64,7 @@ sub run
     my $version = $MYDan::VERSION; $version =~ s/\./0/g;
 
     $SIG{'USR1'} = sub {
-        print Dumper \%index;
+        print Dumper \%index, \%w;
     };
 
     $SIG{INT} = $SIG{TERM} = sub { 
@@ -83,6 +83,7 @@ sub run
             my ( $index ) = grep{ $index{$_}{pid}  && $index{$_}{pid} eq $pid  }keys %index;
             next unless my $data = delete $index{$index};
 
+
             if( $data->{handle}->fh )
             {
                 $data->{handle}->push_write( "*#*MYDan_$version*#" );
@@ -91,14 +92,8 @@ sub run
 
                 if ( ( ! $wbuf || ( $wbuf && $size <= $wbuf ) ) && open my $tmp_handle, '<', "$tmp/$index.out" )
                 {
-                    #seek( $tmp_handle, -16384, SEEK_END );
-                    while(<$tmp_handle>)
-                    {
-                        $data->{handle}->push_write($_) if $data->{handle}->fh;
-                    }
-                    $data->{handle}->push_write("--- $code\n") if $data->{handle}->fh;
+			$w{$index} = +{ code => $code, handle => $data->{handle}, fh => $tmp_handle };
                 }
-                $data->{handle}->destroy() if $data->{handle}->fh;
             }
 
             map{ unlink "$tmp/$_" }( $index, "$index.out" );
@@ -212,6 +207,31 @@ sub run
        $index{$index}{handle} = $handle;
     
     };
+
+    my $ww = AnyEvent->timer(
+        after => 0.01, 
+        interval => 0.05,
+        cb => sub { 
+            for my $index ( keys %w )
+            {
+            	my ( $data, $buf, $n ) = $w{$index};
+            
+            	map{
+            	    if( $n = sysread( $data->{fh}, $buf, 102400 ) && $data->{handle}->fh )
+            	    {
+            	        $data->{handle}->push_write($buf);
+            	    }
+            	    else{
+                        $data->{handle}->push_write("--- $data->{code}\n") if $data->{handle}->fh;
+                        $data->{handle}->destroy() if $data->{handle}->fh;
+                        delete $w{$index};
+                        next;
+            	    }
+            	}1..10;
+            }
+        }
+    ); 
+
     my $t = AnyEvent->timer(
         after => 1, 
         interval => 1,
