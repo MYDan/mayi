@@ -70,6 +70,13 @@ sub run
     my $temp = sprintf "$dp.%stmp", $run{continue} ? '' : time.'.'.$$.'.';
     $temp  = $path. Digest::MD5->new->add( $temp )->hexdigest;
 
+
+    $SIG{INT} = $SIG{TERM} = sub
+    {
+        unlink $temp if !$run{continue} && $temp && -f $temp;
+        die "killed.\n";
+    };
+
     my $position = -f $temp ? ( stat $temp )[7] : 0;
 
     open my $TEMP, '+>>', $temp or die "Can't open '$temp': $!";
