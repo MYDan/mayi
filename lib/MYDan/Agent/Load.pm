@@ -212,7 +212,9 @@ sub run
     unless( $end =~ /^--- 0\n$/  )
     {
         unlink $temp;
-        die "status error $end\n";
+	my $err = $keepalive{cont} || '';
+	$err =~ s/\**#\*MYDan_\d+\*#//;
+        die "status error $err $end\n";
     }
     truncate $TEMP, $size;
     seek $TEMP, 0, 0;
