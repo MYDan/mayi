@@ -96,7 +96,7 @@ sub run
                 }
             }
 
-            map{ unlink "$tmp/$_" }( $index, "$index.out" );
+	    map{ unlink "$tmp/$_" }( $index, "$index.out" );
         }
     };
 
@@ -219,13 +219,33 @@ sub run
             	map{
             	    if( $n = sysread( $data->{fh}, $buf, 102400 ) && $data->{handle}->fh )
             	    {
+		        if( ! $data->{body} && $buf =~ s/MYDanExtractFile_::(.+)::_MYDanExtractFile// )
+			{
+                            $data->{file} = $1;
+			}
+			$data->{body} = 1;
             	        $data->{handle}->push_write($buf);
             	    }
             	    else{
-                        $data->{handle}->push_write("--- $data->{code}\n") if $data->{handle}->fh;
-                        $data->{handle}->destroy() if $data->{handle}->fh;
-                        delete $w{$index};
-                        next;
+		        close $data->{fh};
+		        if( my $f = delete $data->{file} )
+			{
+                             if( open my $tmp_handle, '<', $f )
+			     {
+			         $data->{fh} = $tmp_handle;
+			     }
+			     else
+			     {
+			         warn "open MYDanExtractFile fail: $!";
+			     }
+			}
+			else
+			{
+                            $data->{handle}->push_write("--- $data->{code}\n") if $data->{handle}->fh;
+                            $data->{handle}->destroy() if $data->{handle}->fh;
+                            delete $w{$index};
+                            next;
+			}
             	    }
             	}1..10;
             }
