@@ -137,7 +137,7 @@ sub run
                                  $cut{$node} = $_[1]; return; 
                              }
                              
-                             $result{$node} .= $_[1] unless ! $result{$node} && $_[1] eq '*';
+                             $result{$node} .= $_[1] unless ! $result{$node} && $_[1] =~ /^\*+/;
                          }
                      );
                   },
@@ -216,7 +216,8 @@ sub run
                      my $self = shift;
                      $self->unshift_read (
                          chunk => length $self->{rbuf},
-                         sub { $rresult{$node} .= $_[1] unless ! $rresult{$node} && $_[1] eq '*'; }
+                         sub { $rresult{$node} .= $_[1] unless ! $rresult{$node} && $_[1]  =~ /^\*+/; 
+			 }
                      );
                   },
                   on_eof => sub{
