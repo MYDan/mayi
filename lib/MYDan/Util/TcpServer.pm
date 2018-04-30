@@ -35,7 +35,7 @@ sub new
     map{ 
         $this{$_} ||= "$MYDan::PATH/var/run/tcpserver.$this{port}/$_";
         system( "mkdir -p '$this{$_}'" ) unless -d $this{$_};
-        map{ unlink $_ if $_ =~ /\/\d+$/ || $_ =~ /\/\d+\.out$/ }glob "$this{$_}/*";
+        map{ unlink $_ if $_ =~ /\/\d+$/ || $_ =~ /\/\d+\.out$/ || $_ =~ /\/\d+\.ext$/ }glob "$this{$_}/*";
      }qw( tmp ReservedSpace );
 
 
@@ -96,7 +96,7 @@ sub run
                 }
             }
 
-	    map{ unlink "$tmp/$_" }( $index, "$index.out" );
+	    map{ unlink "$tmp/$_" if -e "$tmp/$_" }( $index, "$index.out", "$index.ext" );
         }
     };
 
@@ -148,12 +148,13 @@ sub run
            unless( open $tmp_handle, '+<', "$tmp/$index" )
            {
 	       print "open '$tmp/$index' fail:$!\n";
-               map{ unlink "$tmp/$rs$_" }( '', '.out' );
+               map{ unlink "$tmp/$rs$_" if -e "$tmp/$rs$_" }( '', '.out' );
                close $fh;
                return;
            }
        }
 
+       my $EF;
        my $handle; $handle = new AnyEvent::Handle( 
            fh => $fh,
            keepalive => 1,
@@ -171,6 +172,7 @@ sub run
 
                    $ENV{TCPREMOTEIP} = $tip;
                    $ENV{TCPREMOTEPORT} = $port;
+		   $ENV{MYDanExtractFile} = "$tmp/$index.ext" if defined $index{$index}{extsize};
       
                    open STDIN, '<', "$tmp/$index" or die "Can't open '$tmp/$index': $!";
                    my $m = -f "$tmp/$index.out" ? '+<' : '>';
@@ -181,12 +183,46 @@ sub run
            },
            on_read => sub {
                my $self = shift;
-               $index{$index}{rbuf} += length $self->{rbuf};
 
-               $self->unshift_read (
-                   chunk => length $self->{rbuf},
-                   sub { print $tmp_handle $_[1] if ! $rbuf || ( $rbuf && $index{$index}{rbuf} <= $rbuf ); }
-               );
+	       if( ! $index{$index}{rbuf} && $self->{rbuf} =~ s/^MYDanExtractFile_::(\d+)::_MYDanExtractFile// )
+	       {
+		   $index{$index}{extsize} = $1;
+                   open $EF, ">$tmp/$index.ext" or die "Can't open $tmp/$index.ext";
+		   $index{$index}{rbuf} = 1;
+	       }
+
+	       my $len = length $self->{rbuf};
+	       if( $index{$index}{extsize} )
+	       {
+		   if( $len < $index{$index}{extsize} )
+		   {
+                       $self->push_read (
+                           chunk => $len,
+			   sub { print $EF $_[1] }
+		       );
+		       $index{$index}{extsize} -= $len;
+		       $len = 0;
+		   }
+		   else
+		   {
+                       $self->push_read(
+			    chunk => $index{$index}{extsize},
+			   sub { print $EF $_[1]}
+		       );
+		       $len -= $index{$index}{extsize};
+                       $index{$index}{extsize} = 0;
+		   }
+	       }
+
+
+	       if( $len )
+	       {
+                   $index{$index}{rbuf} += $len;
+                   $self->push_read (
+                       chunk => $len,
+                       sub { print $tmp_handle $_[1] if ! $rbuf || ( $rbuf && $index{$index}{rbuf} <= $rbuf ); }
+                   );
+               }
             },
             on_error => sub {
                close $tmp_handle;
@@ -200,7 +236,7 @@ sub run
                if( $pid ) { kill 15, $pid; }
                else
                {
-                   unlink "$tmp/$index";
+		    map{ unlink "$tmp/$_" if -e "$tmp/$_" }( $index, "$index.out", "$index.ext" );
                }
             },
         );

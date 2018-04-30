@@ -148,6 +148,18 @@ sub run
                       $cv->end;
                   }
              );
+	     if( my $ef = $ENV{MYDanExtractFile} )
+	     {
+                 open my $EF, "<$ef" or die "open $ef fail:$!";
+		 my $size = (stat $ef )[7];
+		 $hdl->push_write("MYDanExtractFile_::${size}::_MYDanExtractFile");
+                 my ( $n, $buf );
+		 while( $n = sysread( $EF, $buf, 102400 ) )
+		 {
+                     $hdl->push_write($buf);
+		 }
+		 close $EF;
+	     }
              $hdl->push_write($query);
              $hdl->push_shutdown;
           }, sub{ return 3; };
@@ -247,6 +259,18 @@ sub run
                       map { $result{$_} = "no_error by proxy $node"; } @node;
                   }
              );
+	     if( my $ef = $ENV{MYDanExtractFile} )
+	     {
+                 open my $EF, "<$ef" or die "open $ef fail:$!";
+		 my $size = (stat $ef )[7];
+		 $hdl->push_write("MYDanExtractFile_::${size}::_MYDanExtractFile");
+                 my ( $n, $buf );
+		 while( $n = sysread( $EF, $buf, 102400 ) )
+		 {
+                     $hdl->push_write($buf);
+		 }
+		 close $EF;
+	     }
              $hdl->push_write($rquery);
              $hdl->push_shutdown;
           }, sub{ return 3; };

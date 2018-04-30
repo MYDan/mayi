@@ -44,6 +44,19 @@ eval
                      $cv->send;
                  }
             );
+	    if( my $ef = $ENV{MYDanExtractFile} )
+	    {
+                open my $EF, "<$ef" or die "open $ef fail:$!";
+	        my $size = (stat $ef )[7];
+	        $hdl->push_write("MYDanExtractFile_::${size}::_MYDanExtractFile");
+                my ( $n, $buf );
+	        while( $n = sysread( $EF, $buf, 102400 ) )
+	        {
+                    $hdl->push_write($buf);
+	        }
+	        close $EF;
+	    }
+
             $hdl->push_write($argv[1]->{query});
             $hdl->push_shutdown;
         };
