@@ -42,9 +42,10 @@ my $listen = $o{listen};
 
 unless( $listen )
 {
-    my $scan = `nc -z localhost 65112-65535`;
-    my %open = map{ $_ => 1 }my @open = $scan =~ / (\d+) /g;
-    ( $listen ) = grep{ ! $open{$_} }65112 .. 65535;
+    my $scan = `netstat  -tun|awk '{print \$4}'|awk -F: '{print \$2}'`;
+    my %open = map{ $_ => 1 }my @open = $scan =~ /(\d+)/g;
+    my %port = map{ $_ => 1 }65112 .. 65535;
+    ( $listen ) = grep{ ! $open{$_} }keys %port;
 }
 
 my $socket = IO::Socket::INET->new (
