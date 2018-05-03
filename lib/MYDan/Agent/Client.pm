@@ -89,6 +89,7 @@ sub run
 
     $SIG{TERM} = $SIG{INT} = my $tocb = sub
     {
+        warn "exit.\n";
         $stop = 1;
         for my $w ( @work )
         {
@@ -99,6 +100,8 @@ sub run
 
         map{ $cv->end; } 1 .. $cv->{_ae_counter}||0;
     };
+
+    my $w = AnyEvent->timer ( after => $run{timeout},  cb => $tocb );
 
     my %hosts = MYDan::Util::Hosts->new()->match( @node );
 
@@ -127,6 +130,9 @@ sub run
              push @work, \$hdl;
              $hdl = new AnyEvent::Handle(
                  fh => $fh,
+                 rbuf_max => 10240000,
+                 wbuf_max => 10240000,
+                 autocork => 1,
                  on_read => sub {
                      my $self = shift;
                      $self->unshift_read (
@@ -148,21 +154,36 @@ sub run
                       $cv->end;
                   }
              );
-	     if( my $ef = $ENV{MYDanExtractFile} )
-	     {
+             if( my $ef = $ENV{MYDanExtractFile} )
+             {
                  open my $EF, "<$ef" or die "open $ef fail:$!";
-		 my $size = (stat $ef )[7];
-		 $hdl->push_write("MYDanExtractFile_::${size}::_MYDanExtractFile");
+                 my $size = (stat $ef )[7];
+                 $hdl->push_write("MYDanExtractFile_::${size}::_MYDanExtractFile");
+
                  my ( $n, $buf );
-		 while( $n = sysread( $EF, $buf, 102400 ) )
-		 {
-                     $hdl->push_write($buf);
-		 }
-		 close $EF;
-	     }
-             $hdl->push_write($query);
-             $hdl->push_shutdown;
-          }, sub{ return 3; };
+
+                 $hdl->on_drain(sub {
+                         my ( $n, $buf );
+                         $n = sysread( $EF, $buf, 102400 );
+                         if( $n )
+                         {
+                             $hdl->push_write($buf);
+                         }
+                         else
+                         {
+                             $hdl->on_drain(undef);
+                             close $EF;
+                             $hdl->push_write($query);
+                             $hdl->push_shutdown;
+                         }
+                     });
+             }
+             else
+             {
+                 $hdl->push_write($query);
+                 $hdl->push_shutdown;
+             }
+         }, sub{ return 3; };
     };
 
     my $max = scalar @node > $run{max} ? $run{max} : scalar @node;
@@ -212,6 +233,9 @@ sub run
              push @work, \$hdl;
              $hdl = new AnyEvent::Handle(
                  fh => $fh,
+                 rbuf_max => 10240000,
+                 wbuf_max => 10240000,
+                 autocork => 1,
                  on_read => sub {
                      my $self = shift;
                      $self->unshift_read (
@@ -259,28 +283,41 @@ sub run
                       close $fh;
                       map { $result{$_} = "no_error by proxy $node"; } @node;
                   }
-             );
-	     if( my $ef = $ENV{MYDanExtractFile} )
-	     {
+              );
+
+
+             if( my $ef = $ENV{MYDanExtractFile} )
+             {
                  open my $EF, "<$ef" or die "open $ef fail:$!";
-		 my $size = (stat $ef )[7];
-		 $hdl->push_write("MYDanExtractFile_::${size}::_MYDanExtractFile");
-                 my ( $n, $buf );
-		 while( $n = sysread( $EF, $buf, 102400 ) )
-		 {
-                     $hdl->push_write($buf);
-		 }
-		 close $EF;
-	     }
-             $hdl->push_write($rquery);
-             $hdl->push_shutdown;
+                 my $size = (stat $ef )[7];
+                 $hdl->push_write("MYDanExtractFile_::${size}::_MYDanExtractFile");
+
+                 $hdl->on_drain(sub {
+                         my ( $n, $buf );
+                         $n = sysread( $EF, $buf, 102400 );
+                         if( $n )
+                         {
+                             $hdl->push_write($buf);
+                         }
+                         else
+                         {
+                             $hdl->on_drain(undef);
+                             close $EF;
+                             $hdl->push_write($rquery);
+                             $hdl->push_shutdown;
+                         }
+                     });
+             }
+             else
+             {
+                 $hdl->push_write($rquery);
+                 $hdl->push_shutdown;
+             }
           }, sub{ return 3; };
-    };
+      };
 
     #Don't change it to map
     foreach( keys %node ) { $rwork->( $_ ); }
-
-    my $w = AnyEvent->timer ( after => $run{timeout},  cb => $tocb );
 
     $cv->recv;
     undef $w;
