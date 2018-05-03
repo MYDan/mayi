@@ -13,17 +13,21 @@ eval
     die "file undef" unless $file;
 
     die "Can't open '$file': $!\n" unless open my  $fh, '+<', $file;
-    print "MYDanExtractFile_::${file}::_MYDanExtractFile" unless $position;
+    syswrite( \*STDOUT, "MYDanExtractFile_::${file}::_MYDanExtractFile" ) unless $position;
 
     my ( $uid, $mode, $size ) = (stat $file)[4,2,7];
     $mode  = sprintf( "%04o", $mode & 07777 );
-    printf "%d:%s:%s:%s:", 
+    syswrite \*STDOUT, sprintf "%d:%s:%s:%s:", 
         $size, Digest::MD5->new()->addfile( $fh )->hexdigest(),( getpwuid($uid) )[0], $mode;
 
     if( $position )
     {
         seek $fh, $position, 0;
-        while( <$fh> ) { print $_; }
+        my ( $n, $buf );
+        while( $n = sysread $fh, $buf, 102400 )
+        {
+            syswrite \*STDOUT, $buf;
+        }
     }
 
     exit 0;
