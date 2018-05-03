@@ -87,9 +87,9 @@ sub run
 
     my ( @work, $stop );
 
-    $SIG{TERM} = $SIG{INT} = my $tocb = sub
+    
+    my $tocb = sub
     {
-        warn "exit.\n";
         $stop = 1;
         for my $w ( @work )
         {
@@ -101,7 +101,8 @@ sub run
         map{ $cv->end; } 1 .. $cv->{_ae_counter}||0;
     };
 
-    my $w = AnyEvent->timer ( after => $run{timeout},  cb => $tocb );
+    $SIG{TERM} = $SIG{INT} = sub{ warn "sigaction exit.\n"; &$tocb();};
+    my $w = AnyEvent->timer ( after => $run{timeout},  cb => sub{ warn "timeout.\n";&$tocb(); });
 
     my %hosts = MYDan::Util::Hosts->new()->match( @node );
 
