@@ -150,6 +150,13 @@ sub run
                        {
                            $keepalive{cont} .= $_[1];
                            $keepalive{cont} =~ s/^\*+//g;
+
+			   if( length $keepalive{cont} > 1024000 )
+			   {
+				   undef $hdl;
+				   $cv->send;
+			   }
+
                            if( $keepalive{cont} =~ s/\**#\*MYDan_\d+\*#(\d+):([a-z0-9]+):(\w+):(\d+):// )
                            {
                                ( $size, $filemd5, $own, $mode ) = ( $1, $2, $3, $4 );
