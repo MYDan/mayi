@@ -39,6 +39,7 @@ use MYDan::API::Agent;
 use Fcntl qw(:flock SEEK_END);
 use MYDan::Agent::Proxy;
 use MYDan::Util::Hosts;
+use MYDan::Agent::FileCache;
 
 sub new
 {
@@ -56,6 +57,8 @@ sub run
     my ( $this, %run ) = @_;
 
     my ( $node, $sp, $dp, $query ) = @$this{qw( node sp dp )};
+
+    my $filecache = MYDan::Agent::FileCache->new();
 
     my $path = "$MYDan::PATH/tmp";
     unless( -d $path ){ mkdir $path;chmod 0777, $path; }
@@ -166,6 +169,13 @@ sub run
 				   $run{chmod} ||= $mode;
 			       }
 
+			       if( $filecache->check( $filemd5 ) && ! -e $dp  )
+			       {
+				       print "get data from filecache\n";
+				       eval{ $filecache->get( $dp, $filemd5) };
+				       warn "get filecache fail: $@" if $@;
+			       }
+
 			       if( -f $dp )
 			       {
 				   if( open my $DP, '<', $dp )
@@ -241,6 +251,8 @@ sub run
     }
 
     die "rename temp file\n" if system "mv '$temp' '$dp'";
+    eval{ $filecache->save( $dp => $filemd5 ); };
+    warn "save filecache fail: $@" if $@;
 }
 
 1;
