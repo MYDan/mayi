@@ -35,10 +35,17 @@ sub new
 
 sub save
 {
-    my ( $this, $file, $md5, $mv ) = @_;
+    my ( $this, $file, $md5 ) = @_;
 
     my $path = $this->{path};
     return 0 unless -e $path && defined $file &&  -f $file && ! -l $file;
+
+    $this->_clean();
+
+    return 1 if -e "$path/$md5";
+
+    my $tempmd5 = Digest::MD5->new()->add( $file.time,$$ )->hexdigest();
+    die "save fail: $!" if system "cp '$file' '$path/$tempmd5.tmp'";
 
     unless( $md5 && $md5 =~ /^[a-zA-Z0-9]+$/ )
     {
@@ -47,17 +54,7 @@ sub save
         close $fh;
     }
 
-    return 1 if -e "$path/$md5";
-
-    if( $mv )
-    {
-        die "save fail: $!" if system "mv '$file' '$path/$md5'";
-    }
-    else
-    {
-        my $id = time.$$;
-        die "save fail: $!" if system "cp '$file' '$path/$md5.$id' && mv '$path/$md5.$id' '$path/$md5'";
-    }
+    die "save fail: $!" if system "mv '$path/$tempmd5.tmp' '$path/$md5'";
     
     return 1;
 }
@@ -67,9 +64,9 @@ sub check
     my ( $this, $md5 ) = @_;
 
     my $path = $this->{path};
-    return 0 unless -e $path && defined $md5;
+    return undef unless -e $path && defined $md5;
 
-    return  -e "$path/$md5" ? 1 : 0;
+    return  -e "$path/$md5" ? "$path/$md5" : undef;
 }
 
 sub get
@@ -83,31 +80,27 @@ sub get
     return 1;
 }
 
-sub clean
+sub _clean
 {
-    my ( $this, $md5 ) = @_;
+    my $this = shift;
 
-    my $path = $this->{path};
-    return 0 unless -e $path && defined $md5;
+    return unless -e $this->{path};
 
-    my $c = 0;
-    for my $f ( grep{ -f } glob "$path*" )
+    for my $f ( grep{ -f } glob "$this->{path}/*" )
     {
-        if( $f =~ m/\/[a-zA-Z0-9]{32}\.\d+$/ )
+        if( $f =~ m/\/[a-zA-Z0-9]{32}\.tmp$/ )
         {
             my $t = ( stat $f )[9];
             unlink $f if $t && $t < time - 3600;
-            $c ++;
         }
         elsif( $f =~ m/\/[a-zA-Z0-9]{32}$/ )
         {
             my $t = ( stat $f )[9];
             unlink $f if $t && $t < time - 604800;
-            $c ++;
         }
     }
 
-    return $c;
+    return;
 }
 
 1;

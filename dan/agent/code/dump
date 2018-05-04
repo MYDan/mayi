@@ -5,6 +5,7 @@ use warnings;
 use MYDan;
 use YAML::XS;
 use Digest::MD5;
+use MYDan::Agent::FileCache;
 
 local $/ = undef;
 
@@ -45,5 +46,7 @@ close $fh;
 &$unlink( $temp, 'md5 nomatch' ) if $md5 ne $conf->{md5};
 &$unlink( $temp, 'rename fail' ) if system "mv '$temp' '$path'";
 
+eval{ MYDan::Agent::FileCache->new()->save( $path => $md5 ); };
+print "filecache save fail:$@" if $@;
 print "ok\n";
 exit 0;

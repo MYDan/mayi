@@ -104,6 +104,15 @@ sub run
     $SIG{TERM} = $SIG{INT} = sub{ warn "sigaction exit.\n"; &$tocb();};
     my $w = AnyEvent->timer ( after => $run{timeout},  cb => sub{ warn "timeout.\n";&$tocb(); });
 
+    my $md5;
+    if( my $ef = $ENV{MYDanExtractFile} )
+    {
+        open my $TEMP, "<$ef" or die "open ef fail:$!";
+        $md5 = Digest::MD5->new()->addfile( $TEMP )->hexdigest();
+        close $TEMP;
+    }
+
+
     my %hosts = MYDan::Util::Hosts->new()->match( @node );
 
     my %cut;
@@ -144,7 +153,37 @@ sub run
                                  $cut{$node} = $_[1]; return; 
                              }
                              
+
+                             if( ! $result{$node} && $_[1] =~ s/^(\d+)// )
+                             {
+                                 if( $1 )
+                                 {
+                                     my $ef = $ENV{MYDanExtractFile};
+                                     open my $EF, "<$ef" or die "open $ef fail:$!";
+                                     my ( $n, $buf );
+
+                                     $hdl->on_drain(sub {
+                                             my ( $n, $buf );
+                                             $n = sysread( $EF, $buf, 102400 );
+                                             if( $n )
+                                             {
+                                                 $hdl->push_write($buf);
+                                             }
+                                             else
+                                             {
+                                                 $hdl->on_drain(undef);
+                                                 close $EF;
+                                                 $hdl->push_shutdown;
+                                             }
+                                         });
+                                 }
+                                 else
+                                 {
+                                     $hdl->push_shutdown;
+                                 }
+                             }
                              $result{$node} .= $_[1] unless ! $result{$node} && $_[1] =~ /^\*+/;
+
                          }
                      );
                   },
@@ -157,27 +196,9 @@ sub run
              );
              if( my $ef = $ENV{MYDanExtractFile} )
              {
-                 open my $EF, "<$ef" or die "open $ef fail:$!";
-                 my $size = (stat $ef )[7];
-                 $hdl->push_write("MYDanExtractFile_::${size}::_MYDanExtractFile");
-
-                 my ( $n, $buf );
-
-                 $hdl->on_drain(sub {
-                         my ( $n, $buf );
-                         $n = sysread( $EF, $buf, 102400 );
-                         if( $n )
-                         {
-                             $hdl->push_write($buf);
-                         }
-                         else
-                         {
-                             $hdl->on_drain(undef);
-                             close $EF;
-                             $hdl->push_write($query);
-                             $hdl->push_shutdown;
-                         }
-                     });
+                 my $size = length $query;
+                 $hdl->push_write("MYDanExtractFile_::${size}:${md5}::_MYDanExtractFile");
+                 $hdl->push_write($query);
              }
              else
              {
@@ -241,8 +262,39 @@ sub run
                      my $self = shift;
                      $self->unshift_read (
                          chunk => length $self->{rbuf},
-                         sub { $rresult{$node} .= $_[1] unless ! $rresult{$node} && $_[1]  =~ /^\*+/; 
-			 }
+                         sub { 
+                             if( ! $rresult{$node} && $_[1] =~ s/^(\d+)// )
+                             {
+                                 if( $1 )
+                                 {
+                                     my $ef = $ENV{MYDanExtractFile};
+                                     open my $EF, "<$ef" or die "open $ef fail:$!";
+                                     my ( $n, $buf );
+
+                                     $hdl->on_drain(sub {
+                                             my ( $n, $buf );
+                                             $n = sysread( $EF, $buf, 102400 );
+                                             if( $n )
+                                             {
+                                                 $hdl->push_write($buf);
+                                             }
+                                             else
+                                             {
+                                                 $hdl->on_drain(undef);
+                                                 close $EF;
+                                                 $hdl->push_shutdown;
+                                             }
+                                         });
+                                 }
+                                 else
+                                 {
+                                     $hdl->push_shutdown;
+                                 }
+                             }
+
+                             $rresult{$node} .= $_[1] 
+                                 unless ! $rresult{$node} && $_[1]  =~ /^\*+/; 
+                         }
                      );
                   },
                   on_eof => sub{
@@ -289,25 +341,9 @@ sub run
 
              if( my $ef = $ENV{MYDanExtractFile} )
              {
-                 open my $EF, "<$ef" or die "open $ef fail:$!";
-                 my $size = (stat $ef )[7];
-                 $hdl->push_write("MYDanExtractFile_::${size}::_MYDanExtractFile");
-
-                 $hdl->on_drain(sub {
-                         my ( $n, $buf );
-                         $n = sysread( $EF, $buf, 102400 );
-                         if( $n )
-                         {
-                             $hdl->push_write($buf);
-                         }
-                         else
-                         {
-                             $hdl->on_drain(undef);
-                             close $EF;
-                             $hdl->push_write($rquery);
-                             $hdl->push_shutdown;
-                         }
-                     });
+                 my $size = length $rquery;
+                 $hdl->push_write("MYDanExtractFile_::${size}:${md5}::_MYDanExtractFile");
+                 $hdl->push_write($rquery);
              }
              else
              {

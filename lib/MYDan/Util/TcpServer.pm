@@ -18,6 +18,7 @@ use Fcntl qw(:flock SEEK_END);
 use Filesys::Df;
 
 use MYDan;
+use MYDan::Agent::FileCache;
 
 my ( %index, %w );
 
@@ -61,6 +62,7 @@ sub run
     my $this = shift;
     my ( $port, $max, $exec, $tmp, $rbuf, $wbuf ) = @$this{qw( port max exec tmp rbuf wbuf )};
 
+    my $filecache = MYDan::Agent::FileCache->new();
     my $version = $MYDan::VERSION; $version =~ s/\./0/g;
 
     $SIG{'USR1'} = sub {
@@ -174,7 +176,7 @@ sub run
 
                    $ENV{TCPREMOTEIP} = $tip;
                    $ENV{TCPREMOTEPORT} = $port;
-		   $ENV{MYDanExtractFile} = "$tmp/$index.ext" if defined $index{$index}{extsize};
+		   $ENV{MYDanExtractFile} = $index{$index}{extfile} if defined $index{$index}{extfile};
       
                    open STDIN, '<', "$tmp/$index" or die "Can't open '$tmp/$index': $!";
                    my $m = -f "$tmp/$index.out" ? '+<' : '>';
@@ -186,43 +188,65 @@ sub run
            on_read => sub {
                my $self = shift;
 
-	       if( ! $index{$index}{rbuf} && $self->{rbuf} =~ s/^MYDanExtractFile_::(\d+)::_MYDanExtractFile// )
-	       {
-		   $index{$index}{extsize} = $1;
-                   open $EF, ">$tmp/$index.ext" or die "Can't open $tmp/$index.ext";
-		   $index{$index}{rbuf} = 1;
-	       }
+               if( ! $index{$index}{rbuf} && $self->{rbuf} =~ s/^MYDanExtractFile_::(\d+):([a-zA-Z0-9]{32})::_MYDanExtractFile// )
+               {
+                    $index{$index}{querysize} = $1;
+                    if( $index{$index}{extfile} = $filecache->check( $2 ) )
+                    {
+                        $handle->push_write("0") if $handle->fh;
+                    }
+                    else
+                    {
+                        $handle->push_write("1") if $handle->fh;
+                        $index{$index}{extfile} = "$tmp/$index.ext";
+                        open $EF, ">$tmp/$index.ext" or die "Can't open $tmp/$index.ext";
+                    }
+                    $index{$index}{rbuf} = 1;
+               }
 
 	       my $len = length $self->{rbuf};
-	       if( $index{$index}{extsize} )
+
+               $index{$index}{querysize} = 10240000 unless defined $index{$index}{querysize};
+	       if( $index{$index}{querysize} )
 	       {
-		   if( $len < $index{$index}{extsize} )
+		   if( $len < $index{$index}{querysize} )
 		   {
+                       $index{$index}{rbuf} += $len;
                        $self->push_read (
                            chunk => $len,
-			   sub { print $EF $_[1] }
+			   sub { print $tmp_handle $_[1] }
 		       );
-		       $index{$index}{extsize} -= $len;
+		       $index{$index}{querysize} -= $len;
 		       $len = 0;
 		   }
 		   else
 		   {
+                       $index{$index}{rbuf} += $index{$index}{querysize};
                        $self->push_read(
-			    chunk => $index{$index}{extsize},
-			   sub { print $EF $_[1]}
+			    chunk => $index{$index}{querysize},
+			   sub { print $tmp_handle $_[1]}
 		       );
-		       $len -= $index{$index}{extsize};
-                       $index{$index}{extsize} = 0;
+		       $len -= $index{$index}{querysize};
+                       $index{$index}{querysize} = 0;
 		   }
 	       }
 
-
 	       if( $len )
 	       {
-                   $index{$index}{rbuf} += $len;
                    $self->push_read (
                        chunk => $len,
-                       sub { print $tmp_handle $_[1] if ! $rbuf || ( $rbuf && $index{$index}{rbuf} <= $rbuf ); }
+                       sub { 
+                           if( $EF )
+                           {
+                               print $EF $_[1];
+                           }
+                           else
+                           {
+                               #$handle->push_write("1") if $handle->fh;
+                               warn "err";
+                           }
+                       }
+                       #sub { print $EF $_[1] if ! $rbuf || ( $rbuf && $index{$index}{rbuf} <= $rbuf ); }
                    );
                }
             },
