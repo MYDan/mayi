@@ -109,7 +109,7 @@ sub run
         {
             my %rquery = ( 
                 code => 'proxy', 
-                single => 1,
+                proxyload => 1,
                 argv => [ $node, +{ query => $query, map{ $_ => $run{$_} }grep{ $run{$_} }qw( timeout max port ) } ],
 	        map{ $_ => $run{$_} }grep{ $run{$_} }qw( user sudo env ) 
             );
