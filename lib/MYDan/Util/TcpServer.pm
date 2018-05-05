@@ -86,6 +86,7 @@ sub run
 
         }
     };
+    my %savecb;
     my $childcb = sub
     {
         my ($pid, $code) = @_;
@@ -94,6 +95,8 @@ sub run
         my ( $index ) = grep{ $index{$_}{pid}  && $index{$_}{pid} eq $pid  }keys %index;
         next unless my $data = delete $index{$index};
 
+
+        kill( 15, $data->{savecbpid} ) if $data->{savecbpid} && $savecb{$data->{savecbpid}};
 
         if( $data->{handle}->fh )
         {
@@ -112,7 +115,7 @@ sub run
 
     my ( $i, $cv ) = ( 0, AnyEvent->condvar );
 
-    my ( $whitelist, %savecb );
+    my $whitelist;
    
     tcp_server undef, $port, sub {
        my ( $fh, $tip, $tport ) = @_ or die "tcp_server: $!";
@@ -225,6 +228,7 @@ sub run
                         {
                             if ( my $pid = fork() )
                             {
+                                $index{$index}{savecbpid} = $pid;
                                 $savecb{$pid} = AnyEvent->child (pid => $pid, cb => sub
                                     {
                                         delete $savecb{$pid};
