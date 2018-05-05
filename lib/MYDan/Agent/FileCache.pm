@@ -51,7 +51,7 @@ sub save
 
     die "save fail: $!" if system "mv '$path/$tempmd5.tmp' '$path/$md5'";
     
-    return 1;
+    return $md5;
 }
 
 sub check
