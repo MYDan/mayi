@@ -81,26 +81,33 @@ sub run
             my $code = ( $? == -1 || $? & 127 ) ? 110 : $? >> 8;
 
             
-            print "chld: $pid exit $code.\n";;
-
-            my ( $index ) = grep{ $index{$_}{pid}  && $index{$_}{pid} eq $pid  }keys %index;
-            next unless my $data = delete $index{$index};
+            print "chld: $pid exit $code by sig.\n";;
 
 
-            if( $data->{handle}->fh )
-            {
-                $data->{handle}->push_write( "*#*MYDan_$version*#" );
-
-                my $size = $wbuf ? ( stat "$tmp/$index.out" )[7] || 0 : 0;
-
-                if ( ( ! $wbuf || ( $wbuf && $size <= $wbuf ) ) && open my $tmp_handle, '<', "$tmp/$index.out" )
-                {
-			$w{$index} = +{ code => $code, handle => $data->{handle}, fh => $tmp_handle };
-                }
-            }
-
-	    map{ unlink "$tmp/$_" if -e "$tmp/$_" }( $index, "$index.out", "$index.ext" );
         }
+    };
+    my $childcb = sub
+    {
+        my ($pid, $code) = @_;
+        print "chld: $pid exit $code by event.\n";;
+
+        my ( $index ) = grep{ $index{$_}{pid}  && $index{$_}{pid} eq $pid  }keys %index;
+        next unless my $data = delete $index{$index};
+
+
+        if( $data->{handle}->fh )
+        {
+            $data->{handle}->push_write( "*#*MYDan_$version*#" );
+
+            my $size = $wbuf ? ( stat "$tmp/$index.out" )[7] || 0 : 0;
+
+            if ( ( ! $wbuf || ( $wbuf && $size <= $wbuf ) ) && open my $tmp_handle, '<', "$tmp/$index.out" )
+            {
+                $w{$index} = +{ code => $code, handle => $data->{handle}, fh => $tmp_handle };
+            }
+        }
+
+        map{ unlink "$tmp/$_" if -e "$tmp/$_" }( $index, "$index.out", "$index.ext" );
     };
 
     my ( $i, $cv ) = ( 0, AnyEvent->condvar );
@@ -169,6 +176,8 @@ sub run
                if ( my $pid = fork() )
                {
                    $index{$index}{pid} = $pid;
+
+                   $index{$index}{child} = AnyEvent->child (pid => $pid, cb => $childcb );
                }
                else
                {
