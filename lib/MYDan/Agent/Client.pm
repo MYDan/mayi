@@ -104,12 +104,15 @@ sub run
     $SIG{TERM} = $SIG{INT} = sub{ warn "sigaction exit.\n"; &$tocb();};
     my $w = AnyEvent->timer ( after => $run{timeout},  cb => sub{ warn "timeout.\n";&$tocb(); });
 
-    my $md5;
+    my ( $md5, $aim, $efsize );
     if( my $ef = $ENV{MYDanExtractFile} )
     {
         open my $TEMP, "<$ef" or die "open ef fail:$!";
         $md5 = Digest::MD5->new()->addfile( $TEMP )->hexdigest();
         close $TEMP;
+        my $efa =  $ENV{MYDanExtractFileAim};
+        $aim = $efa && $efa =~ /^[a-zA-Z0-9\/\._\-]+$/ ? $efa : '.';
+        $efsize = ( stat $ef )[7];
     }
 
 
@@ -197,7 +200,7 @@ sub run
              if( my $ef = $ENV{MYDanExtractFile} )
              {
                  my $size = length $query;
-                 $hdl->push_write("MYDanExtractFile_::${size}:${md5}::_MYDanExtractFile");
+                 $hdl->push_write("MYDanExtractFile_::${size}:${efsize}:${md5}:${aim}::_MYDanExtractFile");
                  $hdl->push_write($query);
              }
              else
@@ -342,7 +345,7 @@ sub run
              if( my $ef = $ENV{MYDanExtractFile} )
              {
                  my $size = length $rquery;
-                 $hdl->push_write("MYDanExtractFile_::${size}:${md5}::_MYDanExtractFile");
+                 $hdl->push_write("MYDanExtractFile_::${size}:${efsize}:${md5}:${aim}::_MYDanExtractFile");
                  $hdl->push_write($rquery);
              }
              else

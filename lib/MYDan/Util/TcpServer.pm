@@ -16,6 +16,7 @@ use AnyEvent::Socket;
 use AnyEvent::Handle;
 use Fcntl qw(:flock SEEK_END);
 use Filesys::Df;
+use Digest::MD5;
 
 use MYDan;
 use MYDan::Agent::FileCache;
@@ -188,10 +189,37 @@ sub run
            on_read => sub {
                my $self = shift;
 
-               if( ! $index{$index}{rbuf} && $self->{rbuf} =~ s/^MYDanExtractFile_::(\d+):([a-zA-Z0-9]{32})::_MYDanExtractFile// )
+               if( ! $index{$index}{rbuf} && $self->{rbuf} =~ s/^MYDanExtractFile_::(\d+):(\d+):([a-zA-Z0-9]{32}):([a-zA-Z0-9\/\._\-]+)::_MYDanExtractFile// )
                {
-                    $index{$index}{querysize} = $1;
-                    if( $index{$index}{extfile} = $filecache->check( $2 ) )
+                    my ( $qsize, $esize, $md5, $aim  ) = ( $1, $2, $3, $4 );
+                    $index{$index}{querysize} = $qsize;
+
+                    if( ! $filecache->check( $md5 ) && -f $aim )
+                    {
+
+                        my $size = ( stat $aim )[7];
+                        if( $size eq $esize )
+                        {
+                            
+                            if( open my $tfh, "<$aim" )
+                            {
+                                my $tmd5 = Digest::MD5->new()->addfile( $tfh )->hexdigest();
+                                close $tfh;
+                                if( $md5 eq $tmd5 )
+                                {
+                                    $filecache->save( $aim => $md5 );
+                                }
+                            }
+                            else
+                            {
+                                warn "open aim $aim fail: $!";
+                            }
+ 
+                        }
+                    }
+
+
+                    if( $index{$index}{extfile} = $filecache->check( $md5 ) )
                     {
                         $handle->push_write("0") if $handle->fh;
                     }

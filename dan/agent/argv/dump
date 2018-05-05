@@ -28,6 +28,7 @@ return sub
     close $fh;
 
     $ENV{MYDanExtractFile} = $file;
+    $ENV{MYDanExtractFileAim} = $o{path};
 
     return \%o;
 };
