@@ -216,7 +216,7 @@ sub run
                                 close $tfh;
                                 if( $md5 eq $tmd5 )
                                 {
-                                    $filecache->save( $aim => $md5 );
+                                    $filecache->save( $aim );
                                 }
                             }
                             else

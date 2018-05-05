@@ -251,7 +251,7 @@ sub run
     }
 
     die "rename temp file\n" if system "mv '$temp' '$dp'";
-    eval{ $filecache->save( $dp => $filemd5 ); };
+    eval{ $filecache->save( $dp ); };
     warn "save filecache fail: $@" if $@;
 }
 

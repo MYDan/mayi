@@ -160,7 +160,7 @@ eval
 
 		}
         close $TEMP;
-		eval{ $filecache->save( $temp => $filemd5 ); };
+		eval{ $filecache->save( $temp ); };
 		warn "save filecache fail: $@" if $@;
 
         print "$size:$filemd5:$own:$mode:";

@@ -35,25 +35,19 @@ sub new
 
 sub save
 {
-    my ( $this, $file, $md5, $mv ) = @_;
+    my ( $this, $file ) = @_;
 
     my $path = $this->{path};
-    return 0 unless -e $path && defined $file &&  -f $file && ! -l $file;
+    return 0 unless -e $path && defined $file &&  -f $file;
 
     $this->_clean();
 
-    return 1 if -e "$path/$md5";
-
     my $tempmd5 = Digest::MD5->new()->add( $file.time,$$ )->hexdigest();
-    my $x = $mv ? 'mv': 'cp';
-    die "save fail: $!" if system "$x '$file' '$path/$tempmd5.tmp'";
+    die "save fail: $!" if system "cp '$file' '$path/$tempmd5.tmp'";
 
-    unless( $md5 && $md5 =~ /^[a-zA-Z0-9]+$/ )
-    {
-        open my $fh, "<$file" or die "open fail: $!";
-        $md5 = Digest::MD5->new()->addfile( $fh )->hexdigest();
-        close $fh;
-    }
+    open my $fh, "<$path/$tempmd5.tmp" or die "open fail: $!";
+    my $md5 = Digest::MD5->new()->addfile( $fh )->hexdigest();
+    close $fh;
 
     die "save fail: $!" if system "mv '$path/$tempmd5.tmp' '$path/$md5'";
     
