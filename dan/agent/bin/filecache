@@ -16,5 +16,5 @@ my %o = $option->get()->dump();
 $option->assert() unless @ARGV;
 my $filecache = MYDan::Agent::FileCache->new();
 
-map{ $filecache->save( $_ ); }@ARGV;
+map{ die "save $_ fail" unless $filecache->save( $_ ); }@ARGV;
 exit 0;
