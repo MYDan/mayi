@@ -112,7 +112,7 @@ sub run
 
     my ( $i, $cv ) = ( 0, AnyEvent->condvar );
 
-    my $whitelist;
+    my ( $whitelist, %savecb );
    
     tcp_server undef, $port, sub {
        my ( $fh, $tip, $tport ) = @_ or die "tcp_server: $!";
@@ -207,38 +207,47 @@ sub run
                     {
 
                         my $size = ( stat $aim )[7];
-                        if( $size eq $esize )
-                        {
-                            
-                            if( open my $tfh, "<$aim" )
+
+                        my $cb = sub{
+                            return unless $index{$index};
+                            if( $index{$index}{extfile} = $filecache->check( $md5 ) )
                             {
-                                my $tmd5 = Digest::MD5->new()->addfile( $tfh )->hexdigest();
-                                close $tfh;
-                                if( $md5 eq $tmd5 )
-                                {
-                                    $filecache->save( $aim );
-                                }
+                                $handle->push_write("0") if $handle->fh;
                             }
                             else
                             {
-                                warn "open aim $aim fail: $!";
+                                $handle->push_write("1") if $handle->fh;
+                                $index{$index}{extfile} = "$tmp/$index.ext";
+                                open $EF, ">$tmp/$index.ext" or die "Can't open $tmp/$index.ext";
                             }
- 
+                        };
+                        if( $size eq $esize )
+                        {
+                            if ( my $pid = fork() )
+                            {
+                                $savecb{$pid} = AnyEvent->child (pid => $pid, cb => sub
+                                    {
+                                        delete $savecb{$pid};
+                                        &$cb();
+                                    }
+                                );
+                            }
+                            else
+                            {
+                                $0 = "mydan.filecache $aim";
+                                die "save aim $aim fail\n" unless $filecache->save( $aim );
+                                exit 0;
+                            }
+
+                        }
+                        else
+                        {
+                            &$cb();
                         }
                     }
 
 
-                    if( $index{$index}{extfile} = $filecache->check( $md5 ) )
-                    {
-                        $handle->push_write("0") if $handle->fh;
-                    }
-                    else
-                    {
-                        $handle->push_write("1") if $handle->fh;
-                        $index{$index}{extfile} = "$tmp/$index.ext";
-                        open $EF, ">$tmp/$index.ext" or die "Can't open $tmp/$index.ext";
-                    }
-                    $index{$index}{rbuf} = 1;
+                   $index{$index}{rbuf} = 1;
                }
 
 	       my $len = length $self->{rbuf};
