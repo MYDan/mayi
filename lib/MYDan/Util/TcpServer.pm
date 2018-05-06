@@ -210,11 +210,11 @@ sub run
                             return unless $index{$index};
                             if( $index{$index}{extfile} = $filecache->check( $md5 ) )
                             {
-                                $handle->push_write("0") if $handle->fh;
+                                $handle->push_write("MH_:0:_MH") if $handle->fh;
                             }
                             else
                             {
-                                $handle->push_write("1") if $handle->fh;
+                                $handle->push_write("MH_:1:_MH") if $handle->fh;
                                 $index{$index}{extfile} = "$tmp/$index.ext";
                                 open $EF, ">$tmp/$index.ext" or die "Can't open $tmp/$index.ext";
                             }

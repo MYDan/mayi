@@ -156,37 +156,45 @@ sub run
                                  $cut{$node} = $_[1]; return; 
                              }
                              
+			     if( $result{$node} )
+			     {
+				  $result{$node} .= $_[1];
+			     }
+			     else
+			     {
+				     $_[1] =~ s/^\*+//;
 
-                             if( ! $result{$node} && $_[1] =~ s/^(\d+)// )
-                             {
-                                 if( $1 )
-                                 {
-                                     my $ef = $ENV{MYDanExtractFile};
-                                     open my $EF, "<$ef" or die "open $ef fail:$!";
-                                     my ( $n, $buf );
-
-                                     $hdl->on_drain(sub {
+				     if( $_[1] =~ s/^MH_:(\d+):_MH// )
+				     {
+                                         if( $1 )
+                                         {
+                                             my $ef = $ENV{MYDanExtractFile};
+                                             open my $EF, "<$ef" or die "open $ef fail:$!";
                                              my ( $n, $buf );
-                                             $n = sysread( $EF, $buf, 102400 );
-                                             if( $n )
-                                             {
-                                                 $hdl->push_write($buf);
-                                             }
-                                             else
-                                             {
-                                                 $hdl->on_drain(undef);
-                                                 close $EF;
-                                                 $hdl->push_shutdown;
-                                             }
-                                         });
-                                 }
-                                 else
-                                 {
-                                     $hdl->push_shutdown;
-                                 }
-                             }
-                             $result{$node} .= $_[1] unless ! $result{$node} && $_[1] =~ /^\*+/;
-
+        
+                                             $hdl->on_drain(sub {
+                                                     my ( $n, $buf );
+                                                     $n = sysread( $EF, $buf, 102400 );
+                                                     if( $n )
+                                                     {
+                                                         $hdl->push_write($buf);
+                                                     }
+                                                     else
+                                                     {
+                                                         $hdl->on_drain(undef);
+                                                         close $EF;
+                                                         $hdl->push_shutdown;
+                                                     }
+                                                 });
+                                         }
+                                         else
+                                         {
+                                             $hdl->push_shutdown;
+                                         }
+				         $_[1] =~ s/^\*+//;
+				     }
+				     $result{$node} = $_[1] if $_[1];
+			     }
                          }
                      );
                   },
@@ -266,37 +274,49 @@ sub run
                      $self->unshift_read (
                          chunk => length $self->{rbuf},
                          sub { 
-                             if( ! $rresult{$node} && $_[1] =~ s/^(\d+)// )
-                             {
-                                 if( $1 )
-                                 {
-                                     my $ef = $ENV{MYDanExtractFile};
-                                     open my $EF, "<$ef" or die "open $ef fail:$!";
-                                     my ( $n, $buf );
 
-                                     $hdl->on_drain(sub {
+			     if( $rresult{$node} )
+			     {
+                                 $rresult{$node} .= $_[1];
+			     }
+			     else
+			     {
+				     $_[1] =~ s/^\*+//;
+
+				     if( $_[1] =~ s/^MH_:(\d+):_MH// )
+				     {
+
+                                         if( $1 )
+                                         {
+                                             my $ef = $ENV{MYDanExtractFile};
+                                             open my $EF, "<$ef" or die "open $ef fail:$!";
                                              my ( $n, $buf );
-                                             $n = sysread( $EF, $buf, 102400 );
-                                             if( $n )
-                                             {
-                                                 $hdl->push_write($buf);
-                                             }
-                                             else
-                                             {
-                                                 $hdl->on_drain(undef);
-                                                 close $EF;
-                                                 $hdl->push_shutdown;
-                                             }
-                                         });
-                                 }
-                                 else
-                                 {
-                                     $hdl->push_shutdown;
-                                 }
-                             }
+        
+                                             $hdl->on_drain(sub {
+                                                     my ( $n, $buf );
+                                                     $n = sysread( $EF, $buf, 102400 );
+                                                     if( $n )
+                                                     {
+                                                         $hdl->push_write($buf);
+                                                     }
+                                                     else
+                                                     {
+                                                         $hdl->on_drain(undef);
+                                                         close $EF;
+                                                         $hdl->push_shutdown;
+                                                     }
+                                                 });
+                                         }
+                                         else
+                                         {
+                                             $hdl->push_shutdown;
+                                         }
+				         $_[1] =~ s/^\*+//;
+				     }
+				     $rresult{$node} .= $_[1] if $_[1];
+			     }
 
-                             $rresult{$node} .= $_[1] 
-                                 unless ! $rresult{$node} && $_[1]  =~ /^\*+/; 
+
                          }
                      );
                   },
