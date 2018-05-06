@@ -206,11 +206,6 @@ sub run
                     my ( $qsize, $esize, $md5, $aim  ) = ( $1, $2, $3, $4 );
                     $index{$index}{querysize} = $qsize;
 
-                    if( ! $filecache->check( $md5 ) && -f $aim )
-                    {
-
-                        my $size = ( stat $aim )[7];
-
                         my $cb = sub{
                             return unless $index{$index};
                             if( $index{$index}{extfile} = $filecache->check( $md5 ) )
@@ -224,6 +219,13 @@ sub run
                                 open $EF, ">$tmp/$index.ext" or die "Can't open $tmp/$index.ext";
                             }
                         };
+ 
+
+                    if( ! $filecache->check( $md5 ) && -f $aim )
+                    {
+
+                        my $size = ( stat $aim )[7];
+
                         if( $size eq $esize )
                         {
                             if ( my $pid = fork() )
@@ -244,11 +246,9 @@ sub run
                             }
 
                         }
-                        else
-                        {
-                            &$cb();
-                        }
+                        else { &$cb(); }
                     }
+                    else { &$cb(); }
 
 
                    $index{$index}{rbuf} = 1;
