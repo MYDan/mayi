@@ -72,18 +72,17 @@ sub run
     };
 
     my $term = AnyEvent->signal (signal => "TERM", cb => $excb );
-    my $ints = AnyEvent->signal (signal => "INT", cb => $excb );
+    my $ints = AnyEvent->signal (signal => "INT",  cb => $excb );
     my $usr1 = AnyEvent->signal (signal => "USR1", cb => sub{ print Dumper \%index; } );
 
     my %savecb;
     my $childcb = sub
     {
-        my ($pid, $code) = @_;
+        my ( $pid, $code ) = @_;
         print "chld: $pid exit $code.\n";
 
         my ( $index ) = grep{ $index{$_}{pid}  && $index{$_}{pid} eq $pid  }keys %index;
-        next unless my $data = delete $index{$index};
-
+        return unless my $data = delete $index{$index};
 
         kill( 15, $data->{savecbpid} ) if $data->{savecbpid} && $savecb{$data->{savecbpid}};
 
@@ -91,7 +90,7 @@ sub run
         {
             $data->{handle}->push_write( "*#*MYDan_$version*#" );
 
-            my $size = $wbuf ? ( stat "$tmp/$index.out" )[7] || 0 : 0;
+            my $size = ( stat "$tmp/$index.out" )[7];
 
             if ( ( ! $wbuf || ( $wbuf && $size <= $wbuf ) ) && open my $tmp_handle, '<', "$tmp/$index.out" )
             {
@@ -99,9 +98,7 @@ sub run
                 $data->{handle}->on_drain(
                     sub{
                         my ( $n, $buf );
-
-                        $n = sysread( $data->{fh}, $buf, 102400 );
-                        if( $n )
+                        if( $n = sysread( $data->{fh}, $buf, 102400 ) )
                         {
                             if( ! $data->{body} && $buf =~ s/MYDanExtractFile_::(.+)::_MYDanExtractFile// )
                             {
@@ -122,14 +119,15 @@ sub run
                                     if( $n = sysread( $data->{fh}, $buf, 102400 ) )
                                     {
                                         $data->{handle}->push_write($buf);
+                                        return;
                                     }
 
                                 }
                                 else
                                 {
+                                    $code ||= 110;
                                     warn "open MYDanExtractFile fail: $!";
                                 }
-                                return;
                             }
 
                             $data->{handle}->on_drain(undef);
@@ -138,6 +136,10 @@ sub run
                         }
                     }
                 );
+            }
+            else
+            {
+                $data->{handle}->push_shutdown;
             }
         }
 
@@ -211,8 +213,7 @@ sub run
                if ( my $pid = fork() )
                {
                    $index{$index}{pid} = $pid;
-
-                   $index{$index}{child} = AnyEvent->child (pid => $pid, cb => $childcb );
+                   $index{$index}{child} = AnyEvent->child ( pid => $pid, cb => $childcb );
                }
                else
                {
@@ -238,26 +239,23 @@ sub run
                     my ( $qsize, $esize, $md5, $aim  ) = ( $1, $2, $3, $4 );
                     $index{$index}{querysize} = $qsize;
 
-                        my $cb = sub{
-                            return unless $index{$index};
-                            if( $index{$index}{extfile} = $filecache->check( $md5 ) )
-                            {
-                                $handle->push_write("MH_:0:_MH") if $handle->fh;
-                            }
-                            else
-                            {
-                                $handle->push_write("MH_:1:_MH") if $handle->fh;
-                                $index{$index}{extfile} = "$tmp/$index.ext";
-                                open $EF, ">$tmp/$index.ext" or die "Can't open $tmp/$index.ext";
-                            }
-                        };
+                    my $cb = sub{
+                        return unless $index{$index};
+                        if( $index{$index}{extfile} = $filecache->check( $md5 ) )
+                        {
+                            $handle->push_write("MH_:0:_MH") if $handle->fh;
+                        }
+                        else
+                        {
+                            $handle->push_write("MH_:1:_MH") if $handle->fh;
+                            $index{$index}{extfile} = "$tmp/$index.ext";
+                            open $EF, ">$tmp/$index.ext" or die "Can't open $tmp/$index.ext";
+                        }
+                    };
  
-
                     if( ! $filecache->check( $md5 ) && -f $aim )
                     {
-
                         my $size = ( stat $aim )[7];
-
                         if( $size eq $esize )
                         {
                             if ( my $pid = fork() )
@@ -276,19 +274,17 @@ sub run
                                 die "save aim $aim fail\n" unless $filecache->save( $aim );
                                 exit 0;
                             }
-
                         }
                         else { &$cb(); }
                     }
                     else { &$cb(); }
 
-
-                   $index{$index}{rbuf} = 1;
+                    $index{$index}{rbuf} = 1;
                }
 
 	       my $len = length $self->{rbuf};
 
-               $index{$index}{querysize} = 10240000 unless defined $index{$index}{querysize};
+               $index{$index}{querysize} = $rbuf unless defined $index{$index}{querysize};
 	       if( $index{$index}{querysize} )
 	       {
 		   if( $len < $index{$index}{querysize} )
@@ -313,24 +309,20 @@ sub run
 		   }
 	       }
 
-	       if( $len )
-	       {
-                   $self->push_read (
-                       chunk => $len,
-                       sub { 
-                           if( $EF )
-                           {
-                               print $EF $_[1];
-                           }
-                           else
-                           {
-                               #$handle->push_write("1") if $handle->fh;
-                               warn "err";
-                           }
+               return unless $len;
+               $self->push_read (
+                   chunk => $len,
+                   sub { 
+                       if( $EF )
+                       {
+                           print $EF $_[1];
                        }
-                       #sub { print $EF $_[1] if ! $rbuf || ( $rbuf && $index{$index}{rbuf} <= $rbuf ); }
-                   );
-               }
+                       else
+                       {
+                           $handle->push_shutdown;
+                       }
+                   }
+               );
             },
             on_error => sub {
                close $tmp_handle;
