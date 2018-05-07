@@ -21,7 +21,7 @@ use Digest::MD5;
 use MYDan;
 use MYDan::Agent::FileCache;
 
-my ( %index, %w );
+my %index;
 
 sub new
 {
@@ -73,13 +73,13 @@ sub run
 
     my $term = AnyEvent->signal (signal => "TERM", cb => $excb );
     my $ints = AnyEvent->signal (signal => "INT", cb => $excb );
-    my $usr1 = AnyEvent->signal (signal => "USR1", cb => sub{ print Dumper \%index, \%w; } );
+    my $usr1 = AnyEvent->signal (signal => "USR1", cb => sub{ print Dumper \%index; } );
 
     my %savecb;
     my $childcb = sub
     {
         my ($pid, $code) = @_;
-        print "chld: $pid exit $code by event.\n";;
+        print "chld: $pid exit $code.\n";
 
         my ( $index ) = grep{ $index{$_}{pid}  && $index{$_}{pid} eq $pid  }keys %index;
         next unless my $data = delete $index{$index};
@@ -95,7 +95,49 @@ sub run
 
             if ( ( ! $wbuf || ( $wbuf && $size <= $wbuf ) ) && open my $tmp_handle, '<', "$tmp/$index.out" )
             {
-                $w{$index} = +{ code => $code, handle => $data->{handle}, fh => $tmp_handle };
+                $data->{fh} = $tmp_handle;
+                $data->{handle}->on_drain(
+                    sub{
+                        my ( $n, $buf );
+
+                        $n = sysread( $data->{fh}, $buf, 102400 );
+                        if( $n )
+                        {
+                            if( ! $data->{body} && $buf =~ s/MYDanExtractFile_::(.+)::_MYDanExtractFile// )
+                            {
+                                $data->{file} = $1;
+                            }
+                            $data->{body} = 1;
+                            $data->{handle}->push_write($buf);
+                        }
+                        else
+                        {
+                            close $data->{fh};
+
+                            if( my $f = delete $data->{file} )
+                            {
+                                if( open my $tmp_handle, '<', $f )
+                                {
+                                    $data->{fh} = $tmp_handle;
+                                    if( $n = sysread( $data->{fh}, $buf, 102400 ) )
+                                    {
+                                        $data->{handle}->push_write($buf);
+                                    }
+
+                                }
+                                else
+                                {
+                                    warn "open MYDanExtractFile fail: $!";
+                                }
+                                return;
+                            }
+
+                            $data->{handle}->on_drain(undef);
+                            $data->{handle}->push_write("--- $code\n");
+                            $data->{handle}->push_shutdown;
+                        }
+                    }
+                );
             }
         }
 
@@ -162,6 +204,7 @@ sub run
            keepalive => 1,
            rbuf_max => 10240000,
            wbuf_max => 10240000,
+           autocork => 1,
            on_eof => sub{
                close $tmp_handle;
 
@@ -308,50 +351,6 @@ sub run
        $index{$index}{handle} = $handle;
     
     };
-
-    my $ww = AnyEvent->timer(
-        after => 0.01, 
-        interval => 0.05,
-        cb => sub { 
-            for my $index ( keys %w )
-            {
-            	my ( $data, $buf, $n ) = $w{$index};
-            
-            	map{
-            	    if( $n = sysread( $data->{fh}, $buf, 102400 ) && $data->{handle}->fh )
-            	    {
-		        if( ! $data->{body} && $buf =~ s/MYDanExtractFile_::(.+)::_MYDanExtractFile// )
-			{
-                            $data->{file} = $1;
-			}
-			$data->{body} = 1;
-            	        $data->{handle}->push_write($buf);
-            	    }
-            	    else{
-		        close $data->{fh};
-		        if( my $f = delete $data->{file} )
-			{
-                             if( open my $tmp_handle, '<', $f )
-			     {
-			         $data->{fh} = $tmp_handle;
-			     }
-			     else
-			     {
-			         warn "open MYDanExtractFile fail: $!";
-			     }
-			}
-			else
-			{
-                            $data->{handle}->push_write("--- $data->{code}\n") if $data->{handle}->fh;
-                            $data->{handle}->destroy() if $data->{handle}->fh;
-                            delete $w{$index};
-                            next;
-			}
-            	    }
-            	}1..10;
-            }
-        }
-    ); 
 
     my $t = AnyEvent->timer(
         after => 1, 
