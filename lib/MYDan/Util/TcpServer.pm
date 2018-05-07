@@ -45,7 +45,7 @@ sub new
     $c = $this{max} if $c > $this{max};
 
     open my $H, '>', "$r/tmp" or die "Can't open '$r/tmp': $!";
-    map{ print $H "\0" x 1024; } 1 .. $s;
+    map{ syswrite( $H, "\0" x 1024 ); } 1 .. $s;
     close $H;
 
     for my $i ( 1 .. $c )
@@ -292,7 +292,7 @@ sub run
                        $index{$index}{rbuf} += $len;
                        $self->push_read (
                            chunk => $len,
-			   sub { print $tmp_handle $_[1] }
+			   sub { syswrite( $tmp_handle, $_[1] ) }
 		       );
 		       $index{$index}{querysize} -= $len;
 		       $len = 0;
@@ -302,7 +302,7 @@ sub run
                        $index{$index}{rbuf} += $index{$index}{querysize};
                        $self->push_read(
 			    chunk => $index{$index}{querysize},
-			   sub { print $tmp_handle $_[1]}
+			   sub { syswrite( $tmp_handle, $_[1] ) }
 		       );
 		       $len -= $index{$index}{querysize};
                        $index{$index}{querysize} = 0;
@@ -315,7 +315,7 @@ sub run
                    sub { 
                        if( $EF )
                        {
-                           print $EF $_[1];
+                           syswrite( $EF, $_[1] );
                        }
                        else
                        {
