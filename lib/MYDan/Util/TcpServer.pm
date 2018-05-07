@@ -66,26 +66,15 @@ sub run
     my $filecache = MYDan::Agent::FileCache->new();
     my $version = $MYDan::VERSION; $version =~ s/\./0/g;
 
-    $SIG{'USR1'} = sub {
-        print Dumper \%index, \%w;
-    };
-
-    $SIG{INT} = $SIG{TERM} = sub { 
+    my $excb = sub{
         map{ kill 'TERM', $_->{pid} if $_->{pid}; }values %index;
         die "kill.\n";
     };
 
-    $SIG{'CHLD'} = sub {
-        while((my $pid = waitpid(-1, WNOHANG)) >0)
-        {
-            my $code = ( $? == -1 || $? & 127 ) ? 110 : $? >> 8;
+    my $term = AnyEvent->signal (signal => "TERM", cb => $excb );
+    my $ints = AnyEvent->signal (signal => "INT", cb => $excb );
+    my $usr1 = AnyEvent->signal (signal => "USR1", cb => sub{ print Dumper \%index, \%w; } );
 
-            
-            print "chld: $pid exit $code by sig.\n";;
-
-
-        }
-    };
     my %savecb;
     my $childcb = sub
     {
