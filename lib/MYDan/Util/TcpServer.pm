@@ -202,8 +202,8 @@ sub run
        my $handle; $handle = new AnyEvent::Handle( 
            fh => $fh,
            keepalive => 1,
-           rbuf_max => 10240000,
-           wbuf_max => 10240000,
+           rbuf_max => 1024000,
+           wbuf_max => 1024000,
            autocork => 1,
            on_eof => sub{
                close $tmp_handle;
