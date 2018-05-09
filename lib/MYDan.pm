@@ -11,7 +11,7 @@ http://www.mydan.org
 
 =cut
 
-our $VERSION = '0.1.38';
+our $VERSION = '0.1.39';
 our $PATH;
 
 require 5.000;
