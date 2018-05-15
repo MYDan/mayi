@@ -52,16 +52,25 @@ sub run
         }
     };
 
-    my $t = AnyEvent->timer(
+    my $count;
+    my $t  = AnyEvent->timer(
         after => 2,
         interval => 3,
         cb => sub {
                 return if %proc;
+                if( defined $RUN{count} && $count >= $RUN{count} )
+                {
+                    print $logH "[CLOSE]\n";
+                    exit;
+                }
+
 
                 my ( $err, $wtr, $rdr ) = gensym;
                 my $pid = IPC::Open3::open3( undef, $rdr, $err, "$cmd" );
            
-                print $logH unixtai64n(time), " [START]\n";
+                $count ++;
+                print $logH unixtai64n(time), " [START:$count]\n";
+
 
                 $proc{pid} = $pid;
                 $proc{rdr} = AnyEvent->io (
