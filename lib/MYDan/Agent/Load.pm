@@ -195,7 +195,7 @@ sub run
 			       }
 
 			       $percent->renew( $size )->add( length $keepalive{cont}  );
-                               print $TEMP delete $keepalive{cont};
+                               syswrite( $TEMP, delete $keepalive{cont} );
                                $keepalive{save} = 1;
                            }
                        }
@@ -215,8 +215,9 @@ sub run
 
     $cv->recv;
 
-    if( $ok )
+    if( defined $ok )
     {
+
 	$percent->add( $ok );
 	$percent->print('Load ..') if $run{verbose};
         unlink $temp;
