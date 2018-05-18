@@ -163,16 +163,9 @@ eval
 		eval{ $filecache->save( $temp ); };
 		warn "save filecache fail: $@" if $@;
 
-        print "$size:$filemd5:$own:$mode:";
-
-        my $file = $filecache->check( $filemd5 );
-        open my $X, "<$file" or die "load from proxy, open $file fail: $!";
-        my ( $n, $buf );
-	while( $n = sysread( $X, $buf, 102400 ) )
-        {
-            syswrite \*STDOUT, $buf;   
-        }
-        close $X;
+        return unless my $file = $filecache->check( $filemd5 );
+        syswrite( \*STDOUT, "MYDanExtractFile_::${file}::_MYDanExtractFile" );
+        syswrite \*STDOUT, "$size:$filemd5:$own:$mode:";
     }
 
     else
