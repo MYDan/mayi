@@ -30,6 +30,7 @@ use Time::HiRes qw(time);
 use MYDan::API::Agent;
 use MYDan::Util::Percent;
 use MYDan::Agent::Proxy;
+use AnyEvent::Loop;
 
 our %RUN = ( user => 'root', max => 128, timeout => 300 );
 
@@ -49,6 +50,9 @@ sub run
     my $query = $run{query};
 
     my $cv = AE::cv;
+    AnyEvent::Loop::now_update();
+    my $now_update = time;
+
     my ( @work, $stop );
 
     $SIG{TERM} = $SIG{INT} = my $tocb = sub
@@ -81,6 +85,7 @@ sub run
         return unless my $node = shift @node;
         $result{$node} = '';
         
+        my $now_update_time = time - $now_update;
         $cv->begin;
 
         tcp_connect $node, $run{port}, sub {
@@ -171,7 +176,7 @@ sub run
                  $hdl->push_write($query);
                  $hdl->push_shutdown;
              }
-          }, sub{ return 3; };
+          }, sub{ return $now_update_time + 5; };
     };
 
     my $max = scalar @node > $run{max} ? $run{max} : scalar @node;
