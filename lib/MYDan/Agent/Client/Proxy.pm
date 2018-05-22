@@ -31,6 +31,7 @@ use MYDan::API::Agent;
 use MYDan::Util::Percent;
 use MYDan::Agent::Proxy;
 use AnyEvent::Loop;
+use MYDan::Agent::FileCache;
 
 our %RUN = ( user => 'root', max => 128, timeout => 300 );
 
@@ -77,6 +78,9 @@ sub run
         my $efa =  $ENV{MYDanExtractFileAim};
         $aim = $efa && $efa =~ /^[a-zA-Z0-9\/\._\-]+$/ ? $efa : '.';
         $efsize = ( stat $ef )[7];
+
+        my $filecache = MYDan::Agent::FileCache->new();
+        $filecache->save( $ef ) unless $filecache->check( $md5 );
     }
 
     my $percent =  MYDan::Util::Percent->new( scalar @node, 'run ..' );
