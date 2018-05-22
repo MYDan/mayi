@@ -137,7 +137,7 @@ eval
         };
         $cv->recv;
 
-		unless( $ok )
+		unless( defined $ok )
 		{
 			seek $TEMP, -6, SEEK_END;
 			sysread $TEMP, my $end, 6;
