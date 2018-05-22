@@ -137,6 +137,8 @@ sub run
         }
     }
 
+    unlink $load if $load && -f $load;
+
     if( $task{todo} )
     {
         for my $todo ( @{$task{todo}} )
