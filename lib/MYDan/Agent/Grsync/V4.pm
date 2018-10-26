@@ -91,7 +91,7 @@ sub run
     }
 
     my %dump = %{$task{dst}};
-    if( %dump && ( $loadok || ! $task{load}) )
+    if( %dump && ( ( !%{$task{src}} ) ||  $loadok  ) )
     {
         for ( 0 .. $o{retry} )
         {
