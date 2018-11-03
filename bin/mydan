@@ -53,6 +53,8 @@ my @cmd =
     [ 'diskSpaceControl', "控制磁盘使用空间在某个百分比.\n", 'dan/tools/diskSpaceControl', 'box/tools/diskSpaceControl' ],
 
     [ 'node', '机器管理.', 'bin/mydan.node' ],
+
+    [ 'reborn', "重装系统.\n", 'dan/tools/reborn', 'box/tools/reborn' ],
 );
 
 MYDan::Util::Command->new( $name => \@cmd,

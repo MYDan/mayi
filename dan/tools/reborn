@@ -1,0 +1,25 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+
+use MYDan::Util::OptConf;
+use MYDan::Util::Reborn;
+
+$| ++;
+
+=head1 SYNOPSIS
+
+ $0 --ipaddr 10.10.10.2 --netmask 10.0.255.255 --gateway 10.10.10.1 --hostname abc.mydan.org --dns 8.8.8.8 --mac 50-7b-9d-06-00-00
+ $0 --ipaddr 10.10.10.2 --netmask 10.0.255.255 --gateway 10.10.10.1 --hostname abc.mydan.org --dns 8.8.8.8 --mac 50-7b-9d-06-00-00 --ks=http://mydan.org/ks.cfg
+
+ $0 --verbose
+ $0 --url http://xxx.xxx.xxx/ks.list #default in .config
+
+=cut
+
+my $option = MYDan::Util::OptConf->load();
+my %o = $option->get( qw( url=s ks=s ipaddr=s netmask=s gateway=s hostname=s dns=s mac=s verbose ) )->dump();
+
+$option->assert( qw( ipaddr netmask gateway hostname dns mac ) );
+
+MYDan::Util::Reborn->new( %o )->do();
