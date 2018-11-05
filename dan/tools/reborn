@@ -2,6 +2,8 @@
 use strict;
 use warnings;
 
+use YAML::XS;
+use Sys::Hostname;
 use MYDan::Util::OptConf;
 use MYDan::Util::Reborn;
 
@@ -43,9 +45,18 @@ unless( $o{ipaddr} && $o{netmask} && $o{gateway} )
         my $NAME = uc $name;
         $o{$name} = $cfg{$NAME} if $cfg{$NAME};
     }
-
 }
 
+unless( $o{dns} )
+{
+    my @c = `cat /etc/resolv.conf 2>/dev/null`;
+    chomp @c;
+    map{ $o{dns} = $1 if /^nameserver\s+(\d+\.\d+\.\d+\.\d+)$/ }@c;
+}
+
+$o{hostname} = hostname unless $o{hostname};
+
+print YAML::XS::Dump \%o;
 $option->assert( qw( ipaddr netmask gateway hostname dns mac ) );
 
 MYDan::Util::Reborn->new( %o )->do();
