@@ -132,7 +132,7 @@ sub run
         print '-' x 60, "\n";
 
         my $timeout = $opt->{timeout} - $this->{usetime};
-        print "sp:$task->{sp} => dp:$task->{sp}\n";
+        print "sp:$task->{sp} => dp:$task->{dp}\n";
         my @dst = grep{ ! $failed{$_} }@{$sync->{dst}};
         last unless @dst;
         if( $timeout < 0 )
