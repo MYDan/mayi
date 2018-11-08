@@ -17,6 +17,14 @@
      -1      Forces grsync to try protocol version 1
      -2      Forces grsync to try protocol version 2
      -3      Forces grsync to try protocol version 3
+     -4      Forces grsync to try protocol version 4
+
+     --sp /path/file --dp /path/foo/newfile
+     --sp /path/file --dp /path/foo/
+     --sp /path/     --dp /path/foo/
+     --sp /path/foo* --dp /path/foo/
+     --sp '/path/file1;/path/file2' --dp /path/foo/
+
 
 =cut
 use strict;
@@ -24,9 +32,7 @@ use warnings;
 use Sys::Hostname;
 
 use MYDan::Node;
-use MYDan::Agent::Grsync::V12;
-use MYDan::Agent::Grsync::V3;
-use MYDan::Agent::Grsync::V4;
+use MYDan::Agent::GrsyncM;
 use MYDan::Util::OptConf;
 
 $| ++;
@@ -51,9 +57,7 @@ my %sync = (
     agent => +{ $option->dump( 'agent' ) }
 );
 
-my $grsync = $o{4} ? MYDan::Agent::Grsync::V4->new ( %sync ): 
-             $o{3} ? MYDan::Agent::Grsync::V3->new ( %sync ):
-                    MYDan::Agent::Grsync::V12->new ( %sync );
+my @failed = MYDan::Agent::GrsyncM->new( opt => \%o, sync => \%sync )->run();
 
-exit 0 unless my @failed = $grsync->run( %o )->failed();
+exit 0 unless  @failed;
 die $range->load( \@failed )->dump . ": failed.\n\n";
