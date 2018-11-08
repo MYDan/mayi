@@ -48,6 +48,8 @@ $o{delete $o{ProtocolVersion}} = 1 unless $o{ProtocolVersion} && $o{ProtocolVers
 
 $option->assert( qw( dst sp ) );
 
+$o{dp} ||= $o{sp};
+
 $o{user} = `id -un` and chop $o{user} unless $o{user};
 
 my $range = MYDan::Node->new( $option->dump( 'range' ) );
