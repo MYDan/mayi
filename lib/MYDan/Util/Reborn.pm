@@ -71,9 +71,10 @@ sub grub
     my ( $this, $cmd ) = @_;
 
     my $conf = '/boot/grub/grub.conf';
+    my $cbak = "$conf-" . time;
     my $temp = '/tmp/grub.conf.' . time;
 
-    die "cp $conf-0 fail:$!" if system "cp -a $conf $conf-0";
+    die "cp $cbak fail:$!" if system "cp -a $conf $cbak";
     open my $H, ">", $temp or die "open $temp fail: $!";
     print $H <<EOF;
 default=0
@@ -85,7 +86,7 @@ timeout=10
     initrd /install/initrd.img
 EOF
     close($H);
-    die "reborn fail:$!" if system "cat $conf-0 | grep -v default | grep -v timeout | grep -v hiddenmenu | grep -v splashimage >> $temp && cp $temp $conf" ;
+    die "reborn fail:$!" if system "cat $cbak | grep -v default | grep -v timeout | grep -v hiddenmenu | grep -v splashimage >> $temp && cp $temp $conf" ;
 }
 
 sub call
