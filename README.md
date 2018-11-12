@@ -3,6 +3,13 @@
 
 ===================================安装=====================================
 
+安装稳定版本: 
+    curl -L update.mydan.org | bash
+安装最新版本: 
+    curl -L update.mydan.org | MYDanInstallLatestVersion=1 bash
+
+============================================================================
+
 安装方式1:
 
     通过cpan命令安装: dan=1 box=1 def=1 cpan install MYDan
