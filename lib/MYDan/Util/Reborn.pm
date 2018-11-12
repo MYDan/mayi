@@ -15,6 +15,25 @@ sub new
 {
     my ( $class, %self ) = @_;
     map{die "$_ undef" unless $self{$_} }qw( url mac ipaddr netmask gateway hostname dns );
+
+    my ( @disk, @sdev ) = `fdisk -l 2>/dev/null`;
+    map{ push @sdev, $1 if $_ =~ m#(/dev/[a-zA-Z0-9]+)\s+\*\s# }@disk;
+    die "nofind sdev" unless @sdev;
+
+    my %df; map{ my @t = split /\s+/, $_; $df{$t[0]} = $t[-1]; }`df 2>/dev/null`;
+
+    map{ 
+        if( $df{$_} && ( $df{$_} eq '/' ||  $df{$_} eq '/boot' ) )
+        {
+            die "boot nomatch." if $self{boot} && $self{boot} ne $df{$_};
+            $self{boot} = $df{$_};
+        }
+    }@sdev;
+
+    die "nofind boot path." unless $self{boot};
+    $self{boot} = '' if $self{boot} eq '/boot';
+    $self{boot} = '/boot' if $self{boot} eq '/';
+
     bless \%self, ref $class || $class;
 }
 
@@ -29,14 +48,16 @@ sub do
 
     my $hostinfo = join ':',  map{ $this->{$_} }qw( hostname ipaddr netmask gateway dns );
     my $cmd = "ks=$ksurl nofb text  ksdevice=link BOOTIF=01-$this->{mac} osdrive=sda ip=dhcp net.ifnames=0 biosdevname=0 HOSTINFO=$hostinfo";
+    
+    my $title = sprintf "MYDan reborn ( %s )", $ksurl =~ /([^\/]+)\.ks\.cfg$/ ? $1 : $ksurl =~ /([^\/]+)$/ ? $1 : 'install';
 
     if( -f '/boot/grub2/grub.cfg' || -f '/boot/grub/grub.cfg' )
     {
-        $this->grub2( $cmd );
+        $this->grub2( $cmd, $title );
     }
     elsif( -f '/boot/grub/grub.conf' )
     {
-        $this->grub( $cmd );
+        $this->grub( $cmd, $title );
     }
     else
     {
@@ -46,7 +67,7 @@ sub do
 
 sub grub2
 {
-    my ( $this, $cmd ) = @_;
+    my ( $this, $cmd, $title ) = @_;
 
     my ( $v, $conf ) = -f '/boot/grub2/grub.cfg' ? ( '2', '/boot/grub2/grub.cfg' ) : ( '', '/boot/grub/grub.cfg' );
     my $temp = '/tmp/05_custom.' . time;
@@ -56,10 +77,10 @@ sub grub2
     my $cont = `cat $conf`;
     die "nofind set root=" unless $cont =~ /set root='([a-zA-Z0-9,]+)'/;
     print $H <<EOF;
-menuentry "install" {
+menuentry "$title" {
         set root='$1'
-        linux /install/vmlinuz $cmd
-        initrd /install/initrd.img
+        linux $this->{boot}/install/vmlinuz $cmd
+        initrd $this->{boot}/install/initrd.img
 }
 EOF
     close($H);
@@ -68,7 +89,7 @@ EOF
 
 sub grub
 {
-    my ( $this, $cmd ) = @_;
+    my ( $this, $cmd, $title ) = @_;
 
     my $conf = '/boot/grub/grub.conf';
     my $cbak = "$conf-" . time;
@@ -80,10 +101,10 @@ sub grub
 default=0
 timeout=10
 #hiddenmenu
-    title install
+    title $title
     root (hd0,0)
-    kernel /install/vmlinuz $cmd
-    initrd /install/initrd.img
+    kernel $this->{boot}/install/vmlinuz $cmd
+    initrd $this->{boot}/install/initrd.img
 EOF
     close($H);
     die "reborn fail:$!" if system "cat $cbak | grep -v default | grep -v timeout | grep -v hiddenmenu | grep -v splashimage >> $temp && cp $temp $conf" ;
