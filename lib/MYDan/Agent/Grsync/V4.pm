@@ -68,6 +68,8 @@ sub run
             my $host = $task{load}[$i];
             print "$host => localhost: LOAD\n";
 
+            delete $ENV{MYDanExtractFile};
+            delete $ENV{MYDanExtractFileAim};
             eval{
                 MYDan::Agent::Load->new(
                     node => $host,
