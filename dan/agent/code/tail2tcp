@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use EV;
+use AnyEvent;
 use YAML::XS;
 use AnyEvent;
 use AnyEvent::Handle;
@@ -47,16 +47,17 @@ elsif( $argv{file} && ! ref $argv{file} && -f $argv{file} )
 
 &$idie( 'nofile list' ) unless @file;
 
-my ( $cv, %cv, %file, $hdl ) = ( AE::cv );
+my ( $index, $cv, %cv, %file, $hdl, @H, $w ) = ( 0, AE::cv );
 
 my $call = sub{
-    for my $file ( @file )
+    for my $file ( map{ glob $_ }  @file )
     {
         unless( -f $file )
         {
             print "nofile: $file;";
             next;
         }
+        next if $file{$file};
         my $H;
         unless( open $H, "<$file" )
         {
@@ -79,17 +80,8 @@ my $call = sub{
         }
         $file{$file} = $H;
     }
+    @H = values %file;
 
-    for my $file ( keys %file )
-    {
-        $cv{$file} = EV::stat $file, 10, sub {
-            my $buf;
-            while( sysread( $file{$file}, $buf, 102400 ) )
-            { 
-                $hdl->push_write($buf)
-            }
-        };
-    }
 };
 
 tcp_connect $argv{addr}, $argv{port}, sub {
@@ -122,10 +114,38 @@ tcp_connect $argv{addr}, $argv{port}, sub {
             $cv->send;
         },
     );
-    $hdl->push_write( $argv{uuid} . ':' . hostname . ':' );
+    $hdl->on_drain(
+        sub{
+	    for( 1 .. scalar @H )
+            {
+                my ( $i, $buf ) = $index % @H;
+                if( sysread( $H[$i], $buf, 102400 ) )
+                {
+                    $hdl->push_write($buf);
+		    return;
+                }
+	        $index ++;
+            }
+            $w = AnyEvent->timer ( after => 1, interval => 1, cb => sub{
+	    for( 1 .. scalar @H )
+	    {
+            my ( $i, $buf )= $index % @H;
+            if( sysread( $H[$i], $buf, 102400 ) )
+            {
+                $hdl->push_write($buf);
+		undef $w;
+		return;
+            }
+	    $index ++;
+            }
+        });
+
+    });
+
     &$call();
     exit if fork;
-};
+    $hdl->push_write( $argv{uuid} . ':' . hostname . ':' );
+},  sub{ return 5; };
 
 $cv->recv;
 
