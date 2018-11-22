@@ -59,6 +59,12 @@ my %sync = (
     agent => +{ $option->dump( 'agent' ) }
 );
 
+if( $o{dp} eq $o{sp} )
+{
+    my %src = map{ $_ => 1 }@{$sync{src}};
+    die "'$o{sp}' are the same file on same host.\n" unless grep{ ! $src{$_} }@{$sync{dst}};
+}
+
 my @failed = MYDan::Agent::GrsyncM->new( opt => \%o, sync => \%sync )->run();
 
 exit 0 unless  @failed;
