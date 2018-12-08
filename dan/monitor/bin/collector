@@ -2,7 +2,9 @@
 
 use strict;
 use warnings;
+use POSIX;
 use File::Spec;
+use Data::UUID;
 
 use MYDan::Node;
 use MYDan::Util::OptConf;
@@ -24,6 +26,16 @@ $MYDan::Util::OptConf::THIS = 'monitor';
 =cut
 my $option = MYDan::Util::OptConf->load();
 my %o = $option->set( range => '{==*==*??==*}' )->get( qw( range=s ) )->dump();
+
+my $uuid = Data::UUID->new->create_str();
+my $time = time;
+my $stime =  POSIX::strftime( "%Y-%m-%d %H:%M:%S", localtime( $time ) );
+
+my $mark = "$uuid $time $stime $o{range}";
+
+open my $LOG, ">>", "$o{logs}/collector.log" or die "open $o{logs}/collector.log fail: $!";
+print "$mark start.\n";
+print $LOG "$mark start.\n";
 
 my $range = MYDan::Node->new( $option->dump( 'range' ) );
 
@@ -61,5 +73,9 @@ for my $node ( keys %result )
         map{ MYDan::Subscribe->new()->input( 'monitor collector fail', $_, 'monitor_fail' ); }@project;
     }
 }
+
+my $usetime = time - $time;
+print "$mark $usetime finish.\n";
+print $LOG "$mark $usetime finish.\n";
 
 exit 0;
