@@ -3,7 +3,7 @@
 while(1)
 {
     my $t = time;
-    system "$ENV{MYDanPATH}/dan/monitor/bin/collector";
+    system "$ENV{MYDanPATH}/dan/monitor/bin/supervisory";
     my $due = 60 + $t - time;
     sleep $due if $due > 0;
 }
