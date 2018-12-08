@@ -1,0 +1,28 @@
+#!/bin/usr/env perl
+use strict;
+use warnings;
+
+use File::Basename;
+use MYDan::Util::OptConf;
+
+=head1 SYNOPSIS
+
+ $0 
+    
+=cut
+
+my $option = MYDan::Util::OptConf->load();
+my %o = $option->get()->dump( 'subscribe' );
+
+my %x = map{ $_ => 1 }map{ basename $_ }glob "$o{logs}/*";
+
+while( 1 )
+{
+    for( grep{ ! $x{$_} }map{ basename $_ }glob "$o{logs}/*"  )
+    {
+        printf "%s\n$_\n", "-" x 30;
+        system "cat '$o{logs}/$_'";
+        $x{$_} = 1;
+    }
+    sleep 3;
+}
