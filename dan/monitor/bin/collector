@@ -8,6 +8,8 @@ use MYDan::Node;
 use MYDan::Util::OptConf;
 use MYDan::Monitor::Collector;
 use MYDan::Monitor::Make;
+use MYDan::Node::DBI::Cache;
+use MYDan::Subscribe;
 
 $| ++;
 
@@ -28,11 +30,36 @@ my $range = MYDan::Node->new( $option->dump( 'range' ) );
 my $make = MYDan::Monitor::Make->new( %o, option => $option );
 my @node = $range->load( delete $o{range} )->list;
 $make->make( @node );
-my $client = MYDan::Monitor::Collector->new( 
-    @node
-);
+my $client = MYDan::Monitor::Collector->new( @node );
 
 my %result = $client->run( %o ); 
 
-YAML::XS::DumpFile \*STDERR, \%result if %result;
+#YAML::XS::DumpFile \*STDERR, \%result if %result;
+
+my $cache = MYDan::Node::DBI::Cache->new( MYDan::Util::OptConf->load()->{range}{cache} );
+my @x = $cache->select( '*' );
+my %c; map{ $c{$_->[2]}{$_->[0]} = 1 }@x; 
+
+for my $node ( keys %result )
+{
+    print "NODE:$node\n";
+    my @test = YAML::XS::Load $result{$node};
+    my @project = keys %{$c{$node}};
+    @project = ( 'unkown' ) unless @project;
+
+    if( defined $test[1] && ! $test[1] )
+    {
+         my @t = @{$test[0][0]};
+         for my $t ( @t )
+         {
+             next unless $t->[10] && $t->[10] eq 'err';
+             map{ MYDan::Subscribe->new()->input( $t->[0], $_, $t->[11] ); }@project;
+         }
+    }
+    else
+    {
+        map{ MYDan::Subscribe->new()->input( 'monitor collector fail', $_, 'monitor_fail' ); }@project;
+    }
+}
+
 exit 0;
