@@ -27,6 +27,7 @@ sub new
     my ( $class, %self ) = @_;
 
     map{ die "$_ undef" unless $self{$_} }qw( conf code name );
+    $0 = "MYDan.monitorv2.collector.$self{name}";
     $self{config} = eval{ YAML::XS::LoadFile "$self{conf}/$self{name}" };
     die "load fail:$@" if $@;
 
