@@ -29,7 +29,7 @@ if( $o{start} )
 }
 elsif( $o{stop} )
 {
-    die "onfind service $o{start}" unless -f "$exec/$o{stop}";
+    die "onfind service $o{stop}" unless -f "$exec/$o{stop}";
     exec "rm $exec/$o{stop}"
 }
 else
