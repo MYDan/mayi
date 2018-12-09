@@ -1,0 +1,8 @@
+#!/usr/bin/env perl
+use MYDan;
+use File::Basename;
+
+my $name = basename $0;
+
+die "name format error" unless $name =~ s/^monitorv2\.collector\.//;
+exec "$MYDan::PATH/dan/monitorv2/bin/collector '$name'";
