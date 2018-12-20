@@ -27,7 +27,16 @@ for my $usr ( @$user )
     my @p = getpwnam $usr;
     next unless @p;
 
-    system "echo '$usr:$password'|sudo chpasswd";
+    my $cmd = "echo '$usr:$password'|chpasswd >/dev/null 2>&1";
+  
+    if( system( "chpasswd --help >/dev/null 2>&1" ) )
+    {
+        $cmd = "echo '$password' |passwd --stdin '$usr' >/dev/null 2>&1";
+        my $help = `passwd --help`;
+        &$idie( "nonsupport" ) unless $help && $help =~ /--stdin/;
+    }
+
+    system $cmd;
 
     if( $? == -1 )
     {
