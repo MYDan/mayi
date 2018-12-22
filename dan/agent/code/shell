@@ -11,7 +11,7 @@ local $/ = undef;
 
 my %param = %{ YAML::XS::Load( <> ) };
 
-my( $host, $port, $uuid, $row, $col ) = @{$param{argv}};
+my( $host, $port, $uuid, $row, $col, $md5 ) = @{$param{argv}};
 $host ||= $ENV{TCPREMOTEIP};
 
 die "nofind user" unless my $user = $ENV{MYDan_sudo} ||  $ENV{MYDan_user};
@@ -34,6 +34,12 @@ unless( $soc )
 {
     print "Connect $host:$port fail\n";
     exit 1;
+}
+
+if( $md5 )
+{
+    my $head = "MYDanConnect_::${md5}::_MYDanConnect";
+    syswrite( $soc, $head, length $head );
 }
 
 exit 0 if fork;
