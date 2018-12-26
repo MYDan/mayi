@@ -33,6 +33,7 @@ my @cmd =
     [ 'config', "${name}配置.\n", 'dan/tools/config', 'box/tools/config' ],
 
     [ 'shell', "获取远程机器反弹shell.\n", 'dan/tools/shell' ],
+    [ 'shellv2', "获取远程机器反弹shell的v2版本.\n", 'dan/tools/shellv2' ],
 
     [ 'alias', "${name}内部使用的alias.", 'dan/tools/alias', 'box/tools/alias' ],
     [ 'unalias', "${name}内部使用的unalias.\n", 'dan/tools/unalias', 'box/tools/unalias' ],
