@@ -142,7 +142,9 @@ sub _clean
 sub syscmd
 {
     my $cmd = shift;
-    print "$cmd\n";
+    my $x = $cmd;
+    $x =~ s/\.\d+\.\d+\._tmp_explain/.x.x._tmp_explain/g;
+    print "$x\n";
     my $stat = system $cmd;
     warn "ERROR: $!\n" if $stat;
     return $stat;
