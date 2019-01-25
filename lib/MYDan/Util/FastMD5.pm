@@ -41,9 +41,9 @@ sub hexdigest
     {
          my ( $head, $tail );
 
-         sysread $H, $head, $len;
-         seek $H, -$len, SEEK_END;
-         sysread $H, $tail, $len;
+         die "read fail" unless $len eq sysread $H, $head, $len;
+         die "seek fail" unless seek $H, -$len, SEEK_END;
+         die "read fail" unless $len eq sysread $H, $tail, $len;
 
          $md5 = Digest::MD5->new->add( join ':', $size, $head, $tail )->hexdigest;
     }
