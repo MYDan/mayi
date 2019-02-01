@@ -344,7 +344,7 @@ sub run
                         }
                     };
  
-                    if( ! $filecache->check( $md5 ) && -f $aim )
+                    if( $filecache->usable() && ! $filecache->check( $md5 ) && -f $aim )
                     {
                         my $size = ( stat $aim )[7];
                         if( $size eq $esize )

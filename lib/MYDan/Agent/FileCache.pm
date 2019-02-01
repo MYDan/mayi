@@ -25,6 +25,7 @@ use warnings;
 
 use MYDan;
 use Digest::MD5;
+use MYDan::Util::FastMD5;
 
 sub new
 {
@@ -45,14 +46,36 @@ sub save
     my $tempmd5 = Digest::MD5->new()->add( $file.time,$$ )->hexdigest();
     die "save fail: $!" if system "cp '$file' '$path/$tempmd5.tmp'";
 
-    open my $fh, "<$path/$tempmd5.tmp" or die "open fail: $!";
-    my $md5 = Digest::MD5->new()->addfile( $fh )->hexdigest();
-    close $fh;
+    my $md5 = MYDan::Util::FastMD5->hexdigest( "$path/$tempmd5.tmp" );
 
     die "save fail: $!" if system "mv '$path/$tempmd5.tmp' '$path/$md5'";
     
     return $md5;
 }
+
+sub fastsave
+{
+    my ( $this, $file, $md5 ) = @_;
+
+    my $path = $this->{path};
+    return 0 unless -e $path && defined $file &&  -f $file;
+
+    $this->_clean();
+
+    my $tempmd5 = Digest::MD5->new()->add( $file.time,$$ )->hexdigest();
+    
+    my @dev = map{ (stat $_)[0] }( $file, $path );
+    my $cp = $dev[0] eq $dev[1] ? 'ln' : 'cp';
+    die "save fail: $!" if system "$cp '$file' '$path/$tempmd5.tmp'";
+
+    $md5 = MYDan::Util::FastMD5->hexdigest( "$path/$tempmd5.tmp" ) unless $md5;
+
+    die "save fail: $!" if system "mv '$path/$tempmd5.tmp' '$path/$md5'";
+    
+    return $md5;
+}
+
+
 
 sub check
 {
@@ -96,6 +119,12 @@ sub _clean
     }
 
     return;
+}
+
+sub usable
+{
+    my $this = shift;
+    return -e $this->{path} ? 1 : 0;
 }
 
 1;

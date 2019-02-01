@@ -71,7 +71,7 @@ sub _explain
 {
     my $this = shift;
 
-    my ( $repo, $path, $version ) = @$this{qw( repo path version )};
+    my ( $repo, $path, $version, $taropt ) = @$this{qw( repo path version taropt )};
     return if -d "$path/$version";
 
     die "nofind repo file: $repo/$version\n" unless -f "$repo/$version";
@@ -79,7 +79,8 @@ sub _explain
     my $temp = "$path/$version.".time.'.'.$$.'._tmp_explain';
     die "mkdir $temp fail.\n" if syscmd( "mkdir '$temp'" );
 
-    die "untar fail.\n" if syscmd( "tar -zxf '$repo/$version' -C '$temp'" );
+    $taropt ||= '';
+    die "untar fail.\n" if syscmd( "tar $taropt -zxf '$repo/$version' -C '$temp'" );
     die "rename fail.\n" if syscmd( "rm -rf '$path/$version' && mv '$temp' '$path/$version'" );
 }
 
