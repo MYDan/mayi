@@ -237,6 +237,7 @@ sub run
 
                    $ENV{TCPREMOTEIP} = $tip;
                    $ENV{TCPREMOTEPORT} = $port;
+                   $ENV{TCPSERVERINDEX} = $index;
 		   if( defined $index{$index}{extfile} )
 		   {
                        $ENV{MYDanExtractFile} = $index{$index}{extfile};
