@@ -236,8 +236,9 @@ sub run
                    $tport = '0' unless $tport && $tport =~ /^\d+$/;
 
                    $ENV{TCPREMOTEIP} = $tip;
-                   $ENV{TCPREMOTEPORT} = $port;
+                   $ENV{TCPREMOTEPORT} = $tport;
                    $ENV{TCPSERVERINDEX} = $index;
+                   $ENV{TCPSERVERPORT} = $port;
 		   if( defined $index{$index}{extfile} )
 		   {
                        $ENV{MYDanExtractFile} = $index{$index}{extfile};
