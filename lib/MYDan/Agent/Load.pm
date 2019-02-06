@@ -132,7 +132,7 @@ sub run
     
     printf "position: %d\n", $position if $run{verbose};
 
-    my $percent =  MYDan::Util::Percent->new()->add( $position );
+    my $percent =  MYDan::Util::Percent->new(undef, undef, $run{pcb} )->add( $position );
     
     my %hosts = MYDan::Util::Hosts->new()->match( $node );
 
