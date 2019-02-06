@@ -121,7 +121,7 @@ sub new
 
                 my %query = ( 
                     argv => +{ load => $load, src => $src, port => $agent{port}, sp => $sp, dp => $dp, map{ $_ => $param{$_} }qw( chown chmod cc ) },
-	            code => 'download', map{ $_ => $param{$_} }qw( user sudo )
+	            code => 'download', map{ $_ => $param{$_} }qw( user sudo env )
                 );
 
 	        %result = MYDan::Agent::Client->new(

@@ -26,6 +26,9 @@
      --sp /path/foo* --dp /path/foo/
      --sp '/path/file1;/path/file2' --dp /path/foo/
 
+     [--immediately]
+     [--addr 10.10.10.10]
+     [--listen 9999]
 
 =cut
 use strict;
@@ -36,18 +39,95 @@ use MYDan::Node;
 use MYDan::Agent::GrsyncM;
 use MYDan::Util::OptConf;
 
+use AE;
+use AnyEvent;  
+use AnyEvent::Socket;  
+use AnyEvent::Handle;  
+use Data::UUID;
+
 $| ++;
 
 @MYDan::Util::OptConf::CONF = qw( pass_through no_ignore_case );
 
 my $option = MYDan::Util::OptConf->load();
-my %o = $option->set( retry => 2, timeout => 300, gave => 3 )
-    ->get( qw( src=s dst=s sp=s dp=s timeout=i max=i retry=i nice=i user=s sudo=s gave=i chown=s chmod=s cc delete 1 2 3 4 ) )
+my %o = $option->set( retry => 2, timeout => 300, gave => 3, addr => 0 )
+    ->get( qw( src=s dst=s sp=s dp=s timeout=i max=i retry=i nice=i user=s sudo=s gave=i chown=s chmod=s cc delete 1 2 3 4 immediately addr=s listen=i ) )
     ->dump();
 
 $o{delete $o{ProtocolVersion}} = 1 unless $o{ProtocolVersion} && $o{ProtocolVersion} =~ /^\d$/ && grep{ $o{$_} }1..3;
 
 $option->assert( qw( dst sp ) );
+
+if( $o{immediately} )
+{
+    my $listen = $o{listen};
+    unless( $listen )
+    {
+        my $scan = `netstat  -tun|awk '{print \$4}'|awk -F: '{print \$2}'`;
+        my %open = map{ $_ => 1 }my @open = $scan =~ /(\d+)/g;
+        my %port = map{ $_ => 1 }65112 .. 65535;
+        ( $listen ) = grep{ ! $open{$_} }keys %port;
+    }
+    
+    my ( $cv, $index, $uuid, %index, %head ) = ( AE::cv, 0, Data::UUID->new->create_str() );
+    tcp_server undef, $listen, sub {
+        my ( $fh, $ip, $port ) = @_ or die "[MYDan]tcp_server: $!";
+    
+        $index ++;
+        warn "[MYDan]tcp connet from $ip:$port\n";
+    
+    	my $handle; $handle = new AnyEvent::Handle(
+    		fh => $fh,
+    		rbuf_max => 10240000,
+    		wbuf_max => 10240000,
+    		autocork => 1,
+    		on_read => sub {
+    			my $self = shift;
+                $self->unshift_read (
+                	chunk => length $self->{rbuf},
+                	sub {
+                        if( $head{"$ip:$port"} )
+                        {
+                            map{ print $head{"$ip:$port"}.':'.$_, "\n"; }split "\n", $_[1];
+                        }
+                        else
+                        {
+                            my $x = $_[1];
+
+                            $x =~ s/^([^:]+):([^:]+)://;
+                            if( $1 ne $uuid )
+                            {
+                                $handle->push_shutdown;
+                                return;
+                            }
+                		    warn "[MYDan]host:$2 ip:$ip port:$port:\n";
+                            print $x;
+                            $head{"$ip:$port"} = $2;
+                        }
+                	},
+                )
+    		},
+    
+    		on_error => sub{
+    			warn "[MYDan]tcp error: $ip:$port\n";
+    		},
+    		on_eof => sub{
+    			warn "[MYDan]tcp close: $ip:$port\n";
+    		},
+    	);
+        $index{$index}{handle} = $handle;
+    };
+    
+    my $env = 'MYDan_rlog='.join ":", $uuid, $o{addr}, $listen;
+    $o{env} = $o{env} ? join( ';', $env, $o{env} ) : $env;
+}
+
+if( $o{env} )
+{
+    my %env;
+    map{ my @env = split /=/, $_; $env{$env[0]} = $env[1] if 2 == @env }split /;/, $o{env};
+    $o{env} = \%env if %env;
+}
 
 $o{dp} ||= $o{sp};
 
