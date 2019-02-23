@@ -39,27 +39,21 @@ if( my $rlog = $ENV{MYDan_rlog} )
             rbuf_max => 10240000,
             wbuf_max => 10240000,
             autocork => 1,
-            on_read => sub {
-                my $self = shift;
-                $self->unshift_read (
-                    chunk => length $self->{rbuf},
-                    sub { print $_[1]; },
-                )
-            },
             on_error => sub{
-                print 'tcp error';
+                warn 'tcp error';
                 undef $hdl;
                 $cv->send;
             },
             on_eof => sub{
-                print 'tcp close';
+                warn 'tcp close';
+                undef $hdl;
                 $cv->send;
             },
         );
         $hdl->push_write( $argv{uuid} . ':' . hostname . ':' );
     },  sub{ return 5; };
 
-    $pcb = sub { $hdl->push_write( shift ); };
+    $pcb = sub { $hdl->push_write( shift ) if $hdl; };
 }
 
 eval{
@@ -77,7 +71,7 @@ eval{
     MYDan::Agent::Load->new( 
         node => $param->{src}, 
         map{ $_ => $param->{$_} }qw( sp dp )
-    )->run( %$param, role => 'agent', pcb => $pcb, verbose => $pcb, query => $param->{load}||1 );
+    )->run( %$param, role => 'agent', pcb => $pcb, verbose => $pcb ? 1 : 0, query => $param->{load}||1 );
 };
 
 if($@) { print "load fail $@";exit 1; }

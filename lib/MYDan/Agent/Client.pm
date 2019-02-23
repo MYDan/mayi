@@ -140,6 +140,7 @@ sub run
                  return;
              }
 
+             &{$run{pcb}}( $efsize, $node ) if $run{pcb};
              my $hdl;
              push @work, \$hdl;
              $hdl = new AnyEvent::Handle(
@@ -176,6 +177,7 @@ sub run
                                              $hdl->on_drain(sub {
                                                      my ( $n, $buf );
                                                      $n = sysread( $EF, $buf, 102400 );
+                                                     &{$run{pcb}}( $n, $node ) if $run{pcb};
                                                      if( $n )
                                                      {
                                                          $hdl->push_write($buf);
@@ -240,9 +242,9 @@ sub run
         map{ $result{$_} = '' }@node;
 
         my %rquery = ( 
-            code => 'proxy', 
-            argv => [ \@node, +{ query => $query, map{ $_ => $run{$_} }grep{ $run{$_} }qw( timeout max port ) } ],
-	    map{ $_ => $run{query}{$_} }qw( user sudo env ) 
+            code => 'proxy',
+            argv => [ \@node, +{ query => $query, map{ $_ => $run{$_} }grep{ $run{$_} }qw( timeout max port MYDan_rlog ) } ],
+            map{ $_ => $run{$_} }qw( user sudo )  #not env
         );
 
         $rquery{node} = [ $node ] if $isc;
@@ -271,6 +273,7 @@ sub run
                  return;
              }
 
+             &{$run{pcb}}( $efsize, $node, 'Proxy' ) if $run{pcb};
              my $hdl;
              push @work, \$hdl;
              $hdl = new AnyEvent::Handle(
@@ -304,6 +307,7 @@ sub run
                                              $hdl->on_drain(sub {
                                                      my ( $n, $buf );
                                                      $n = sysread( $EF, $buf, 102400 );
+                                                     &{$run{pcb}}( $n, $node ) if $run{pcb};
                                                      if( $n )
                                                      {
                                                          $hdl->push_write($buf);
