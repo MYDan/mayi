@@ -50,8 +50,8 @@ sub run
    
                 my %query = ( 
                     code => 'mrsync',
-                    argv => &$argv( 'mrsync', undef, %o, %$sync, %path ),
-                     map{ $_ => $o{$_} }qw( user sudo ) 
+                    argv => &$argv( 'mrsync', undef, %o, %$sync, %path, pcb => undef ),
+                     map{ $_ => $o{$_} }qw( user sudo env ) 
                 );
     
                 my %result = MYDan::Agent::Client->new(
@@ -188,11 +188,11 @@ sub run
         
                     my %query = ( 
                         code => 'mrsync',
-                        argv => &$argv( 'mrsync', undef, %o, %sync ),
-			map{ $_ => $o{$_} }qw( user sudo ) 
+                        argv => &$argv( 'mrsync', undef, %o, %sync, pcb => undef ),
+			map{ $_ => $o{$_} }qw( user sudo env ) 
                     );
         
-                    my %result = MYDan::Agent::Client->new( $p )->run( %{$this->{agent}}, %o, query => \%query );
+                    my %result = MYDan::Agent::Client->new( $p )->run( %{$this->{agent}}, %o, query => \%query, pcb => undef );
     		    my $result = $result{$p} || '';
         	    if( $result =~ s/--- 0\n// && $result =~ s/###mrsync_failed:([\w\._-]*):mrsync_failed###$//)
     		    {

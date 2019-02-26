@@ -64,7 +64,7 @@ eval
             $hdl->push_write( $argv{uuid} . ':' . hostname . ':' );
         },  sub{ return 5; };
     
-        $rlog_pcb = sub { $hdl->push_write( shift ) if $hdl; };
+        $rlog_pcb = sub { $hdl->push_write( shift. "\n" ) if $hdl; };
     }
 
     if( $param{single} )
@@ -250,7 +250,7 @@ eval
             else
             {
                 $percent{$node}->add( $info )->print();
-                &$rlog_pcb( "$node => $pcb{$node}\n" );
+                &$rlog_pcb( "$node => $pcb{$node}" );
             }
         } if $rlog_pcb;
     

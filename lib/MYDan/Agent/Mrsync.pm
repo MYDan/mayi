@@ -97,7 +97,7 @@ sub new
 
                 my %query = ( 
                     argv => $dl,
-	            code => 'download', map{ $_ => $param{$_} }qw( user sudo )
+                    code => 'download', map{ $_ => $param{$_} }qw( user sudo env )
                 );
 
 	        %result = MYDan::Agent::Client->new(
@@ -151,7 +151,7 @@ sub queryx
     for my $type ( qw( load download ) )
     {
         my %query = (
-            code => $type, map{ $_ => $param{$_} }qw( user sudo )
+            code => $type, map{ $_ => $param{$_} }qw( user sudo env )
         );
 
         $query{node} = $param{node} if $isc;

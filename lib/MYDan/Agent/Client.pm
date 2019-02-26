@@ -241,9 +241,11 @@ sub run
         my @node = @{$node{$node}};
         map{ $result{$_} = '' }@node;
 
+
+        my %MYDan_rlog = ( MYDan_rlog => $run{MYDan_rlog} ) if $run{MYDan_rlog};
         my %rquery = ( 
-            code => 'proxy',
-            argv => [ \@node, +{ query => $query, map{ $_ => $run{$_} }grep{ $run{$_} }qw( timeout max port MYDan_rlog ) } ],
+            code => 'proxy', %MYDan_rlog,
+            argv => [ \@node, +{ query => $query, map{ $_ => $run{$_} }grep{ $run{$_} }qw( timeout max port ) } ],
             map{ $_ => $run{$_} }qw( user sudo )  #not env
         );
 

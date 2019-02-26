@@ -53,7 +53,7 @@ if( my $rlog = $ENV{MYDan_rlog} )
         $hdl->push_write( $argv{uuid} . ':' . hostname . ':' );
     },  sub{ return 5; };
 
-    $pcb = sub { $hdl->push_write( shift ) if $hdl; };
+    $pcb = sub { $hdl->push_write( shift."\n" ) if $hdl; };
 }
 
 eval{
