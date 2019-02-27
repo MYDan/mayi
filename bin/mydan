@@ -58,6 +58,8 @@ my @cmd =
     [ 'node', '机器管理.', 'bin/mydan.node' ],
 
     [ 'reborn', "重装系统.\n", 'dan/tools/reborn', 'box/tools/reborn' ],
+
+    [ 'svrInfo', "获取当前服务器的cpu/mem等信息.\n", 'dan/tools/svrInfo', 'box/tools/svrInfo' ],
 );
 
 MYDan::Util::Command->new( $name => \@cmd,
