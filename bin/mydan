@@ -59,7 +59,7 @@ my @cmd =
 
     [ 'reborn', "重装系统.\n", 'dan/tools/reborn', 'box/tools/reborn' ],
 
-    [ 'svrInfo', "获取当前服务器的cpu/mem等信息.\n", 'dan/tools/svrInfo', 'box/tools/svrInfo' ],
+    [ 'os', "获取当前服务器的cpu/mem等信息.\n", 'dan/tools/os', 'box/tools/os' ],
 );
 
 MYDan::Util::Command->new( $name => \@cmd,

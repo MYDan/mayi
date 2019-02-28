@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #===============================================================================
 #
-#          FILE: svrInfo
+#          FILE: os
 # 
-#         USAGE: ./svrInfo 
+#         USAGE: ./os 
 # 
 #   DESCRIPTION: 获取当前服务器的cpu/mem等信息
 # 
