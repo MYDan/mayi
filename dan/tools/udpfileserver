@@ -19,7 +19,7 @@ $| ++;
      --WriteFileInterval 0.001
      --RTT 0.003
      --MaxRTO 0.2
-     --SendSec 20000
+     --SendSec 2000
      --ReadFileCache 400000
      --TransmitRatio 1.5
      --Buffers 1000
@@ -38,7 +38,7 @@ $| ++;
      --WriteFileInterval 0.001
      --RTT 0.003
      --MaxRTO 0.2
-     --SendSec 20000
+     --SendSec 2000
      --ReadFileCache 400000
      --TransmitRatio 1.5
      --Buffers 1000
