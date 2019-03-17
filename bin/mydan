@@ -52,6 +52,7 @@ my @cmd =
     [ 'deploy', "本地发布切连接小工具.\n", 'dan/tools/deploy' ],
     [ 'check', "检查服务的小工具.\n", 'dan/tools/check', 'box/tools/check' ],
     [ 'secure', "私密文件管理小工具.\n", 'dan/tools/secure', 'box/tools/secure' ],
+    [ 'udpfileserver', "udp文件服务.\n", 'dan/tools/udpfileserver' ],
 
     [ 'diskSpaceControl', "控制磁盘使用空间在某个百分比.\n", 'dan/tools/diskSpaceControl', 'box/tools/diskSpaceControl' ],
 
