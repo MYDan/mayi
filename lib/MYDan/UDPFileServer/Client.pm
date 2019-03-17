@@ -40,8 +40,9 @@ sub put
 {
     my $this = shift @_;
     my %run = ( %RUN, @_ );
-    die "nofile" unless my $file = $run{file};
-    die "$file: not a file" unless -f $file;
+    die "nofile\n" unless my $file = $run{file};
+    die "file name format is not supported\n" unless $file =~ /^[a-zA-Z0-9\._\-]+$/;
+    die "$file: not a file\n" unless -f $file;
     my $basename = File::Basename::basename $file;
 
     die "$file: open: $!\n" unless open my $fh => $file;
@@ -233,8 +234,8 @@ sub put
         cb => sub {
             printf "rt: %0.3f\tri: %s\tst: %s\tsi: %s\tct: %s\t",
                 map{ 1000 * $_}( $readtime, $readinterval, $sendtime, $sendinterval, $ctrltime );
-            printf "qlen: %s\t", $data_index - $deleteid;
-            printf "buflen: %s\t", scalar @{$conn->{buffers}};
+            printf "rfilecache: %s\t", $data_index - $deleteid;
+            printf "buffers: %s\t", scalar @{$conn->{buffers}};
             printf "rtt: %s\t", 1000*$ctrl{rtt};
             printf "speed: %0.2fM/s\t", ( $run{MTU} * ( $sendcount ) ) / ( 1024 * 1024 );
             printf "ack: %0.2fM/s\n", ( $run{MTU} * ( $deleteid - $deleteid_ ) ) / ( 1024 * 1024 );
@@ -250,7 +251,8 @@ sub get
 {
     my $this = shift @_;
     my %run = ( %RUN, @_ );
-    die "file undef" unless my $file = $run{file};
+    die "file undef\n" unless my $file = $run{file};
+    die "file name format is not supported\n" unless $file =~ /^[a-zA-Z0-9\._\-]+$/;
 
     my ( $cv, %data, %temp_cache ) = ( AE::cv );
 

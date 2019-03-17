@@ -64,6 +64,7 @@ if( delete $o{server} )
 }
 elsif( delete $o{client} )
 {
+    $option->assert() unless $o{put} || $o{get};
     my $client = MYDan::UDPFileServer::Client->new( map{ $_ => delete $o{$_} }qw( ip port ) ); 
     $o{put} ? $client->put( file => delete $o{put}, %o ) : $client->get( file => delete $o{get}, %o );
 }

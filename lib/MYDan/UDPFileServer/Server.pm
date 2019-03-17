@@ -51,7 +51,6 @@ sub run
 
             if( $action eq 'G' )
             {
-                $recv{$name}{recv}++;
                 if( $type eq 'C' )
                 {
                     return unless $recv{$name}{recv_sec};
@@ -62,6 +61,7 @@ sub run
                 {
                     map{ $handle->push_send($index, $name) }1 .. 2;
                     my ( $count, $dp ) = split /:/, $data;
+                    $dp = 'tempfile' unless $dp && $dp =~ /^[a-zA-Z0-9\._\-]+$/;
                     unless( $recv{$name}{filename} )
                     {
                         my $fh = File::Temp->new( DIR => '.', SUFFIX => ".udp.mydan", UNLINK => 0 );
@@ -72,7 +72,7 @@ sub run
                             host => $host,
                             port => $port,
                             fh => $fh,
-                            dp => $dp || 'tempfile',
+                            dp => $dp,
                             filename => $fh->filename,
                             stat => AnyEvent->timer(
                                 after => 1,
@@ -131,6 +131,7 @@ sub run
                     return;
                 }
 
+                $recv{$name}{recv}++;
                 if( $recv{$name}{id}{$id} )
                 {
                     $recv{$name}{repeat}++;
@@ -140,7 +141,7 @@ sub run
                 $recv{$name}{id}{$id} = 1;
                 $recv{$name}{data}{$id} = $data;
 
-                return unless $id == $recv{$name}{ackto};
+                return unless defined $recv{$name}{ackto} && $id == $recv{$name}{ackto};
                 $recv{$name}{ackto}++;
                 for( $recv{$name}{ackto} .. $recv{$name}{count} )
                 {
@@ -152,13 +153,15 @@ sub run
             {
                 if( $type eq 'A' )
                 {
+                    return if $send{$name};
+
                     my ($port, $host) = AnyEvent::Socket::unpack_sockaddr($name);
                     $host = AnyEvent::Socket::format_address( $host );
 
                     my $file = $data;
                     print "$host:$port GET <= file: $file\n";
 
-                    unless( $file =~ /^[a-zA-Z0-9]+$/ )
+                    unless( $file =~ /^[a-zA-Z0-9\._\-]+$/ )
                     {
                         map{ $handle->push_send("$index$file: file name format not support", $name) }1..2;
                         return;
@@ -332,8 +335,8 @@ sub run
                         cb => sub {
                             printf "$send{$name}{host}:$send{$name}{port} $send{$name}{filename} GET => rt: %0.3f\tri: %s\tst: %s\tsi: %s\tct: %s\t",
                                 map{ 1000 * $send{$name}{$_}; }qw( readtime readinterval sendtime sendinterval ctrltime );
-                            printf "qlen: %s\t", $send{$name}{data_index} - $send{$name}{deleteid};
-                            printf "buflen: %s\t", scalar @{$handle->{buffers}};
+                            printf "rfilecache: %s\t", $send{$name}{data_index} - $send{$name}{deleteid};
+                            printf "buffers: %s\t", scalar @{$handle->{buffers}};
                             printf "rtt: %s\t", 1000*$send{$name}{ctrl}{rtt};
                             printf "speed: %0.2fM/s\t", ( ( $run{MTU} * ( $send{$name}{sendcount} )) / ( 1024 * 1024 ) );
                             printf "ack: %0.2fM/s\n",  ( ( $run{MTU} * ( $send{$name}{deleteid} - $send{$name}{deleteid_} )) / ( 1024 * 1024 ) );
@@ -366,6 +369,7 @@ sub run
             }
         },
 
+        autoflush => 1,
         on_error => sub{
             print YAML::XS::Dump \@_;
             die "error $_[2].\n";
@@ -389,8 +393,7 @@ sub run
                 }
                 elsif( $recv{$name}{cleantime} + $run{Timeout} < $time )
                 {
-                    printf "%s:%s %s PUT <= timeout.\n",
-                        map{ $recv{$name}{$_} || $_.'unkown' }qw( host port dp );
+                    printf "%s:%s %s PUT <= timeout.\n", map{ $recv{$name}{$_} }qw( host port dp ) if $recv{$name}{host} ;
                     delete $recv{$name};
                 }
             }
@@ -406,8 +409,7 @@ sub run
                 }
                 elsif( $send{$name}{cleantime} + $run{Timeout} < $time )
                 {
-                    printf "%s:%s %s GET => timeout.\n",
-                        map{ $send{$name}{$_} || $_.'unkown' }qw( host port filename );
+                    printf "%s:%s %s GET => timeout.\n", map{ $send{$name}{$_} }qw( host port filename ) if $send{$name}{host};
                     delete $send{$name};
                 }
             }
