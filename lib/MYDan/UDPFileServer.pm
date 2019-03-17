@@ -11,6 +11,7 @@ our %RUN = (
     ACKInterval => 0.001, 
     WriteFileInterval => 0.001,
     RTT => 0.003, 
+    MaxRTO => 0.2,
     SendSec => 20000, 
     ReadFileCache => 400000,
     TransmitRatio => 1.5,

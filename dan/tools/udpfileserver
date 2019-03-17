@@ -18,6 +18,7 @@ $| ++;
      --ACKInterval 0.001
      --WriteFileInterval 0.001
      --RTT 0.003
+     --MaxRTO 0.2
      --SendSec 20000
      --ReadFileCache 400000
      --TransmitRatio 1.5
@@ -36,6 +37,7 @@ $| ++;
      --ACKInterval 0.001
      --WriteFileInterval 0.001
      --RTT 0.003
+     --MaxRTO 0.2
      --SendSec 20000
      --ReadFileCache 400000
      --TransmitRatio 1.5
@@ -51,7 +53,7 @@ $| ++;
 my $option = MYDan::Util::OptConf->load();
 my %o = $option->set( ip => '0.0.0.0', port => 65111 )->get( 
     qw( ip=s port=i MTU=i WriteFileWidth=i ACKInterval=f WriteFileInterval=f 
-        RTT=f SendSec=i ReadFileCache=i TransmitRatio=f Buffers=i 
+        RTT=f MaxRTO=f SendSec=i ReadFileCache=i TransmitRatio=f Buffers=i 
         SendTimeoutAddTime=f SendOne=i ReadFileOneTime=i Timeout=i 
         RTimeout=i server client put=s get=s ) 
 )->dump();

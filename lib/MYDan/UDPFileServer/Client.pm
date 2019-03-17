@@ -164,6 +164,7 @@ sub put
         return if @{$conn->{buffers}} > $run{Buffers};
 
         my $timeout = $ctrl{rtt} + $run{SendTimeoutAddTime} + $waitRepeat;
+        $timeout = $run{MaxRTO} if $timeout > $run{MaxRTO};
 
         for my $id ( $deleteid -1 .. $data_index -1 )
         {

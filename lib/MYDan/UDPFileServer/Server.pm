@@ -266,6 +266,7 @@ sub run
                         return if scalar @{$handle->{buffers}} > $run{Buffers};
 
                         my $timeout = $send{$name}{ctrl}{rtt} + $run{SendTimeoutAddTime} + $send{$name}{waitRepeat};
+                        $timeout = $run{MaxRTO} if $timeout > $run{MaxRTO};
                         for my $id ( $send{$name}{deleteid} - 1 .. $send{$name}{data_index} - 1 )
                         {
                             next if ( ! $send{$name}{data}{$id} ) || ( $send{$name}{stime}{$id} && $send{$name}{stime}{$id} + $timeout > time );
