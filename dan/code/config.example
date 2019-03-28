@@ -1,11 +1,11 @@
 -
   name: git1
-  token: ShRepShRepShRepShRepShR
+  token: xxxxxxxxxxxxxxxx
   apiurl: http://gitlab.mydan.org/api/v4
 
 -
   name: git2
-  token: dSnODalwdqdaDWDQa
+  token: xxxxxxxxxxxxxxxx
   apiurl: https://gitlab.mydan.com/api/v4
 
 - 
