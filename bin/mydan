@@ -42,6 +42,7 @@ my @cmd =
     [ 'sync', "同步${name}的配置", 'dan/tools/sync', 'box/tools/sync' ],
     [ 'xtar', '脚本和数据压缩工具.', 'dan/tools/xtar' ],
     [ 'git', 'git命令，添加了指定key功能.', 'dan/tools/git', 'box/tools/git' ],
+    [ 'gitrsync', '代码发布到远程机器.', 'dan/tools/gitrsync', 'box/tools/gitrsync' ],
     [ 'alarm', '设置超时闹钟运行命令.', 'dan/tools/alarm' ],
     [ 'bigest', '查找大文件.', 'dan/tools/bigest' ],
     [ 'expect', '自动应答.', 'dan/tools/expect' ],
