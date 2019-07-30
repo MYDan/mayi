@@ -16,7 +16,7 @@ sub new
 
     die "keep format error" unless $self{keep} =~ /^\d+$/;
 
-    die "$self{repo}: No such directory.\n" unless -d $self{repo};
+    die "$self{repo}: No such directory.\n" if $self{repo} !~ /@/ && ! -d $self{repo};
 
     unless( -d $self{path} )
     {
@@ -29,9 +29,8 @@ sub new
         die "mkdir path $linkdir fail: $!" if system "mkdir -p '$linkdir'";
     }
 
-    map{ 
-        $self{$_} = Cwd::abs_path( $self{$_} ) unless $self{$_} =~ /^\//;
-    }qw( path repo );
+    $self{path} = Cwd::abs_path( $self{path} ) unless $self{path} =~ /^\//;
+    $self{repo} = Cwd::abs_path( $self{repo} ) if $self{repo} !~ /@/ && $self{repo} !~ /^\//;
 
     bless \%self, ref $class || $class;
 }
@@ -71,16 +70,29 @@ sub _explain
 {
     my $this = shift;
 
-    my ( $repo, $path, $version, $taropt ) = @$this{qw( repo path version taropt )};
+    my ( $repo, $path, $version, $taropt, $link ) = @$this{qw( repo path version taropt link )};
     return if -d "$path/$version";
 
-    die "nofind repo file: $repo/$version\n" unless -f "$repo/$version";
+    die "nofind repo file: $repo/$version\n" unless $repo =~ /@/ || -f "$repo/$version" || -d "$repo/$version";
 
     my $temp = "$path/$version.".time.'.'.$$.'._tmp_explain';
     die "mkdir $temp fail.\n" if syscmd( "mkdir '$temp'" );
 
     $taropt ||= '';
-    die "untar fail.\n" if syscmd( "tar $taropt -zxf '$repo/$version' -C '$temp'" );
+
+    if( -f "$repo/$version" )
+    {
+        die "untar fail.\n" if syscmd( "tar $taropt -zxf '$repo/$version' -C '$temp'" );
+    }
+    elsif( $repo =~ /@/ || -d "$repo/$version" )
+    {
+        if( -d $link ) { die "rsync fail.\n" if syscmd( "rsync -a '$link/' '$temp/'" )};
+        die "rsync fail.\n" if syscmd( "rsync $taropt --delete -a '$repo/$version/' '$temp/'" );
+    }
+    else
+    {
+        die "$repo/$version unkown type"
+    }
     die "rename fail.\n" if syscmd( "rm -rf '$path/$version' && mv '$temp' '$path/$version'" );
 }
 
@@ -119,7 +131,7 @@ sub _clean
         next if $name !~ /^$regx\.\d{10}\.\d+\._tmp_explain$/;
         die "get $_ mtime fail\." unless my $mtime = ( stat $_ )[9];
         next unless $mtime < $expire;
-        die "rmmove fail.\n" if syscmd( "rm -f '$_'" );
+        die "rmmove fail.\n" if syscmd( "rm -rf '$_'" );
     }
  
     ( %path, @path ) = ();
