@@ -2,6 +2,7 @@ package MYDan::Util::Deploy;
 use strict;
 use warnings;
 use Cwd;
+use Digest::MD5;
 use File::Basename;
 
 sub new
@@ -29,6 +30,8 @@ sub new
         die "mkdir path $linkdir fail: $!" if system "mkdir -p '$linkdir'";
     }
 
+    $self{cache} = (getpwnam((getpwuid $<)[0]))[7] . "/.mydan/deploy";
+
     $self{path} = Cwd::abs_path( $self{path} ) unless $self{path} =~ /^\//;
     $self{repo} = Cwd::abs_path( $self{repo} ) if $self{repo} !~ /@/ && $self{repo} !~ /^\//;
 
@@ -40,6 +43,8 @@ sub deploy
     my $this = shift;
 
     my ( $path, $link, $version ) = @$this{qw( path link version )};
+
+	return $this->_recoverlink() if $this->{comeback};
 
     my $temp = "$link.backup";
 
@@ -59,12 +64,64 @@ sub deploy
     }
 
     die "link $link may be a directory.\n" if -d $link && ! -l $link;
+
+	$this->_savelink();
+
+	return $this if $this->{stage};
+
     die "link $link fail.\n" if syscmd( "ln -fsn '$path/$version' '$link'" );
 
     $this->_clean();
     return $this;
 }
 
+sub _recoverlink
+{
+    my $this = shift;
+
+    my ( $link, $version, $cache ) = @$this{qw( link version cache )};
+
+    my $md5 = Digest::MD5->new->add( "$link:$version" )->hexdigest;
+
+    die "recover link fail: No such link.\n" unless -l "$cache/$md5";
+    my $newlink = readlink "$cache/$md5";
+    die "recover link fail: No link to a directory.\n" unless -d $newlink;
+
+    die "recover link fail: ln -fsn.\n" if syscmd("ln -fsn $newlink '$link'");
+
+    return $this;
+}
+
+sub _savelink
+{
+    my $this = shift;
+
+    my ( $link, $version, $cache ) = @$this{qw( link version cache )};
+
+    return $this unless my $oldlink = readlink $link;
+
+    my $md5 = Digest::MD5->new->add( "$link:$version" )->hexdigest;
+    return $this if -l "$cache/$md5";
+
+    unless( -d $cache )
+    {
+        die "mkdir $cache fail.\n" if syscmd( "mkdir -p '$cache'" );
+    }
+
+    die "save link fail: ln -fsn.\n" if syscmd("ln -fsn $oldlink '$cache/$md5'");
+
+    my $expire = time - 94608000;
+
+    for( glob "$cache/*" )
+    {
+        next unless -l $_;
+        die "get $_ mtime fail\." unless my $mtime = ( lstat $_ )[9];
+        next unless $mtime < $expire;
+        die "rmmove fail.\n" if syscmd( "rm -f '$_'" );
+    }
+
+    return $this;
+}
 
 sub _explain
 {
