@@ -127,7 +127,7 @@ sub _explain
 {
     my $this = shift;
 
-    my ( $repo, $path, $version, $taropt, $link ) = @$this{qw( repo path version taropt link )};
+    my ( $repo, $path, $version, $taropt, $rsyncopt, $link ) = @$this{qw( repo path version taropt rsyncopt link )};
     return if -d "$path/$version";
 
     die "nofind repo file: $repo/$version\n" unless $repo =~ /@/ || -f "$repo/$version" || -d "$repo/$version";
@@ -136,6 +136,7 @@ sub _explain
     die "mkdir $temp fail.\n" if syscmd( "mkdir '$temp'" );
 
     $taropt ||= '';
+    $rsyncopt ||= '';
 
     if( -f "$repo/$version" )
     {
@@ -144,7 +145,7 @@ sub _explain
     elsif( $repo =~ /@/ || -d "$repo/$version" )
     {
         if( -d $link ) { die "rsync fail.\n" if syscmd( "rsync -a '$link/' '$temp/'" )};
-        die "rsync fail.\n" if syscmd( "rsync $taropt --delete -a '$repo/$version/' '$temp/'" );
+        die "rsync fail.\n" if syscmd( "rsync $rsyncopt --delete -a '$repo/$version/' '$temp/'" );
     }
     else
     {
