@@ -136,7 +136,7 @@ sub _explain
     die "mkdir $temp fail.\n" if syscmd( "mkdir '$temp'" );
 
     $taropt ||= '';
-    $rsyncopt ||= '';
+    $rsyncopt ||= '-rlptoD';
 
     if( -f "$repo/$version" )
     {
@@ -144,8 +144,8 @@ sub _explain
     }
     elsif( $repo =~ /@/ || -d "$repo/$version" )
     {
-        if( -d $link ) { die "rsync fail.\n" if syscmd( "rsync -a '$link/' '$temp/'" )};
-        die "rsync fail.\n" if syscmd( "rsync $rsyncopt --delete -a '$repo/$version/' '$temp/'" );
+        if( -d $link ) { die "rsync fail.\n" if syscmd( "rsync $rsyncopt '$link/' '$temp/'" )};
+        die "rsync fail.\n" if syscmd( "rsync $rsyncopt --delete '$repo/$version/' '$temp/'" );
     }
     else
     {
