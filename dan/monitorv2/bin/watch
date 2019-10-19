@@ -1,0 +1,69 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+
+use YAML::XS;
+use File::Basename;
+use MYDan::Util::OptConf;
+
+$| ++;
+
+$MYDan::Util::OptConf::THIS = 'monitorv2';
+
+=head1 SYNOPSIS
+
+ $0 #show
+ $0 --interval 3
+
+=cut
+
+my $option = MYDan::Util::OptConf->load();
+my %o = $option->get( qw( interval=i ) )->dump();
+my %bootstrap = $option->dump( 'bootstrap' );
+
+while(1)
+{
+    system 'clear;date' if $o{interval};
+
+    my ( $err, %re ) = ( 0 );
+    for ( map{ basename $_ }glob "$bootstrap{exec}/*" )
+    {
+        next unless $_ =~ /^monitorv2\.collector\.(.+)$/;
+        my $name = $1;
+
+        my $mtime = ( stat "$o{run}/$name" )[9];
+        unless( $mtime )
+        {
+            $re{$name} = "SysErr: nofind $o{run}/$name";
+            $err ++;
+            next;
+        }
+        my $conf = eval{ YAML::XS::LoadFile "$o{conf}/$name" };
+        unless( $conf && ref $conf eq 'HASH' && $conf->{interval} )
+        {
+            $re{$name} = "SysErr: get interval fail";
+            $err ++;
+            next;
+        }
+
+        unless( $mtime && $conf->{interval} && $mtime + $conf->{interval} + 2 > time )
+        {
+            $re{$name} = "SysErr: monitorv2 fail";
+            $err ++;
+            next;
+        }
+
+        $re{$name} = eval{ YAML::XS::LoadFile "$o{run}/$name" };
+        $re{$name} = $@ if $@;
+
+        $re{$name} = 'ok' if ref $re{$name} eq 'HASH' && ! keys %{$re{$name}};
+        $err ++ unless $re{$name} eq 'ok';
+    }
+
+    print YAML::XS::Dump \%re;
+
+    print "\nERR: $err\n";
+
+    exit 0 unless $o{interval};
+    sleep $o{interval};
+}
