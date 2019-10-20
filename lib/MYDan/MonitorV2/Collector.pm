@@ -49,7 +49,14 @@ sub run
     while( 1 )
     {
         my $time = time;
-        my ( $config, $code, $tmp ) = @$this{qw( config code tmp )};
+        my ( $config, $code, $conf, $name, $tmp ) = @$this{qw( config code conf name tmp )};
+
+        print "check config: begin.\n";
+        my $newconfig = eval{ YAML::XS::LoadFile "$conf/$name" };
+        die "load config $conf/$name: $@\n" if $@;
+        die "config has been updated. exit.\n" 
+            unless ( YAML::XS::Dump $newconfig ) eq ( YAML::XS::Dump $config );
+        print "check config: done.\n";
 
         my $option = MYDan::Util::OptConf->load();
         my $range = MYDan::Node->new( $option->dump( 'range' ) );
