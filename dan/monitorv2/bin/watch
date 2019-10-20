@@ -2,6 +2,7 @@
 use strict;
 use warnings;
 
+use POSIX;
 use YAML::XS;
 use File::Basename;
 use MYDan::Util::OptConf;
@@ -23,7 +24,7 @@ my %bootstrap = $option->dump( 'bootstrap' );
 
 while(1)
 {
-    system 'clear;date' if $o{interval};
+    system 'clear' if $o{interval};
 
     my ( $err, %re ) = ( 0 );
     for ( map{ basename $_ }glob "$bootstrap{exec}/*" )
@@ -60,9 +61,8 @@ while(1)
         $err ++ unless $re{$name} eq 'ok';
     }
 
-    print YAML::XS::Dump \%re;
-
-    print "\nERR: $err\n";
+    my $time = POSIX::strftime( "%Y-%m-%d_%H:%M:%S", localtime );
+    print YAML::XS::Dump $time, \%re, $err;
 
     exit 0 unless $o{interval};
     sleep $o{interval};
