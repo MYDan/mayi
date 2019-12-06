@@ -396,7 +396,7 @@ sub run
 
                   on_error => sub {
                       close $fh;
-                      map { $result{$_} = "no_error by proxy $node"; } @node;
+                      map { $result{$_} = "on_error by proxy $node"; } @node;
                   }
               );
 
