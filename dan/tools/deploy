@@ -16,6 +16,7 @@ $| ++;
     [--path /my/path ( default $repo/data ) ]
     [--keep 10 (default 10)]
     [--taropt '-m']
+    [--rsyncopt '-v']
     [--stage]
 
     Version 'release-x.x.x' and 'rollback:release-x.x.x' are the same
@@ -27,7 +28,7 @@ $| ++;
 
 my $option = MYDan::Util::OptConf->load();
 my %o = $option->set( keep => 10 )->get(
-     qw( repo=s link=s version=s path=s keep=i taropt=s stage )
+     qw( repo=s link=s version=s path=s keep=i taropt=s rsyncopt=s stage )
 )->dump();
 
 $option->assert( qw( repo link version ) );
