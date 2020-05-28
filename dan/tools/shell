@@ -96,7 +96,7 @@ while ( $poll->handles && $soc ) {
         if ( $handle eq $soc )
         {
             if ( $byte = sysread( $soc, $data, 1024 ) ) { syswrite( STDOUT, $data, $byte ); }
-            else { $soc->shutdown(2); last; }
+            else { $soc->shutdown(2); goto EXIT; }
         }
 
         syswrite( $soc, $data, $byte ) 
@@ -106,8 +106,9 @@ while ( $poll->handles && $soc ) {
     if( $poll->handles( POLLHUP | POLLERR) )
     {
         $soc->shutdown( 2 );
-        last;
+        goto EXIT;
     }
 }
 
+EXIT:
 ReadMode(0);
