@@ -25,11 +25,13 @@ $| ++;
 
  $0 --host host [--user user(default `id -un`)] [--sudo sudoer]
 
+    [--cmd top]
+
 =cut
 
 $MYDan::Util::OptConf::THIS = 'agent';
 my $option = MYDan::Util::OptConf->load();
-my ( %o, %proxy ) = $option->get( qw( host=s user=s sudo=s ) )->dump();
+my ( %o, %proxy ) = $option->get( qw( host=s user=s sudo=s cmd=s ) )->dump();
 $option->assert( 'host' );
 
 if( $o{proxy} )
@@ -50,7 +52,7 @@ my ($cols, $rows) = Term::Size::chars *STDOUT{IO};
 my %query = (
     env => +{ TERM => 'linux' },
     code => 'shell',
-    argv => [ $proxy ? undef : '127.0.0.1', $o{port}, $uuid, $rows, $cols, $md5 ],
+    argv => [ $proxy ? undef : '127.0.0.1', $o{port}, $uuid, $rows, $cols, $md5, $o{cmd} ],
     map{ $_ => $o{$_} }qw( user sudo )
 );
 

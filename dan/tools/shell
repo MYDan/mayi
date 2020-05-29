@@ -29,11 +29,13 @@ $| ++;
  $0 --host host --listen 9999 [--addr 10.10.10.1]\
       [--user user(default `id -un`)] [--sudo sudoer]
 
+    [--cmd top]
+
 =cut
 
 $MYDan::Util::OptConf::THIS = 'agent';
 my $option = MYDan::Util::OptConf->load();
-my %o = $option->get( qw( host=s listen=i addr=s user=s sudo=s ) )->dump();
+my %o = $option->get( qw( host=s listen=i addr=s user=s sudo=s cmd=s ) )->dump();
 $option->assert( 'host' );
 
 my $cv = AE::cv;  
@@ -64,7 +66,7 @@ my ($cols, $rows) = Term::Size::chars *STDOUT{IO};
 my %query = (
     env => +{ TERM => 'linux' },
     code => 'shell',
-    argv => [ $o{addr}, $listen, $uuid, $rows, $cols ],
+    argv => [ $o{addr}, $listen, $uuid, $rows, $cols, undef, $o{cmd} ],
     map{ $_ => $o{$_} }qw( user sudo )
 );
 
