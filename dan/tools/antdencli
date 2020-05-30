@@ -1,0 +1,65 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use YAML::XS;
+use MYDan::AntDen::Cli;
+use MYDan::Util::OptConf;
+
+=head1 SYNOPSIS
+
+ $0 [--run abc.sh] [--dataset abc] [--nice 5] [--group foo] [--count 1] [--resources CPU:100,MEM:50]
+ $0 [--list]
+ $0 [--info J.20200526.141337.852564.866]
+ $0 [--stop J.20200526.141337.852564.866]
+ $0 [--tail J.20200526.141337.852564.866 || T.20200526.141337.852564.866.001]
+ $0 [--top J.20200526.141337.852564.866 || T.20200526.141337.852564.866.001]
+ $0 [--shell J.20200526.141337.852564.866 || T.20200526.141337.852564.866.001]
+
+=cut
+
+my $option = MYDan::Util::OptConf->load();
+my %o = $option->set( nice => 5, group => 'foo', count => 1, resources => 'CPU:100,MEM:50' )
+    ->get( qw( run=s dataset=s nice=i group=s count=i resources=s list info=s stop=s tail=s top=s shell=s ) )->dump();
+ 
+my $antden = MYDan::AntDen::Cli->new();
+
+if( $o{run} )
+{
+    printf "jobid: %s\n", $antden->run( %o );
+}
+elsif( $o{list} )
+{
+    my $job = $antden->list( %o );
+    my @key = qw( id jobid nice group status );
+    unshift @$job, +{ map{ $_ => $_ }@key };
+    map{ my $j = $_; printf "%s\n", join "\t", map{ $j->{$_}} @key } @$job;
+}
+elsif( $o{info} )
+{
+    my $info = $antden->info( jobid => $o{info} );
+    print YAML::XS::Dump $info;
+}
+elsif( $o{stop} )
+{
+    my $jobid = $antden->stop( jobid => $o{stop} );
+    print "stop $jobid done.\n";
+}
+elsif( $o{tail} )
+{
+    $antden->tail( jobid => $o{tail} );
+}
+elsif( $o{top} )
+{
+    $antden->top( jobid => $o{top} );
+}
+elsif( $o{shell} )
+{
+    $antden->shell( jobid => $o{shell} );
+}
+else
+{
+    $option->assert();
+}
+
+exit 0;
+
