@@ -2,6 +2,7 @@ package MYDan::AntDen::Cli;
 use strict;
 use warnings;
 
+use Cwd;
 use Carp;
 use MYDan;
 use MYDan::Util::OptConf;
@@ -41,7 +42,7 @@ sub _rcall
     my %query = ( code => 'antdencli', argv => \%argv, map{ $_ => $o{$_} }qw( user sudo ) );
 
     my %result = MYDan::Agent::Client->new( 
-	$api
+        $api
     )->run( %o, query => \%query ); 
 
     my $res = $result{$api} || '';
@@ -78,18 +79,38 @@ sub run
 
     die "resources err" unless @resources;
 
+    my $executer;
+    if( $run{image} )
+    {
+        my $pwd = getcwd;
+        $executer = +{
+            name => 'docker',
+            param => +{
+                cmd => "$run{run}",
+                image => $run{image},
+                volumes => [ "/data/AntDen_repo/$user.$uuid:$pwd" ],
+                antden_repo => [ $api, "/data/AntDen_repo/$user.$uuid" ],
+                workdir => "$pwd",
+            }
+        },
+    }
+    else
+    {
+        $executer = +{
+            name => 'exec',
+            param => +{
+                exec => "MYDan_Agent_Load_Code=free.load_antden $this->{mt}/load --host $api  --sp '$repofile' --dp $runpath.tar.gz && mkdir -p $runpath && tar -zxvf $runpath.tar.gz -C '$runpath' &&cd '$runpath' && $run{run}"
+            }
+        },
+    }
+
     my %argv = (
         ctrl => 'submitjob',
         conf => +{
             nice => $run{nice},
             group => $run{group},
             config => [+{
-                executer => +{
-                    name => 'exec',
-                    param => +{
-                        exec => "MYDan_Agent_Load_Code=free.load_antden $this->{mt}/load --host $api  --sp '$repofile' --dp $runpath.tar.gz && mkdir -p $runpath && tar -zxvf $runpath.tar.gz -C '$runpath' &&cd '$runpath' && $run{run}"
-                    }
-                },
+                executer => $executer,
                 scheduler => +{
                     envhard => 'arch=x86_64,os=Linux',
                     envsoft => 'app1=1.0',
@@ -190,15 +211,21 @@ sub _taskcall
 
     if ( $run{name} eq 'tail' )
     {
-        exec "$this->{mt}/shellv2 -h '$host' --sudo root --cmd 'tail -F /opt/AntDen/logs/task/$taskid.log'";
+        exec $task->{executer} eq 'docker'
+            ? "$this->{mt}/shellv2 -h '$host' --sudo root --cmd 'docker logs -f $taskid'"
+            : "$this->{mt}/shellv2 -h '$host' --sudo root --cmd 'tail -F /opt/AntDen/logs/task/$taskid.log'";
     }
     elsif ( $run{name} eq 'top' )
     {
-        exec "$this->{mt}/shellv2 -h '$host' --sudo root --cmd top";
+        exec $task->{executer} eq 'docker'
+            ? "$this->{mt}/shellv2 -h '$host' --sudo root --cmd 'docker exec -it $taskid  top'"
+            : "$this->{mt}/shellv2 -h '$host' --sudo root --cmd top";
     }
     else
     {
-        exec "$this->{mt}/shellv2 -h '$host' --sudo root";
+        exec $task->{executer} eq 'docker'
+            ? "$this->{mt}/shellv2 -h '$host' --sudo root --cmd 'docker exec -it $taskid  bash'"
+            : "$this->{mt}/shellv2 -h '$host' --sudo root";
     }
 }
 

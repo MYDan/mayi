@@ -66,6 +66,8 @@ my @cmd =
     [ 'reborn', "重装系统.\n", 'dan/tools/reborn', 'box/tools/reborn' ],
 
     [ 'os', "获取当前服务器的cpu/mem等信息.\n", 'dan/tools/os', 'box/tools/os' ],
+
+    [ 'antdencli', "AntDen 命令行工具.\n", 'dan/tools/antdencli', 'box/tools/antdencli' ],
 );
 
 MYDan::Util::Command->new( $name => \@cmd,
