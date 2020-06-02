@@ -79,6 +79,8 @@ sub run
 
     die "resources err" unless @resources;
 
+    my @datasets; @datasets = map{ "/mnt/$_" }split /,/, $run{datasets} if $run{datasets};
+
     my $executer;
     if( $run{image} )
     {
@@ -88,7 +90,7 @@ sub run
             param => +{
                 cmd => "$run{run}",
                 image => $run{image},
-                volumes => [ "/data/AntDen_repo/$user.$uuid:$pwd" ],
+                volumes => [ "/data/AntDen_repo/$user.$uuid:$pwd", @datasets ],
                 antden_repo => [ $api, "/data/AntDen_repo/$user.$uuid" ],
                 workdir => "$pwd",
             }
@@ -207,7 +209,8 @@ sub _taskcall
     die "call fail: $res $@" if $@;
     die "task no Hash" unless $task && ref $task eq 'HASH';
     my $host = $task->{hostip};
-    die "get task hostip fail: $res" unless $host && $host =~ /^\d+\.\d+\.\d+\.\d+$/;
+    die "The task hasn't started yet. try it later.\n" unless $host;
+    die "get task hostip fail: $res" unless $host =~ /^\d+\.\d+\.\d+\.\d+$/;
 
     if ( $run{name} eq 'tail' )
     {
