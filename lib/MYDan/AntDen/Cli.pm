@@ -192,6 +192,12 @@ sub shell
     $this->_taskcall( %run, name => 'shell' );
 }
 
+sub  nvidiasmi
+{
+    my ( $this, %run ) = splice @_;
+    $this->_taskcall( %run, name => 'nvidia-smi' );
+}
+
 sub _taskcall
 {
     my ( $this, %run ) = splice @_;
@@ -212,6 +218,7 @@ sub _taskcall
     my $host = $task->{hostip};
     die "The task hasn't started yet. try it later.\n" unless $host;
     die "get task hostip fail: $res" unless $host =~ /^\d+\.\d+\.\d+\.\d+$/;
+    die "Status of task: $task->{status}\n" if $task->{status} && $task->{status} ne 'running';
 
     if ( $run{name} eq 'tail' )
     {
@@ -222,13 +229,19 @@ sub _taskcall
     elsif ( $run{name} eq 'top' )
     {
         exec $task->{executer} eq 'docker'
-            ? "$this->{mt}/shellv2 -h '$host' --sudo root --cmd 'docker exec -it $taskid  top'"
+            ? "$this->{mt}/shellv2 -h '$host' --sudo root --cmd 'docker exec -it $taskid top'"
             : "$this->{mt}/shellv2 -h '$host' --sudo root --cmd top";
+    }
+    elsif ( $run{name} eq 'nvidia-smi' )
+    {
+        exec $task->{executer} eq 'docker'
+            ? "$this->{mt}/shellv2 -h '$host' --sudo root --cmd 'docker exec -it $taskid nvidia-smi'"
+            : "$this->{mt}/shellv2 -h '$host' --sudo root --cmd nvidia-smi";
     }
     else
     {
         exec $task->{executer} eq 'docker'
-            ? "$this->{mt}/shellv2 -h '$host' --sudo root --cmd 'docker exec -it $taskid  bash'"
+            ? "$this->{mt}/shellv2 -h '$host' --sudo root --cmd 'docker exec -it $taskid bash' --ictrl 0"
             : "$this->{mt}/shellv2 -h '$host' --sudo root";
     }
 }
