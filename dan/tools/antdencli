@@ -19,7 +19,7 @@ use MYDan::Util::OptConf;
 
 my $option = MYDan::Util::OptConf->load();
 my %o = $option->set( nice => 5, group => 'foo', count => 1, resources => 'CPU:100,MEM:50' )
-    ->get( qw( run=s datasets=s nice=i group=s count=i resources=s list info=s stop=s tail=s top=s shell=s image=s ) )->dump();
+    ->get( qw( run=s datasets=s nice=i group=s count=i resources=s list info=s stop=s tail=s top=s shell=s image=s volume=s ) )->dump();
  
 my $antden = MYDan::AntDen::Cli->new();
 

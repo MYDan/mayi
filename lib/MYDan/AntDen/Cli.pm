@@ -80,6 +80,7 @@ sub run
     die "resources err" unless @resources;
 
     my @datasets; @datasets = map{ "/mnt/$_" }split /,/, $run{datasets} if $run{datasets};
+    my @volume; @volume = split /,/, $run{volume} if $run{volume};
 
     my $executer;
     if( $run{image} )
@@ -90,7 +91,7 @@ sub run
             param => +{
                 cmd => "$run{run}",
                 image => $run{image},
-                volumes => [ "/data/AntDen_repo/$user.$uuid:$pwd", @datasets ],
+                volumes => [ "/data/AntDen_repo/$user.$uuid:$pwd", @datasets, @volume ],
                 antden_repo => [ $api, "/data/AntDen_repo/$user.$uuid" ],
                 workdir => "$pwd",
             }
