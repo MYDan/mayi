@@ -235,8 +235,8 @@ sub _taskcall
     elsif ( $run{name} eq 'nvidia-smi' )
     {
         exec $task->{executer} eq 'docker'
-            ? "$this->{mt}/shellv2 -h '$host' --sudo root --cmd 'docker exec -it $taskid nvidia-smi'"
-            : "$this->{mt}/shellv2 -h '$host' --sudo root --cmd nvidia-smi";
+            ? "$this->{mt}/shellv2 -h '$host' --sudo root --cmd 'docker exec -it $taskid bash -c \"watch nvidia-smi\"'"
+            : "$this->{mt}/shellv2 -h '$host' --sudo root --cmd 'watch nvidia-smi'";
     }
     else
     {
