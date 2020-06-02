@@ -11,7 +11,7 @@ local $/ = undef;
 
 my %param = %{ YAML::XS::Load( <> ) };
 
-my( $host, $port, $uuid, $row, $col, $md5, $cmd ) = @{$param{argv}};
+my( $host, $port, $uuid, $row, $col, $md5, $cmd, $ictrl ) = @{$param{argv}};
 $host ||= $ENV{TCPREMOTEIP};
 
 die "nofind user" unless my $user = $ENV{MYDan_sudo} ||  $ENV{MYDan_user};
@@ -69,11 +69,11 @@ while ( $poll->handles && $soc ) {
         my ( $byte, $data );
         if( $handle eq $soc && ( $byte = sysread( $soc, $data, 1024 ) ) )
         {
-            map{ goto CLOSE if 3 == ord $_ }split //, $data if $cmd;
+            map{ goto CLOSE if 3 == ord $_ }split //, $data if $ictrl;
             syswrite( $pty, $data, $byte );
         }
         syswrite( $soc, $data, $byte ) if $handle eq $pty && ( $byte = sysread( $pty, $data, 1024 ) );
-	goto CLOSE unless $byte;
+        goto CLOSE unless $byte;
     }
     if ( $poll->handles( POLLHUP | POLLERR) ) {
         $soc->shutdown( 2 );
