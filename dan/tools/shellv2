@@ -111,3 +111,4 @@ while ( $poll->handles && $soc ) {
 
 EXIT:
 ReadMode(0);
+system 'echo -e "\033[?25h"';
