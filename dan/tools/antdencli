@@ -9,6 +9,7 @@ use MYDan::Util::OptConf;
 
  $0 [--run abc.sh] [--nice 5] [--group foo] [--count 1] [--resources CPU:100,MEM:50] [--image ubuntu] [--datasets abc:/tmp/abc,foo:/tmp/foo] [--volume /tmp/abc:/tmp/abcd,/foo:/bar]
  $0 [--list]
+ $0 [--ri]         #resource information
  $0 [--info J.20200526.141337.852564.866]
  $0 [--stop J.20200526.141337.852564.866]
  $0 [--tail J.20200526.141337.852564.866 || T.20200526.141337.852564.866.001]
@@ -20,7 +21,7 @@ use MYDan::Util::OptConf;
 
 my $option = MYDan::Util::OptConf->load();
 my %o = $option->set( nice => 5, group => 'foo', count => 1, resources => 'CPU:100,MEM:50' )
-    ->get( qw( run=s datasets=s nice=i group=s count=i resources=s list info=s stop=s tail=s top=s shell=s nvidia-smi=s image=s volume=s ) )->dump();
+    ->get( qw( run=s datasets=s nice=i group=s count=i resources=s list ri info=s stop=s tail=s top=s shell=s nvidia-smi=s image=s volume=s ) )->dump();
  
 my $antden = MYDan::AntDen::Cli->new();
 
@@ -34,6 +35,15 @@ elsif( $o{list} )
     my @key = qw( id jobid nice group status );
     unshift @$job, +{ map{ $_ => $_ }@key };
     map{ my $j = $_; printf "%s\n", join "\t", map{ $j->{$_}} @key } @$job;
+}
+elsif( $o{ri} )
+{
+    my $res = $antden->resources( %o );
+    printf "Resources:\n  %s\n\n", join ' ', map{ "$_->[0]($_->[1]/$_->[2])" }@{$res->{total}};
+    print "Machine\n";
+    my @key = qw( ip hostname envhard envsoft switchable group workable role resources mon );
+    unshift @{$res->{machine}}, +{ map{ $_ => $_ }@key };
+    map{ my $j = $_; printf "  %s\n", join "\t", map{ $j->{$_}} @key } @{$res->{machine}};
 }
 elsif( $o{info} )
 {

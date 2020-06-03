@@ -140,6 +140,15 @@ sub list
     return $job;
 }
 
+sub resources
+{
+    my ( $this, %run ) = splice @_;
+    my $res = $this->_rcall( ctrl => 'resources' );
+    my $r = eval{ YAML::XS::Load $res };
+    die "call fail: $res $@" if $@;
+    return $r;
+}
+
 sub info
 {
     my ( $this, %run ) = splice @_;

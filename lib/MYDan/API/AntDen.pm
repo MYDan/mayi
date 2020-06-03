@@ -35,4 +35,9 @@ sub taskinfo
     return $self->get( "$URI/scheduler/taskinfo/$taskid" );
 }
 
+sub resources
+{
+    return shift->get( "$URI/scheduler/resources" );
+}
+
 1;
