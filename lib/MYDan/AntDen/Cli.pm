@@ -74,12 +74,19 @@ sub run
 
     my @resources;
     map{
-        push( @resources, [ $1, '.', $2 ]) if $_ =~ /^([A-Z]+):(\d+)$/;
+        if( my @x = $_ =~ /^([A-Z]+):(\d+)$/ )
+        {
+            if( $x[0] eq 'GPU' )
+            {
+                map{ push( @resources, [ $x[0], '.', 1 ] ) } 1 .. $x[1];
+            }
+            else { push( @resources, [ $x[0], '.', $x[1] ] ) }
+        }
     } split /,/, $run{resources};
 
     die "resources err" unless @resources;
 
-    my @datasets; @datasets = map{ "/mnt/$_" }split /,/, $run{datasets} if $run{datasets};
+    my @datasets; @datasets = map{ "/mnt/$_:/mnt/$_" }split /,/, $run{datasets} if $run{datasets};
     my @volume; @volume = split /,/, $run{volume} if $run{volume};
 
     my $executer;
@@ -93,7 +100,7 @@ sub run
                 image => $run{image},
                 volumes => [ "/data/AntDen_repo/$user.$uuid:$pwd", @datasets, @volume ],
                 antden_repo => [ $api, "/data/AntDen_repo/$user.$uuid" ],
-                workdir => "$pwd",
+                workdir => $run{run} =~ /\.\// ? $pwd : undef,
             }
         },
     }
