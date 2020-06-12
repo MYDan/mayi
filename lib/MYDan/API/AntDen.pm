@@ -13,8 +13,8 @@ sub submitjob
 
 sub listjob
 {
-    my ( $self ) = @_;
-    return $self->get( "$URI/scheduler/listJob" );
+    my ( $self, $owner ) = @_;
+    return $self->get( "$URI/scheduler/listJob?owner=$owner" );
 }
 
 sub info

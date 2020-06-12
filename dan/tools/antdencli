@@ -7,7 +7,7 @@ use MYDan::Util::OptConf;
 
 =head1 SYNOPSIS
 
- $0 [--run abc.sh] [--nice 5] [--group foo] [--count 1] [--resources CPU:100,MEM:50] [--image ubuntu] [--datasets abc:/tmp/abc,foo:/tmp/foo] [--volume /tmp/abc:/tmp/abcd,/foo:/bar]
+ $0 [--run abc.sh] [--name jobname ] [--nice 5] [--group foo] [--count 1] [--resources CPU:100,MEM:50] [--image ubuntu] [--datasets abc,foo] [--volume /tmp/abc:/tmp/abcd,/foo:/bar]
  $0 [--list]
  $0 [--ri]         #resource information
  $0 [--info J.20200526.141337.852564.866]
@@ -20,19 +20,21 @@ use MYDan::Util::OptConf;
 =cut
 
 my $option = MYDan::Util::OptConf->load();
-my %o = $option->set( nice => 5, group => 'foo', count => 1, resources => 'CPU:100,MEM:50' )
-    ->get( qw( run=s datasets=s nice=i group=s count=i resources=s list ri info=s stop=s tail=s top=s shell=s nvidia-smi=s image=s volume=s ) )->dump();
+my %o = $option->set( nice => 5, group => 'foo', count => 1, resources => 'CPU:100,MEM:50', name => 'jobname'  )
+    ->get( qw( run=s datasets=s name=s nice=i group=s count=i resources=s list ri info=s stop=s tail=s top=s shell=s nvidia-smi=s image=s volume=s ) )->dump();
  
 my $antden = MYDan::AntDen::Cli->new();
 
 if( $o{run} )
 {
-    printf "jobid: %s\n", $antden->run( %o );
+    my $jobid = $antden->run( %o );
+    print "[INFO]Jobid: $jobid\n";
+    exec "$0 --tail $jobid";
 }
 elsif( $o{list} )
 {
     my $job = $antden->list( %o );
-    my @key = qw( id jobid nice group status );
+    my @key = qw( id jobid name nice group status );
     unshift @$job, +{ map{ $_ => $_ }@key };
     map{ my $j = $_; printf "%s\n", join "\t", map{ $j->{$_}} @key } @$job;
 }

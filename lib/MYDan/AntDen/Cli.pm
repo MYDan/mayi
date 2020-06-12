@@ -65,7 +65,7 @@ sub run
     my ( $temp, $repofile, $runpath ) = ( "/tmp/antden.pkg.$uuid.tar.gz", "/data/AntDen_repo/$user.$uuid.tar.gz", "/tmp/AntDen.run.$uuid" );
 
     print "[INFO]Compress local path...\n";
-    die "tar fail: $!" if system "tar -zcvf $temp `ls -a|grep -v '^\\.\$'|grep -v '^\\.\\.\$'`";
+    die "tar fail: $!" if system "tar -zcf $temp `ls -a|grep -v '^\\.\$'|grep -v '^\\.\\.\$'`";
     print "[INFO]Upload data...\n";
     die "dump fail: $!" if system "$this->{mt}/rcall -r $api dump $temp --path '$repofile' --sudo root >/dev/null";
     die "remove temp file $temp fail:$!" if system "rm -f $temp";
@@ -117,8 +117,6 @@ sub run
     my %argv = (
         ctrl => 'submitjob',
         conf => +{
-            nice => $run{nice},
-            group => $run{group},
             config => [+{
                 executer => $executer,
                 scheduler => +{
@@ -127,7 +125,8 @@ sub run
                     count => $run{count},
                     resources => \@resources
                 }
-            }]
+            }],
+            map{ $_ => $run{$_} }qw( nice name group )
         }
     );
 
@@ -208,19 +207,15 @@ sub shell
     $this->_taskcall( %run, name => 'shell' );
 }
 
-sub  nvidiasmi
+sub nvidiasmi
 {
     my ( $this, %run ) = splice @_;
     $this->_taskcall( %run, name => 'nvidia-smi' );
 }
 
-sub _taskcall
+sub _gethost
 {
-    my ( $this, %run ) = splice @_;
-
-    die "jobid undef" unless my $taskid = $run{jobid};
-    $taskid .= '.001' if $taskid =~ s/^J/T/;
-        
+    my ( $this, $taskid, $type ) = @_;
     my $res = $this->_rcall(
         ctrl => 'taskinfo',
         conf => +{
@@ -231,10 +226,34 @@ sub _taskcall
     my $task = eval{ YAML::XS::Load $res };
     die "call fail: $res $@" if $@;
     die "task no Hash" unless $task && ref $task eq 'HASH';
-    my $host = $task->{hostip};
-    die "The task hasn't started yet. try it later.\n" unless $host;
-    die "get task hostip fail: $res" unless $host =~ /^\d+\.\d+\.\d+\.\d+$/;
-    die "Status of task: $task->{status}\n" if $task->{status} && $task->{status} ne 'running';
+    return ( $task, 'scheduling' ) unless my $host = $task->{hostip};
+    return ( $task, 'nofind ip' ) unless $host =~ /^\d+\.\d+\.\d+\.\d+$/;
+    return ( $task, 'nofind status' ) unless $task->{status};
+    my $x = "task status $task->{status}";
+    if( $type eq 'tail' )
+    {
+        return ( grep{ $task->{status} eq $_ } qw( running stoped ) ) ? ( $task, $x, $host ) : ( $task, $x );
+    }
+    die "task stoped.\n" if $task->{status} eq 'stoped';
+    return ( $task->{status} eq 'running' ) ? ( $task, $x, $host ) : ( $task, $x );
+}
+
+sub _taskcall
+{
+    my ( $this, %run, $task, $mesg, $host ) = splice @_;
+
+    die "jobid undef" unless my $taskid = $run{jobid};
+    $taskid .= '.001' if $taskid =~ s/^J/T/;
+        
+    for( 1 .. 60 )
+    {
+        ( $task, $mesg, $host ) = $this->_gethost( $taskid, $run{name} );
+        last if $host;
+        print "[INFO]Pending... $_ [$mesg]\n";
+        sleep 1;
+    }
+
+    die "[INFO] Please try again later\n" unless $host;
 
     if ( $run{name} eq 'tail' )
     {
