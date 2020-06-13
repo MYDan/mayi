@@ -14,10 +14,10 @@ my $idie = sub{ print shift; exit 1; };
 
 @r = eval{ $api->submitjob( %{$argv->{conf}}, owner => $param{user} ); } if $argv->{ctrl} eq 'submitjob';
 @r = eval{ $api->listjob( $param{user} ); } if $argv->{ctrl} eq 'listjob';
-@r = eval{ $api->info( $argv->{conf}{jobid} ); } if  $argv->{ctrl} eq 'info';
-@r = eval{ $api->stop( $argv->{conf}{jobid} ); } if $argv->{ctrl} eq 'stop';
+@r = eval{ $api->info( $argv->{conf}{jobid}, $param{user} ); } if  $argv->{ctrl} eq 'info';
+@r = eval{ $api->stop( $argv->{conf}{jobid}, $param{user} ); } if $argv->{ctrl} eq 'stop';
 @r = eval{ $api->taskinfo( $argv->{conf}{taskid} ); } if $argv->{ctrl} eq 'taskinfo';
-@r = eval{ $api->resources(); } if $argv->{ctrl} eq 'resources';
+@r = eval{ $api->resources( $param{user} ); } if $argv->{ctrl} eq 'resources';
 
 &$idie( "err: $@" ) if $@;
 print YAML::XS::Dump @r;
