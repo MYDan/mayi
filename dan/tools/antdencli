@@ -78,6 +78,12 @@ elsif( $o{'nvidia-smi'} )
 }
 else
 {
+    my $user = `id -un`; chop $user;
+    my $home = $ENV{HOME} || ( getpwnam $user )[7];
+    $user = $ENV{MYDan_username} if $ENV{MYDan_username};
+
+    printf "\nhome: [$home] user: [$user] api:[%s] mydan:[%s]\n\n",
+        $option->dump('api')->{addr}, $option->dump('agent')->{role};
     $option->assert();
 }
 
