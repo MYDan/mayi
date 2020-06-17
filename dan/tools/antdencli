@@ -7,7 +7,10 @@ use MYDan::Util::OptConf;
 
 =head1 SYNOPSIS
 
- $0 [--run abc.sh] [--name jobname ] [--nice 5] [--group foo] [--count 1] [--resources CPU:100,MEM:50] [--image ubuntu] [--datasets abc,foo] [--volume /tmp/abc:/tmp/abcd,/foo:/bar]
+ $0 [--run abc.sh] [--name jobname ] [--nice 5] [--group foo] [--count 1] [--resources CPU:100,MEM:50,GPU:2]
+        [--image ubuntu] [--datasets abc,foo] [--volume /tmp/abc:/tmp/abcd,/foo:/bar]
+        [--hostip 192.168.1.12]
+
  $0 [--list]
  $0 [--ri]         #resource information
  $0 [--info J.20200526.141337.852564.866]
@@ -21,7 +24,7 @@ use MYDan::Util::OptConf;
 
 my $option = MYDan::Util::OptConf->load();
 my %o = $option->set( nice => 5, group => 'foo', count => 1, resources => 'CPU:100,MEM:50', name => 'jobname'  )
-    ->get( qw( run=s datasets=s name=s nice=i group=s count=i resources=s list ri info=s stop=s tail=s top=s shell=s nvidia-smi=s image=s volume=s ) )->dump();
+    ->get( qw( run=s datasets=s name=s nice=i group=s count=i resources=s list ri info=s stop=s tail=s top=s shell=s nvidia-smi=s image=s volume=s hostip=s ) )->dump();
  
 my $antden = MYDan::AntDen::Cli->new();
 

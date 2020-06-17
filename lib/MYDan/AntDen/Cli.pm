@@ -120,6 +120,7 @@ sub run
             config => [+{
                 executer => $executer,
                 scheduler => +{
+                    ip => $run{hostip},
                     envhard => 'arch=x86_64,os=Linux',
                     envsoft => 'app1=1.0',
                     count => $run{count},
