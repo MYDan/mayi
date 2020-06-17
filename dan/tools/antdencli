@@ -19,12 +19,15 @@ use MYDan::Util::OptConf;
  $0 [--top J.20200526.141337.852564.866 || T.20200526.141337.852564.866.001]
  $0 [--shell J.20200526.141337.852564.866 || T.20200526.141337.852564.866.001]
  $0 [--nvidia-smi J.20200526.141337.852564.866 || T.20200526.141337.852564.866.001]
+ $0 [--listoutput J.20200526.141337.852564.866/ || T.20200526.141337.852564.866.001/bar/abc/123/]
+ $0 [--download J.20200526.141337.852564.866/abc.txt || T.20200526.141337.852564.866.001/abc/foo/abc.svc] --to /tmp/filename.txt
 
 =cut
 
 my $option = MYDan::Util::OptConf->load();
 my %o = $option->set( nice => 5, group => 'foo', count => 1, resources => 'CPU:100,MEM:50', name => 'jobname'  )
-    ->get( qw( run=s datasets=s name=s nice=i group=s count=i resources=s list ri info=s stop=s tail=s top=s shell=s nvidia-smi=s image=s volume=s hostip=s ) )->dump();
+    ->get( qw( run=s datasets=s name=s nice=i group=s count=i resources=s list ri
+         info=s stop=s tail=s top=s shell=s nvidia-smi=s image=s volume=s hostip=s listoutput=s download=s to=s ) )->dump();
  
 my $antden = MYDan::AntDen::Cli->new();
 
@@ -76,12 +79,23 @@ elsif( $o{'nvidia-smi'} )
 {
     $antden->nvidiasmi( jobid => $o{'nvidia-smi'} );
 }
+elsif( $o{'listoutput'} )
+{
+    my ( $jobid, $listoutput ) = split /\//, $o{'listoutput'}, 2;
+    $listoutput = '' unless defined $listoutput;
+    $antden->listoutput( jobid => $jobid, listoutput => $listoutput );
+}
+elsif( $o{'download'} )
+{
+    my ( $jobid, $download ) = split /\//, $o{'download'}, 2;
+    $option->assert() unless defined $o{'to'};
+    $antden->download( jobid => $jobid, download => $download, to => $o{'to'} );
+}
 else
 {
     my $user = `id -un`; chop $user;
     my $home = $ENV{HOME} || ( getpwnam $user )[7];
     $user = $ENV{MYDan_username} if $ENV{MYDan_username};
-
     printf "\nhome: [$home] user: [$user] api:[%s] mydan:[%s]\n\n",
         $option->dump('api')->{addr}, $option->dump('agent')->{role};
     $option->assert();

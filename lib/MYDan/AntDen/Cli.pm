@@ -214,6 +214,18 @@ sub nvidiasmi
     $this->_taskcall( %run, name => 'nvidia-smi' );
 }
 
+sub listoutput
+{
+    my ( $this, %run ) = splice @_;
+    $this->_taskcall( %run, name => 'listoutput' );
+}
+
+sub download
+{
+    my ( $this, %run ) = splice @_;
+    $this->_taskcall( %run, name => 'download' );
+}
+
 sub _gethost
 {
     my ( $this, $taskid, $type ) = @_;
@@ -231,7 +243,7 @@ sub _gethost
     return ( $task, 'nofind ip' ) unless $host =~ /^\d+\.\d+\.\d+\.\d+$/;
     return ( $task, 'nofind status' ) unless $task->{status};
     my $x = "task status $task->{status}";
-    if( $type eq 'tail' )
+    if( grep{ $type eq $_ }qw( tail listoutput download ) )
     {
         return ( grep{ $task->{status} eq $_ } qw( running stoped ) ) ? ( $task, $x, $host ) : ( $task, $x );
     }
@@ -255,6 +267,7 @@ sub _taskcall
     }
 
     die "[INFO] Please try again later\n" unless $host;
+    print "[INFO] Go ...\n";
 
     if ( $run{name} eq 'tail' )
     {
@@ -273,6 +286,14 @@ sub _taskcall
         exec $task->{executer} eq 'docker'
             ? "$this->{mt}/shellv2 -h '$host' --sudo root --cmd 'docker exec -it $taskid bash -c \"watch nvidia-smi\"'"
             : "$this->{mt}/shellv2 -h '$host' --sudo root --cmd 'watch nvidia-smi'";
+    }
+    elsif ( $run{name} eq 'listoutput' )
+    {
+        exec "$this->{mt}/rcall -r '$host' --sudo root exec 'cd /data/AntDen_output && ls -l $taskid/$run{listoutput}'";
+    }
+    elsif ( $run{name} eq 'download' )
+    {
+        exec "$this->{mt}/load -h '$host' --sudo root  --sp '/data/AntDen_output/$taskid/$run{download}' --dp '$run{to}'";
     }
     else
     {
