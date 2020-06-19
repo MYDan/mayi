@@ -30,7 +30,7 @@ sub _api
 
 sub _rcall
 {
-    my ( $this, %argv ) = splice @_;
+    my ( $this, $host, %argv ) = splice @_;
 
     my $option = MYDan::Util::OptConf->load();
     my %o = $option->set( timeout => 60 )->get()->dump( 'agent' );
@@ -38,8 +38,8 @@ sub _rcall
     $o{user} = `id -un` and chop $o{user} unless $o{user};
     $o{sudo} = 'root';
 
-    my $api = $this->_api();
-    my %query = ( code => 'antdencli', argv => \%argv, map{ $_ => $o{$_} }qw( user sudo ) );
+    my $api = $host || $this->_api();
+    my %query = ( %argv, map{ $_ => $o{$_} }qw( user sudo ) );
 
     my %result = MYDan::Agent::Client->new( 
         $api
@@ -131,7 +131,7 @@ sub run
         }
     );
 
-    my $res = $this->_rcall( %argv );
+    my $res = $this->_rcall( undef, code => 'antdencli', argv => \%argv );
     my $jobid = eval{ YAML::XS::Load $res };
     die "call fail: $res $@" if $@;
     die "call fail: $res\n" unless $jobid =~ /^J\.\d{8}\.\d{6}.\d{6}\.\d{3}$/;
@@ -141,7 +141,7 @@ sub run
 sub list
 {
     my ( $this, %run ) = splice @_;
-    my $res = $this->_rcall( ctrl => 'listjob' );
+    my $res = $this->_rcall( undef, code => 'antdencli', argv => +{ ctrl => 'listjob' } );
     my $job = eval{ YAML::XS::Load $res };
     die "call fail: $res $@" if $@;
     return $job;
@@ -150,7 +150,7 @@ sub list
 sub resources
 {
     my ( $this, %run ) = splice @_;
-    my $res = $this->_rcall( ctrl => 'resources' );
+    my $res = $this->_rcall( undef, code => 'antdencli', argv => +{ ctrl => 'resources' } );
     my $r = eval{ YAML::XS::Load $res };
     die "call fail: $res $@" if $@;
     return $r;
@@ -162,10 +162,13 @@ sub info
 
     die "jobid undef" unless $run{jobid};
 
-    my $res = $this->_rcall(
-        ctrl => 'info',
-        conf => +{
-            jobid => $run{jobid}
+    my $res = $this->_rcall( undef,
+        code =>'antdencli',
+	argv => +{
+            ctrl => 'info',
+            conf => +{
+                jobid => $run{jobid}
+            }
         }
     );
     my $job = eval{ YAML::XS::Load $res };
@@ -178,10 +181,13 @@ sub stop
     my ( $this, %run ) = splice @_;
     die "jobid undef" unless $run{jobid};
 
-    my $res = $this->_rcall(
-        ctrl => 'stop',
-        conf => +{
-            jobid => $run{jobid}
+    my $res = $this->_rcall( undef,
+        code =>'antdencli',
+        argv => +{
+            ctrl => 'stop',
+            conf => +{
+                jobid => $run{jobid}
+            }
         }
     );
 
@@ -229,15 +235,18 @@ sub download
 sub _gethost
 {
     my ( $this, $taskid, $type ) = @_;
-    my $res = $this->_rcall(
-        ctrl => 'taskinfo',
-        conf => +{
-            taskid => $taskid
+    my $res = $this->_rcall( undef,
+        code => 'antdencli',
+        argv => +{
+            ctrl => 'taskinfo',
+            conf => +{
+                taskid => $taskid
+            }
         }
     );
 
     my $task = eval{ YAML::XS::Load $res };
-    die "call fail: $res $@" if $@;
+    die "call fail: $res $@\n" if $@;
     die "task no Hash" unless $task && ref $task eq 'HASH';
     return ( $task, 'scheduling' ) unless my $host = $task->{hostip};
     return ( $task, 'nofind ip' ) unless $host =~ /^\d+\.\d+\.\d+\.\d+$/;
@@ -267,10 +276,10 @@ sub _taskcall
     }
 
     die "[INFO] Please try again later\n" unless $host;
-    print "[INFO] Go ...\n";
 
     if ( $run{name} eq 'tail' )
     {
+        print "[INFO] Go ...\n";
         exec $task->{executer} eq 'docker'
             ? "$this->{mt}/shellv2 -h '$host' --sudo root --cmd 'docker logs -f $taskid'"
             : "$this->{mt}/shellv2 -h '$host' --sudo root --cmd 'tail -F /opt/AntDen/logs/task/$taskid.log'";
@@ -289,10 +298,29 @@ sub _taskcall
     }
     elsif ( $run{name} eq 'listoutput' )
     {
-        exec "$this->{mt}/rcall -r '$host' --sudo root exec 'cd /data/AntDen_output && ls -l $taskid/$run{listoutput}'";
+            my $res = $this->_rcall( $host,
+                code => 'exec',
+                argv => [ "cd /data/AntDen_output && ls -l $taskid/$run{listoutput}" ]
+            );
+            print $res;
+            exit;
     }
     elsif ( $run{name} eq 'download' )
     {
+        if( "$taskid/$run{download}" =~ /\/$/ )
+        {
+            my $uuid = time . '.'. sprintf "%012d", int rand 1000000000000;
+            my ( $f, $t ) = ( "/data/AntDen_output/$taskid.$uuid.tar.gz", "$run{to}/_TEMP_$uuid.tar.gz" );
+            my $res = $this->_rcall( $host,
+                code => 'exec',
+                argv => [ "cd '/data/AntDen_output/$taskid/$run{download}' && tar -zcf '$f' *" ]
+            );
+            die "load fail: $!" if system "$this->{mt}/load -h '$host' --sudo root  --sp '$f' --dp '$t'";
+            die "untar fail: $!" if system "tar -zxvf '$t' -C $run{to}/";
+            unlink $t;
+            exit;
+        }
+
         exec "$this->{mt}/load -h '$host' --sudo root  --sp '/data/AntDen_output/$taskid/$run{download}' --dp '$run{to}'";
     }
     else
