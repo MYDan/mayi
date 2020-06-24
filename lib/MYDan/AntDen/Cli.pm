@@ -286,21 +286,23 @@ sub _gethost
 
 sub _taskcall
 {
-    my ( $this, %run, $task, $mesg, $host, $omesg, $p ) = splice @_;
+    my ( $this, %run, $task, $mesg, $host, $omesg, $p, $i ) = splice @_;
 
     die "jobid undef" unless my $taskid = $run{jobid};
     $taskid .= '.001' if $taskid =~ s/^J/T/;
 
-    for( 1 .. 60 )
+    for( 1 .. 900 )
     {
+        last if $i++ > 60;
         ( $task, $mesg, $host ) = $this->_gethost( $taskid, $run{name} );
         last if $host;
         $omesg ||= $mesg;
         unless( $omesg eq $mesg )
         {
-            print "\n"; $p = 0;
+            $i = 1;$p = 0;
+            print "\n";
         }
-        print "\r[INFO]Pending... $_ [$mesg]";
+        print "\r[INFO]Pending... $i [$mesg]";
         $p ++;
         $omesg = $mesg;
         sleep 1;
