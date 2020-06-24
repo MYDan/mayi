@@ -54,6 +54,29 @@ sub run
 {
     my ( $this, %run ) = splice @_;
 
+    my $codeaddr = '';
+    my $r = $this->resources( %run );
+    die "[ERROR]Get resources fail.\n" unless $r && ref $r eq 'HASH';
+    die "[ERROR]You don't have any resources to use.\n" unless $r->{machine} && ref $r->{machine} eq 'ARRAY' && @{$r->{machine}};
+
+    if( $run{hostip} )
+    {
+        map{
+           if( $_->{mon} =~ /health=1/ )
+           {
+                $codeaddr = $_->{ip};
+                $run{group} = $_->{group};
+           }
+        }grep{ $run{hostip} eq $_->{ip} }@{$r->{machine}};
+    }
+    else
+    {
+        map{
+            $codeaddr = $_->{ip} if $_->{mon} =~ /health=1/;
+        }grep{ $run{group} eq $_->{group} }@{$r->{machine}};
+    }
+
+    die "[ERROR]No machines or clusters available.\n" unless $codeaddr;
     map{ die "$_ undef" unless defined $run{$_} }qw( nice group count resources );
     my $api = $this->_api();
 
@@ -67,7 +90,7 @@ sub run
     print "[INFO]Compress local path...\n";
     die "tar fail: $!" if system "tar -zcf $temp `ls -a|grep -v '^\\.\$'|grep -v '^\\.\\.\$'`";
     print "[INFO]Upload data...\n";
-    die "dump fail: $!" if system "$this->{mt}/rcall -r $api dump $temp --path '$repofile' --sudo root >/dev/null";
+    die "dump fail: $!" if system "$this->{mt}/rcall -r $codeaddr dump $temp --path '$repofile' --sudo root >/dev/null";
     die "remove temp file $temp fail:$!" if system "rm -f $temp";
 
     print "[INFO]Submit job...\n";
@@ -99,7 +122,7 @@ sub run
                 cmd => "$run{run}",
                 image => $run{image},
                 volumes => [ "/data/AntDen_repo/$user.$uuid:$pwd", @datasets, @volume ],
-                antden_repo => [ $api, "/data/AntDen_repo/$user.$uuid" ],
+                antden_repo => [ $codeaddr, "/data/AntDen_repo/$user.$uuid" ],
                 workdir => $run{run} =~ /\.\// ? $pwd : undef,
             }
         },
@@ -109,7 +132,7 @@ sub run
         $executer = +{
             name => 'exec',
             param => +{
-                exec => "MYDan_Agent_Load_Code=free.load_antden $this->{mt}/load --host $api  --sp '$repofile' --dp $runpath.tar.gz && mkdir -p $runpath && tar -zxvf $runpath.tar.gz -C '$runpath' &&cd '$runpath' && $run{run}"
+                exec => "MYDan_Agent_Load_Code=free.load_antden $this->{mt}/load --host $codeaddr  --sp '$repofile' --dp $runpath.tar.gz && mkdir -p $runpath && tar -zxvf $runpath.tar.gz -C '$runpath' &&cd '$runpath' && $run{run}"
             }
         },
     }
@@ -164,7 +187,7 @@ sub info
 
     my $res = $this->_rcall( undef,
         code =>'antdencli',
-	argv => +{
+        argv => +{
             ctrl => 'info',
             conf => +{
                 jobid => $run{jobid}
@@ -235,6 +258,7 @@ sub download
 sub _gethost
 {
     my ( $this, $taskid, $type ) = @_;
+    die "[ERROR]TaskID error.\n" unless $taskid =~ /^T\.\d{8}\.\d{6}\.\d{6}\.\d{3}\.\d{3}$/;
     my $res = $this->_rcall( undef,
         code => 'antdencli',
         argv => +{
@@ -262,24 +286,32 @@ sub _gethost
 
 sub _taskcall
 {
-    my ( $this, %run, $task, $mesg, $host ) = splice @_;
+    my ( $this, %run, $task, $mesg, $host, $omesg, $p ) = splice @_;
 
     die "jobid undef" unless my $taskid = $run{jobid};
     $taskid .= '.001' if $taskid =~ s/^J/T/;
-        
+
     for( 1 .. 60 )
     {
         ( $task, $mesg, $host ) = $this->_gethost( $taskid, $run{name} );
         last if $host;
-        print "[INFO]Pending... $_ [$mesg]\n";
+        $omesg ||= $mesg;
+        unless( $omesg eq $mesg )
+        {
+            print "\n"; $p = 0;
+        }
+        print "\r[INFO]Pending... $_ [$mesg]";
+        $p ++;
+        $omesg = $mesg;
         sleep 1;
     }
+    print "\n" if $p;
 
-    die "[INFO] Please try again later\n" unless $host;
+    die "[INFO]Your task has been submitted, but it hasn't been run yet. Please check the log later.\n" unless $host;
 
     if ( $run{name} eq 'tail' )
     {
-        print "[INFO] Go ...\n";
+        print "[INFO]Go ...\n";
         exec $task->{executer} eq 'docker'
             ? "$this->{mt}/shellv2 -h '$host' --sudo root --cmd 'docker logs -f $taskid'"
             : "$this->{mt}/shellv2 -h '$host' --sudo root --cmd 'tail -F /opt/AntDen/logs/task/$taskid.log'";

@@ -7,9 +7,15 @@ use MYDan::Util::OptConf;
 
 =head1 SYNOPSIS
 
- $0 [--run abc.sh] [--name jobname ] [--nice 5] [--group foo] [--count 1] [--resources CPU:100,MEM:50,GPU:2]
-        [--image ubuntu] [--datasets abc,foo] [--volume /tmp/abc:/tmp/abcd,/foo:/bar]
-        [--hostip 192.168.1.12]
+ $0 [--run ./abc.sh]
+      [--group foo] or [--hostip 192.168.1.12]
+      [--name jobname ]
+      [--nice 5]
+      [--count 1]
+      [--resources CPU:100,MEM:50,GPU:2]
+      [--image ubuntu]
+      [--datasets abc,foo]
+      [--volume /tmp/abc:/tmp/abcd,/foo:/bar]
 
  $0 [--list]
  $0 [--ri]         #resource information
