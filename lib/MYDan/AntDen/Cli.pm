@@ -7,6 +7,7 @@ use Carp;
 use MYDan;
 use MYDan::Util::OptConf;
 use MYDan::Agent::Client;
+use Digest::MD5;
 
 sub new
 {
@@ -59,6 +60,14 @@ sub run
     die "[ERROR]Get resources fail.\n" unless $r && ref $r eq 'HASH';
     die "[ERROR]You don't have any resources to use.\n" unless $r->{machine} && ref $r->{machine} eq 'ARRAY' && @{$r->{machine}};
 
+    unless( $run{group} )
+    {
+        my %group;
+        grep{ $group{$_->{group}} ++ if 'slave' eq $_->{role} && $_->{mon} =~ /health=1/ }@{$r->{machine}};
+        ( $run{group} ) = sort{ $group{$b} <=> $group{$a} } keys %group;
+        die "[ERROR]You don't have any resources to use.\n" unless $run{group};
+    }
+
     if( $run{hostip} )
     {
         map{
@@ -76,6 +85,8 @@ sub run
         }grep{ $run{group} eq $_->{group} }@{$r->{machine}};
     }
 
+    my @ingress = map{ $_->{ip} }grep{ $run{group} eq $_->{group} && $_->{role} eq 'ingress' }@{$r->{machine}};
+
     die "[ERROR]No machines or clusters available.\n" unless $codeaddr;
     map{ die "$_ undef" unless defined $run{$_} }qw( nice group count resources );
     my $api = $this->_api();
@@ -87,12 +98,14 @@ sub run
 
     my ( $temp, $repofile, $runpath ) = ( "/tmp/antden.pkg.$uuid.tar.gz", "/data/AntDen_repo/$user.$uuid.tar.gz", "/tmp/AntDen.run.$uuid" );
 
-    print "[INFO]Compress local path...\n";
-    die "tar fail: $!" if system "tar -zcf $temp `ls -a|grep -v '^\\.\$'|grep -v '^\\.\\.\$'`";
-    print "[INFO]Upload data...\n";
-    die "dump fail: $!" if system "$this->{mt}/rcall -r $codeaddr dump $temp --path '$repofile' --sudo root >/dev/null";
-    die "remove temp file $temp fail:$!" if system "rm -f $temp";
-
+    unless( $run{run} eq '_null_' )
+    {
+        print "[INFO]Compress local path...\n";
+        die "tar fail: $!" if system "tar -zcf $temp `ls -a|grep -v '^\\.\$'|grep -v '^\\.\\.\$'`";
+        print "[INFO]Upload code...\n";
+        die "dump fail: $!" if system "$this->{mt}/rcall -r $codeaddr dump $temp --path '$repofile' --sudo root >/dev/null";
+        die "remove temp file $temp fail:$!" if system "rm -f $temp";
+    }
     print "[INFO]Submit job...\n";
 
     my @resources;
@@ -109,21 +122,49 @@ sub run
 
     die "resources err" unless @resources;
 
+    my $ingress;
+    my $domain = $run{domain} || sprintf "tmp.%s.antden.cn", Digest::MD5->new->add( time. rand( 10*10 ). YAML::XS::Dump \%run )->hexdigest;
+
+    if( $run{port} )
+    {
+        push( @resources, [ 'PORT', '.', 1 ] );
+        $ingress = +{ domain => $domain, location => '/' };
+        
+        if( @ingress )
+        {
+            if( $run{domain} )
+            {
+                printf "[INFO]Confirm that domain name $domain is bound to %s\n", join ',', @ingress;
+            }
+            else
+            {
+                print "[INFO]Domain $domain => $ingress[0]\n";
+                die "write domain into hosts fail:$!\n" if system "echo '$ingress[0] $domain' >> /etc/hosts";
+            }
+            print "[INFO]Please open in browser http://$domain Access to services\n";
+        }
+        else
+        {
+            print "[WARN] no ingress in group $run{group}\n";
+        }
+    }
+
     my @datasets; @datasets = map{ "/mnt/$_:/mnt/$_" }split /,/, $run{datasets} if $run{datasets};
     my @volume; @volume = split /,/, $run{volume} if $run{volume};
 
     my $executer;
+    my $pwd = getcwd;
     if( $run{image} )
     {
-        my $pwd = getcwd;
         $executer = +{
             name => 'docker',
             param => +{
                 cmd => "$run{run}",
                 image => $run{image},
                 volumes => [ "/data/AntDen_repo/$user.$uuid:$pwd", @datasets, @volume ],
-                antden_repo => [ $codeaddr, "/data/AntDen_repo/$user.$uuid" ],
+                antden_repo => $run{run} eq '_null_' ? undef : [ $codeaddr, "/data/AntDen_repo/$user.$uuid" ],
                 workdir => $run{run} =~ /\.\// ? $pwd : undef,
+                port => $run{port},
             }
         },
     }
@@ -148,7 +189,8 @@ sub run
                     envsoft => 'app1=1.0',
                     count => $run{count},
                     resources => \@resources
-                }
+                },
+                ingress => $ingress,
             }],
             map{ $_ => $run{$_} }qw( nice name group )
         }
@@ -174,6 +216,15 @@ sub resources
 {
     my ( $this, %run ) = splice @_;
     my $res = $this->_rcall( undef, code => 'antdencli', argv => +{ ctrl => 'resources' } );
+    my $r = eval{ YAML::XS::Load $res };
+    die "call fail: $res $@" if $@;
+    return $r;
+}
+
+sub datasets
+{
+    my ( $this, %run ) = splice @_;
+    my $res = $this->_rcall( undef, code => 'antdencli', argv => +{ ctrl => 'datasets' } );
     my $r = eval{ YAML::XS::Load $res };
     die "call fail: $res $@" if $@;
     return $r;

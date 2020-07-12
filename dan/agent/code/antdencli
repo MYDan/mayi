@@ -18,6 +18,7 @@ my $idie = sub{ print shift; exit 1; };
 @r = eval{ $api->stop( $argv->{conf}{jobid}, $param{user} ); } if $argv->{ctrl} eq 'stop';
 @r = eval{ $api->taskinfo( $argv->{conf}{taskid} ); } if $argv->{ctrl} eq 'taskinfo';
 @r = eval{ $api->resources( $param{user} ); } if $argv->{ctrl} eq 'resources';
+@r = eval{ $api->datasets( $param{user} ); } if $argv->{ctrl} eq 'datasets';
 
 &$idie( "err: $@" ) if $@;
 print YAML::XS::Dump @r;

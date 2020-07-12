@@ -41,4 +41,10 @@ sub resources
     return shift->get( "$URI/resources?owner=$owner" );
 }
 
+sub datasets
+{
+    my ( $self, $owner ) = @_;
+    return shift->get( "$URI/datasets?owner=$owner" );
+}
+
 1;
