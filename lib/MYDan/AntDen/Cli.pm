@@ -165,6 +165,7 @@ sub run
                 antden_repo => $run{run} eq '_null_' ? undef : [ $codeaddr, "/data/AntDen_repo/$user.$uuid" ],
                 workdir => $run{run} =~ /\.\// ? $pwd : undef,
                 port => $run{port},
+                datasets => $run{datasets},
             }
         },
     }
