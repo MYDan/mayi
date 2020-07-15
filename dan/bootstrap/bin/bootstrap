@@ -33,7 +33,9 @@ $option->assert() unless grep{ $o{$_} }qw( install uninstall start stop restart 
 
 my $bootstrap = MYDan::Bootstrap->new( %o );
 
-my $uuid = substr Digest::MD5->new->add( $ENV{MYDanPATH} = $MYDan::PATH )->hexdigest, 0, 7;
+my $x = `cat /proc/1/cgroup 2>/dev/null`;
+my $indocker = $x =~ /\b1:.+(docker|lxc|kubepods)/ ? 1 : '';
+my $uuid = substr Digest::MD5->new->add( $indocker . ( $ENV{MYDanPATH} = $MYDan::PATH ) )->hexdigest, 0, 7;
 
 my $os = ( uname() )[0];
 my $user = `id -un`;
