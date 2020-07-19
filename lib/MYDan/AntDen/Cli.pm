@@ -40,6 +40,11 @@ sub _rcall
     $o{sudo} = 'root';
 
     my $api = $host || $this->_api();
+    if( $argv{code} eq 'antdencli' )
+    {
+        $argv{argv}{version}{cli} = '1.0.01';
+        $argv{argv}{version}{image} = $ENV{AntDenCliImageVersion} if $ENV{AntDenCliImageVersion};
+    }
     my %query = ( %argv, map{ $_ => $o{$_} }qw( user sudo ) );
 
     my %result = MYDan::Agent::Client->new( 
@@ -48,6 +53,7 @@ sub _rcall
 
     my $res = $result{$api} || '';
     die "call fail: $res" unless $res =~ s/--- 0$//;
+    die "[Error]$res" if $res !~ /^---\n/;
     return $res;
 }
 
