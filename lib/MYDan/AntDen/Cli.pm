@@ -24,7 +24,7 @@ sub _api
     $api =~ s/^http[s]*:\/\///;
     $api =~ s/:.*$//;
     $api =~ s/\/.*$//;
-    die "api.addr error" unless $api && $api =~ /^[a-zA-Z0-9\.]+$/;
+    die "api.addr error" unless $api && $api =~ /^[a-zA-Z0-9\.\-]+$/;
 
     return $api;
 }
