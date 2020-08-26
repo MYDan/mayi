@@ -1,0 +1,57 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use FindBin qw( $RealBin );
+use MYDan::AntDen::Cli;
+use MYDan::Util::OptConf;
+
+=head1 SYNOPSIS
+
+ $0 [--list]
+
+ $0 groupname datasetsname [OPTIONS]
+
+=cut
+
+my @argv = @ARGV;
+@ARGV = splice @argv, 0, 2;
+
+my $option = MYDan::Util::OptConf->load();
+my %o = $option->set()->get( qw( list ) )->dump();
+ 
+my $antden = MYDan::AntDen::Cli->new();
+
+if( $o{list} )
+{
+    my $r = $antden->datasets();
+    my %datasets;
+    map{ $datasets{$_->{group}}{$_->{name}} = $_; }@$r;
+
+    my @key = qw( group name );
+    unshift @$r, +{ map{ $_ => $_ }@key };
+    map{ my $j = $_; printf "%s\n", join "\t", map{ $j->{$_}} @key } @$r;
+}
+elsif( @ARGV >= 2 )
+{
+    my ( $group, $name, $config ) = splice @ARGV, 0, 2;
+    my $r = $antden->datasets();
+    
+    map{ $config = $_ if $_->{name} eq $name && $_->{group} eq $group }@$r;
+    die "nofind the datasets.\n" unless $config;
+
+    my $tool = "$RealBin/../code/datasets/$config->{type}/client";
+    die "nofind tool $tool\n" unless -x $tool;
+    map{ $ENV{"DataSetsCli_$_"} = $config->{$_} }qw( name group info token );
+    exec "$tool @argv";
+}
+else
+{
+    my $user = `id -un`; chop $user;
+    my $home = $ENV{HOME} || ( getpwnam $user )[7];
+    $user = $ENV{MYDan_username} if $ENV{MYDan_username};
+    printf "\nhome: [$home] user: [$user] api:[%s] mydan:[%s]\n\n",
+        $option->dump('api')->{addr}, $option->dump('agent')->{role};
+    $option->assert();
+}
+
+exit 0;

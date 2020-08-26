@@ -1,0 +1,39 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use MYDan::Util::OptConf;
+
+=head1 SYNOPSIS
+
+ $0 [--push /local/path/]
+ $0 [--pull /local/path/]
+
+ env
+    DataSetsCli_token = rsyncdPassword
+    DataSetsCli_info = rsyncdAddr #antden@127.0.0.1::repo/datasets/foo/
+
+=cut
+
+my $option = MYDan::Util::OptConf->load();
+my ( %o, %config ) = $option->set()->get( qw( push=s pull=s ) )->dump();
+ 
+map{
+    die "env $_ undef.\n" unless $config{$_} = $ENV{"DataSetsCli_$_"};
+}qw( info token );
+#TODO format
+
+die "info format err" unless $config{info} =~ /^[a-z0-9A-Z]+@[0-9\.a-zA-Z\-]+::[0-9\.a-zA-Z\-]+\/[a-zA-Z0-9\.\/]*$/;
+die "token format err" unless $config{token} =~ /^\w+$/;
+
+if( $o{push} )
+{
+    exec "RSYNC_PASSWORD=$config{token} rsync -av $o{push}/ $config{info}/";
+}
+elsif( $o{pull} )
+{
+    exec "RSYNC_PASSWORD=$config{token} rsync -av $config{info}/ $o{pull}/";
+}
+else
+{
+    $option->assert();
+}

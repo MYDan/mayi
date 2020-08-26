@@ -1,0 +1,47 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use FindBin qw( $RealBin );
+use MYDan::Util::OptConf;
+
+=head1 SYNOPSIS
+
+ $0 [--list]
+
+ $0 datasetsname [OPTIONS]
+
+=cut
+
+my ( $name, @argv ) = @ARGV;
+@ARGV = ( $name );
+
+my $option = MYDan::Util::OptConf->load();
+my %o = $option->set()->get( qw( list ) )->dump();
+ 
+sub getConfig
+{
+    my $config = eval{ YAML::XS::LoadFile '/opt/AntDen/slave/conf/datasets.conf' };
+    return $@ ? die( "load config fail: $@" ) : $config;
+}
+
+if( $o{list} )
+{
+    print YAML::XS::Dump getConfig();
+}
+elsif( $name )
+{
+    my $config = getConfig();
+    my $conf; map{ $conf = $_ if $_->{name} eq $name }@$config;
+    die "nofind the datasets.\n" unless $conf;
+    
+    my $tool = "$RealBin/../../code/datasets/$conf->{type}/slave";
+    die "nofind tool $tool\n" unless -x $tool;
+    map{ $ENV{"DataSetsCli_$_"} = $conf->{$_} }qw( name group info token );
+    exec "$tool @argv";
+}
+else
+{
+    $option->assert();
+}
+
+exit 0;

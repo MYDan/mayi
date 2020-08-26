@@ -1,0 +1,48 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use MYDan::Util::OptConf;
+
+=head1 SYNOPSIS
+
+ $0 [--mount] 
+ $0 [--umount]
+
+ env
+    DataSetsCli_name = datasetsname
+
+=cut
+
+my $option = MYDan::Util::OptConf->load();
+my %o = $option->set()->get( qw( umount mount ) )->dump();
+
+my $datasets = $ENV{"DataSetsCli_name"};
+$option->assert() unless $datasets && $datasets =~ /^[a-zA-Z0-9_\-]+$/;
+ 
+my $link = "/mnt/$datasets";
+my $path = "/data/AntDen_datasets_data/$datasets";
+
+if( $o{mount} )
+{
+    my $config = eval{ YAML::XS::LoadFile '/opt/AntDen/slave/conf/datasets.conf' };
+    die "load config fail: $@" if $@;
+    my $conf; map{ $conf = $_ if $_->{name} eq $datasets }@$config;
+    die "nofind the datasets.\n" unless $conf;
+
+    die "info format err" unless $conf->{info} =~ /^[a-z0-9A-Z]+@[0-9\.a-zA-Z\-]+::[0-9\.a-zA-Z\-]+\/[a-zA-Z0-9\.\/]*$/;
+    die "token format err" unless $conf->{token} =~ /^\w+$/;
+
+    system "ln -fsn $path $link";
+    system "mkdir -p $path" unless -d $path;
+    exec "RSYNC_PASSWORD=$conf->{token} rsync -av $conf->{info}/ $path/";
+
+}
+elsif( $o{umount} )
+{
+    unlink $link if -l $link;
+    system "rm -rf $path";
+}
+else
+{
+    $option->assert();
+}
