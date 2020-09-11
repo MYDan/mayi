@@ -53,7 +53,7 @@ sub _rcall
 
     my $res = $result{$api} || '';
     die "call fail: $res" unless $res =~ s/--- 0$//;
-    die "[Error]$res" if $res !~ /^---\n/;
+    die "[Error]$res" if $res !~ /^---/;
     return $res;
 }
 
