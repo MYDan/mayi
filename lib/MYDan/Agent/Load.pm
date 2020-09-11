@@ -40,6 +40,7 @@ use Fcntl qw(:flock SEEK_END);
 use MYDan::Agent::Proxy;
 use MYDan::Util::Hosts;
 use MYDan::Agent::FileCache;
+use MYDan::Util::FastMD5;
 use File::Basename;
 
 sub new
@@ -61,7 +62,7 @@ sub run
 
     my $filecache = MYDan::Agent::FileCache->new();
 
-    my $path = "$MYDan::PATH/tmp";
+    my ( $path, $hint ) = ( "$MYDan::PATH/tmp", '' );
     unless( -d $path ){ mkdir $path;chmod 0777, $path; }
     $path .= '/load.data.';
 
@@ -87,7 +88,7 @@ sub run
 
     unless( $query = $run{query} )
     {
-        my %query = ( code => 'load', user => $run{user}, sudo => $run{sudo}, argv => [ $sp, $position ] );
+        my %query = ( code => $ENV{MYDan_Agent_Load_Code} || 'load', user => $run{user}, sudo => $run{sudo}, argv => [ $sp, $position ] );
 
         my $isc = $run{role} && $run{role} eq 'client' ? 1 : 0;
 
@@ -108,6 +109,7 @@ sub run
 
         if( my $rnode = $proxy{$node} )
         {
+            $hint = "FromProxy";
             my %rquery = ( 
                 code => 'proxy', 
                 proxyload => 1,
@@ -126,12 +128,13 @@ sub run
         }
     }
 
+    $hint .= ".$node";
     my ( $cv, $len, %keepalive )
         = ( AE::cv, $position,  cont => '', save => 0 );
     
     printf "position: %d\n", $position if $run{verbose};
 
-    my $percent =  MYDan::Util::Percent->new()->add( $position );
+    my $percent =  MYDan::Util::Percent->new(undef, undef, $run{pcb} )->add( $position );
     
     my %hosts = MYDan::Util::Hosts->new()->match( $node );
 
@@ -179,20 +182,17 @@ sub run
 
 			       if( -f $dp )
 			       {
-				   if( open my $DP, '<', $dp )
-				   {
-				       my $x = Digest::MD5->new()->addfile( $DP )->hexdigest();
-				       if( $x && $filemd5 && $x eq $filemd5 )
-				       {
-				           die "chmod fail\n" if $run{chmod} && ! chmod oct($run{chmod}), $dp;
-					   if( $run{chown} )
-					   {
-                                               die "get $run{chown} uid fail\n" unless my @pw = getpwnam $run{chown};
-					       die "chown fail\n" unless chown @pw[2,3], $dp;
-					   }
-                                           undef $hdl; $cv->send; $ok = $size;
-				       }
-			           }
+                       my $x = eval{ MYDan::Util::FastMD5->hexdigest( $dp ) };
+                       if( $x && $filemd5 && $x eq $filemd5 )
+                       {
+                           die "chmod fail\n" if $run{chmod} && ! chmod oct($run{chmod}), $dp;
+                           if( $run{chown} )
+                           {
+                               die "get $run{chown} uid fail\n" unless my @pw = getpwnam $run{chown};
+                               die "chown fail\n" unless chown @pw[2,3], $dp;
+                           }
+                           undef $hdl; $cv->send; $ok = $size;
+                       }
 			       }
 
 			       $percent->renew( $size )->add( length $keepalive{cont}  );
@@ -201,7 +201,7 @@ sub run
                            }
                        }
 
-                       $percent->print('Load ..') if $run{verbose};
+                       $percent->print('Load'.$hint.' ..') if $run{verbose};
                    }
                );
             },
@@ -224,7 +224,7 @@ sub run
     {
 
 	$percent->add( $ok );
-	$percent->print('Load ..') if $run{verbose};
+	$percent->print( 'Load' . $hint . ' ..' ) if $run{verbose};
         unlink $temp;
         return;
     }
@@ -240,9 +240,8 @@ sub run
         die "status error $err $end\n";
     }
     truncate $TEMP, $size;
-    seek $TEMP, 0, 0;
 
-    unless( $filemd5 eq Digest::MD5->new()->addfile( $TEMP )->hexdigest() )
+    unless( $filemd5 eq MYDan::Util::FastMD5->hexdigest( $temp ) )
     {
         unlink $temp;
         die "md5 nomatch\n";

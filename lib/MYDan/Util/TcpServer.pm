@@ -9,7 +9,7 @@ use Data::Dumper;
 use Tie::File;
 use Fcntl 'O_RDONLY';
 use POSIX ":sys_wait_h";
-use Time::HiRes qw(time);
+use Time::HiRes qw(time sleep );
 use AnyEvent;
 use AnyEvent::Impl::Perl;
 use AnyEvent::Socket;
@@ -21,7 +21,7 @@ use Digest::MD5;
 use MYDan;
 use MYDan::Agent::FileCache;
 
-my %index;
+my ( %index, %connect );
 
 sub new
 {
@@ -55,6 +55,10 @@ sub new
 
     map{ $this{$_} ||= $this{buf} }qw( rbuf wbuf );
 
+    $this{limit} ||= 104857600; #100m
+    map{ $this{$_} ||= $this{limit}; $this{$_} /= 10; }qw( rlimit wlimit );
+    map{ $this{"${_}ctrl"}{itime} = 0; }qw( r w );
+
     bless \%this, ref $class || $class;
 }
 
@@ -73,7 +77,7 @@ sub run
 
     my $term = AnyEvent->signal (signal => "TERM", cb => $excb );
     my $ints = AnyEvent->signal (signal => "INT",  cb => $excb );
-    my $usr1 = AnyEvent->signal (signal => "USR1", cb => sub{ print Dumper \%index; } );
+    my $usr1 = AnyEvent->signal (signal => "USR1", cb => sub{ print Dumper +{ index => \%index, connect => \%connect } } );
 
     my %savecb;
     my $childcb = sub
@@ -113,6 +117,8 @@ sub run
                                 $data->{file} = $1;
                             }
                             $data->{body} = 1;
+
+                            $this->rwlimit( w => length $buf );
                             $data->{handle}->push_write($buf);
                         }
                         else
@@ -126,6 +132,7 @@ sub run
                                     $data->{fh} = $tmp_handle;
                                     if( $n = sysread( $data->{fh}, $buf, 102400 ) )
                                     {
+                                        $this->rwlimit( w => length $buf );
                                         $data->{handle}->push_write($buf);
                                         return;
                                     }
@@ -229,7 +236,9 @@ sub run
                    $tport = '0' unless $tport && $tport =~ /^\d+$/;
 
                    $ENV{TCPREMOTEIP} = $tip;
-                   $ENV{TCPREMOTEPORT} = $port;
+                   $ENV{TCPREMOTEPORT} = $tport;
+                   $ENV{TCPSERVERINDEX} = $index;
+                   $ENV{TCPSERVERPORT} = $port;
 		   if( defined $index{$index}{extfile} )
 		   {
                        $ENV{MYDanExtractFile} = $index{$index}{extfile};
@@ -245,6 +254,84 @@ sub run
            },
            on_read => sub {
                my $self = shift;
+
+               if( ! $index{$index}{rbuf} && $self->{rbuf} =~ s/^MYDanConnect_::([a-zA-Z0-9]{32})::_MYDanConnect// )
+               {
+                   my $uuid = $1;
+
+                   close $tmp_handle;
+                   unlink "$tmp/$index" if -e "$tmp/$index";
+
+                   unless( $connect{$uuid} )
+                   {
+                       if( keys( %connect ) >= $max )
+                       {
+                            my $c = delete $index{$index};
+                            $c->{handle}->push_write("MYDan connect limit");
+                            $c->{handle}->on_drain(undef);
+                            $c->{handle}->push_shutdown;
+                            $c->{handle}->destroy() unless $c->{handle}->destroyed();
+                            return;
+                       }
+ 
+                       $connect{$uuid}{$index} = delete $index{$index};
+                       $connect{$uuid}{$index}{handle}->on_read( undef );
+                       $connect{$uuid}{$index}{handle}->on_drain( undef );
+                       $connect{$uuid}{time} = time;
+                       return;
+                   }
+
+                   if( $connect{$uuid} && keys( %{$connect{$uuid}} ) >= 3 )
+                   {
+                       $index{$index}{handle}->push_write("uuidRepeat");
+                       $index{$index}{handle}->on_drain(undef);
+                       $index{$index}{handle}->push_shutdown;
+                       $index{$index}{handle}->destroy() unless $index{$index}{handle}->destroyed();
+                       return;
+                   }
+
+                   $connect{$uuid}{$index} = delete $index{$index};
+
+                   for my $id ( grep{ $_ ne 'time' }keys %{$connect{$uuid}} )
+                   {
+                       my ( $bid ) = grep{ $_ ne $id }grep{ $_ ne 'time' } keys %{$connect{$uuid}};
+
+                       $connect{$uuid}{$id}{on_drain} = sub{
+                           $connect{$uuid}{$bid}{handle}->on_read( $connect{$uuid}{$bid}{on_read} );
+                       };
+                       $connect{$uuid}{$id}{on_read} = sub{
+                           $connect{$uuid}{$id}{handle}->on_read( undef );
+                           my $self = shift;
+                           my $len = length $self->{rbuf};
+                           $self->push_read (
+                               chunk => $len,
+                               sub { $connect{$uuid}{$bid}{handle}->push_write($_[1]); }
+                           );
+                       };
+
+                       my $erc = sub{
+                           map{
+                           $connect{$uuid}{$_}{handle}->on_drain(undef);
+                           $connect{$uuid}{$_}{handle}->push_shutdown;
+                           $connect{$uuid}{$_}{handle}->destroy() unless $connect{$uuid}{$_}{handle}->destroyed();
+
+                           }( $id, $bid );
+                           delete $connect{$uuid} if $connect{$uuid}{$bid}{handle}->destroyed() 
+                           && $connect{$uuid}{$id}{handle}->destroyed();
+                       };
+
+                       $connect{$uuid}{$id}{handle}->on_error( $erc  );
+                       $connect{$uuid}{$id}{handle}->on_eof( $erc );
+                   }
+
+                   for my $id ( grep{ $_ ne 'time' }keys %{$connect{$uuid}} )
+                   {
+                       $connect{$uuid}{$id}{handle}->on_read( $connect{$uuid}{$id}{on_read} );
+                       $connect{$uuid}{$id}{handle}->on_drain( $connect{$uuid}{$id}{on_drain} );
+                   }
+
+                   return;
+               }
 
                if( ! $index{$index}{rbuf} && $self->{rbuf} =~ s/^MYDanExtractFile_::(\d+):(\d+):([a-zA-Z0-9]{32}):([a-zA-Z0-9\/\._\-]+)::_MYDanExtractFile// )
                {
@@ -303,6 +390,7 @@ sub run
 		   if( $len < $index{$index}{querysize} )
 		   {
                        $index{$index}{rbuf} += $len;
+                       $this->rwlimit( r => $len );
                        $self->push_read (
                            chunk => $len,
 			   sub { syswrite( $tmp_handle, $_[1] ) }
@@ -313,6 +401,7 @@ sub run
 		   else
 		   {
                        $index{$index}{rbuf} += $index{$index}{querysize};
+                       $this->rwlimit( r => $index{$index}{querysize} );
                        $self->push_read(
 			    chunk => $index{$index}{querysize},
 			   sub { syswrite( $tmp_handle, $_[1] ) }
@@ -323,6 +412,8 @@ sub run
 	       }
 
                return unless $len;
+               
+               $this->rwlimit( r => $len );
                $self->push_read (
                    chunk => $len,
                    sub { 
@@ -358,13 +449,36 @@ sub run
     
     };
 
-    my $t = AnyEvent->timer(
+    my $ti = AnyEvent->timer(
         after => 1, 
         interval => 1,
         cb => sub { 
             map{ 
                 $_->{handle}->push_write('*') if $_->{handle} && $_->{handle}->fh;
             }values %index; 
+        }
+    ); 
+
+    my $tc = AnyEvent->timer(
+        after => 1, 
+        interval => 1,
+        cb => sub { 
+            for my $uuid ( keys %connect )
+            {
+                my $len = scalar keys %{$connect{$uuid}};
+
+                next if ( $len == 2 && $connect{$uuid}{time} + 6 > time ) || ( $len == 3 && $connect{$uuid}{time} + 3600 > time );
+                my $conn = delete $connect{$uuid};
+
+                for my $uuid ( grep{ $_ ne 'time' }keys %$conn )
+                {
+                    $conn->{$uuid}{handle}->on_drain(undef);
+                    $conn->{$uuid}{handle}->on_read(undef);
+                    $conn->{$uuid}{handle}->push_shutdown;
+                    $conn->{$uuid}{handle}->destroy() unless $conn->{$uuid}{handle}->destroyed();
+                }
+
+            }
         }
     ); 
 
@@ -429,5 +543,32 @@ sub dfok
     return undef unless $df && ref $df eq 'HASH' && defined $df->{bfree} && defined $df->{ffree};
     return ( $df->{bfree} > 102400 && $df->{ffree} > 4000 ) ? 1 : 0;
 }
+
+sub rwlimit
+{
+    my ( $this, $type, $len ) = @_;
+    my $limit = $this->{"${type}limit"};
+
+    my $time = time * 10;
+    my $itime = int $time;
+
+    if( $this->{"${type}ctrl"}{itime} eq $itime )
+    {
+        $this->{"${type}ctrl"}{time} = $time;
+        $this->{"${type}ctrl"}{len} += $len; 
+
+        if( $this->{"${type}ctrl"}{len} > $limit )
+        {
+            my $x = ( $itime + 1 - $time ) / 10;
+            sleep $x if $x > 0;
+        }
+    }
+    else
+    {
+        $this->{"${type}ctrl"} = +{ itime => $itime, time => $time, len => $len };
+    }
+
+}
+
 
 1;

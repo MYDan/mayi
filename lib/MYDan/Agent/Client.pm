@@ -31,7 +31,10 @@ use MYDan::API::Agent;
 use MYDan::Util::Percent;
 use MYDan::Agent::Proxy;
 use MYDan::Util::Hosts;
+use MYDan::Util::FastMD5;
 use AnyEvent::Loop;
+
+use Errno;
 
 our %RUN = ( user => 'root', max => 128, timeout => 300 );
 
@@ -108,9 +111,7 @@ sub run
     my ( $md5, $aim, $efsize );
     if( my $ef = $ENV{MYDanExtractFile} )
     {
-        open my $TEMP, "<$ef" or die "open ef fail:$!";
-        $md5 = Digest::MD5->new()->addfile( $TEMP )->hexdigest();
-        close $TEMP;
+        $md5 = MYDan::Util::FastMD5->hexdigest( $ef );
         my $efa =  $ENV{MYDanExtractFileAim};
         $aim = $efa && $efa =~ /^[a-zA-Z0-9\/\._\-]+$/ ? $efa : '.';
         $efsize = ( stat $ef )[7];
@@ -118,6 +119,24 @@ sub run
 
 
     my %hosts = MYDan::Util::Hosts->new()->match( @node );
+
+    my %activity;
+    my $activity = AnyEvent->timer ( after => 30, interval => 30, cb => sub{ 
+        for my $n ( keys %activity )
+        {
+            my ( $w, $t ) = map{ $activity{$n}{$_} }qw( hdl time );
+            unless( $w && $$w && $$w->fh )
+            {
+                delete $activity{$n};
+                next;
+            }
+            if( $t + 30 < AE::now )
+            {
+                $$w->_error( Errno::ENETRESET );
+                delete $activity{$n};
+            }
+        }
+    });
 
     my %cut;
     my $work;$work = sub{
@@ -141,8 +160,10 @@ sub run
                  return;
              }
 
+             &{$run{pcb}}( $efsize, $node ) if $run{pcb};
              my $hdl;
              push @work, \$hdl;
+             $activity{$node} = { time => AE::now, hdl => \$hdl };
              $hdl = new AnyEvent::Handle(
                  fh => $fh,
                  rbuf_max => 10240000,
@@ -153,6 +174,7 @@ sub run
                      $self->unshift_read (
                          chunk => length $self->{rbuf},
                          sub { 
+                             $activity{$node}{time} = AE::now;
                              if ( defined $cut{$node} || length $result{$node} > 102400 )
                              {
                                  $cut{$node} = $_[1]; return; 
@@ -177,6 +199,7 @@ sub run
                                              $hdl->on_drain(sub {
                                                      my ( $n, $buf );
                                                      $n = sysread( $EF, $buf, 102400 );
+                                                     &{$run{pcb}}( $n, $node ) if $run{pcb};
                                                      if( $n )
                                                      {
                                                          $hdl->push_write($buf);
@@ -240,10 +263,12 @@ sub run
         my @node = @{$node{$node}};
         map{ $result{$_} = '' }@node;
 
+
+        my %MYDan_rlog = ( MYDan_rlog => $run{MYDan_rlog} ) if $run{MYDan_rlog};
         my %rquery = ( 
-            code => 'proxy', 
+            code => 'proxy', %MYDan_rlog,
             argv => [ \@node, +{ query => $query, map{ $_ => $run{$_} }grep{ $run{$_} }qw( timeout max port ) } ],
-	    map{ $_ => $run{query}{$_} }qw( user sudo env ) 
+            map{ $_ => $run{$_} }qw( user sudo )  #not env
         );
 
         $rquery{node} = [ $node ] if $isc;
@@ -272,8 +297,10 @@ sub run
                  return;
              }
 
+             &{$run{pcb}}( $efsize, $node, 'Proxy' ) if $run{pcb};
              my $hdl;
              push @work, \$hdl;
+             $activity{$node} = { time => AE::now, hdl => \$hdl };
              $hdl = new AnyEvent::Handle(
                  fh => $fh,
                  rbuf_max => 10240000,
@@ -284,6 +311,7 @@ sub run
                      $self->unshift_read (
                          chunk => length $self->{rbuf},
                          sub { 
+                             $activity{$node}{time} = AE::now;
 
 			     if( $rresult{$node} )
 			     {
@@ -305,6 +333,7 @@ sub run
                                              $hdl->on_drain(sub {
                                                      my ( $n, $buf );
                                                      $n = sysread( $EF, $buf, 102400 );
+                                                     &{$run{pcb}}( $n, $node ) if $run{pcb};
                                                      if( $n )
                                                      {
                                                          $hdl->push_write($buf);
@@ -367,7 +396,7 @@ sub run
 
                   on_error => sub {
                       close $fh;
-                      map { $result{$_} = "no_error by proxy $node"; } @node;
+                      map { $result{$_} = "on_error by proxy $node"; } @node;
                   }
               );
 
@@ -391,6 +420,8 @@ sub run
 
     $cv->recv;
     undef $w;
+    undef $activity;
+    %activity = ();
 
     map{ 
          my $end = $cut{$_} =~ /--- (\d+)\n$/ ? "--- $1\n" : '';
