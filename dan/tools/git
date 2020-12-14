@@ -2,8 +2,6 @@
 use strict;
 use warnings;
 use FindBin qw( $RealBin $RealScript );
-die "err: endless loop.\n" if $ENV{MYDAN_GIT_TOOL};
-$ENV{MYDAN_GIT_TOOL} = 1;
 my $info = "Usage:
   git -i ssh-key-file git-command
   git -u foo git-command
@@ -12,7 +10,7 @@ die $info unless @ARGV;
 if( $ENV{USE_4_SSH_GIT_NICES_128} )
 {
     my $pkey = $ENV{PKEY} ? "-i $ENV{PKEY}" : '';
-    exec "ssh $pkey @ARGV";
+    exec "ssh -o StrictHostKeyChecking=no $pkey @ARGV";
 }
 if( $ARGV[0] eq '-u' && @ARGV >= 2 )
 {
@@ -26,4 +24,7 @@ if( $ARGV[0] eq '-i' && @ARGV >= 2 )
     $ENV{USE_4_SSH_GIT_NICES_128} = 1;
     $ENV{GIT_SSH} = "$RealBin/$RealScript";
 }
+
+die "err: endless loop.\n" if $ENV{MYDAN_GIT_TOOL};
+$ENV{MYDAN_GIT_TOOL} = 1;
 exec "git @ARGV";
