@@ -66,7 +66,11 @@ sub dump
     {
         my ( $time, $user, $auth ) = ( time, $query->{user}, $o{'auth'} );
 
-        if( $o{role} && $o{role} eq 'client' )
+        if( my $keypath = $ENV{MYDan_Agent_KEY_PATH} )
+        {
+            $auth = $keypath;
+        }
+        elsif( $o{role} && $o{role} eq 'client' )
         {
             my $home = $ENV{HOME} || ( getpwnam $user )[7];
             $auth = $home.'/.ssh';
