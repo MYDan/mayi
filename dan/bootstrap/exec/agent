@@ -12,9 +12,12 @@ fi
 echo "os: $os";
 
 if [ "x$os" == "xLinux" ] ;then
-    ulimit -n 655350 || _exit "ulimit -n fail";
-    ulimit -u 102400 || _exit "ulimit -u fail";
-    ulimit -s 10240  || _exit "ulimit -s fail";
+    USERID=$(id -u)
+    if [ "x$USERID" == "x0" ]; then
+        ulimit -n 655350 || _exit "ulimit -n fail";
+        ulimit -u 102400 || _exit "ulimit -u fail";
+        ulimit -s 10240  || _exit "ulimit -s fail";
+    fi
 fi
 
 MAX=10

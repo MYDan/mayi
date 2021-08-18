@@ -152,9 +152,11 @@ sub run
     {
         idie( "invalid sudo $sudo\n" ) unless my @pw = getpwnam $sudo;
         @pw = map { 0 + sprintf '%d', $_ } @pw[2,3];
-        POSIX::setgid( $pw[1] ); ## setgid must preceed setuid
-        POSIX::setuid( $pw[0] );
+        idie( "setgid fail" ) unless POSIX::setgid( $pw[1] ); ## setgid must preceed setuid
+        idie( "setuid fail" ) unless POSIX::setuid( $pw[0] );
     }
+
+    idie( "invalid sudo $sudo\n" ) if $code ne 'proxy' && $< && $sudo && $sudo ne ( getpwuid $< )[0];
 
     %ENV = ( %ENV, %$env ) if $env && ref $env eq 'HASH';
     map{ $ENV{"MYDan_$_"} = $query->{$_} }qw( user sudo );

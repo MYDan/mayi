@@ -7,7 +7,8 @@ use MYDan;
 use File::Basename;
 use MYDan::Util::OptConf;
 use Digest::MD5;
-use MYDan::Bootstrap
+use MYDan::Bootstrap;
+use MYDan::Util::Sudo;
 
 $| ++;
 
@@ -16,11 +17,13 @@ $MYDan::Util::OptConf::THIS = 'bootstrap';
 =head1 SYNOPSIS
 
  $0 --install
+    --install worker
  $0 --uninstall  
 
  $0 --stop
  $0 --start
  $0 --restart
+    --restart worker
 
 =cut
 
@@ -41,6 +44,7 @@ my $os = ( uname() )[0];
 my $user = `id -un`;
 chomp $user if $user;
 
+my $sudo = @ARGV ? $ARGV[0] : $user;
 
 if( $o{install} )
 {
@@ -59,14 +63,14 @@ if( $o{install} )
 
     if( $os =~ /CYGWIN/ )
     {
-        die "user undef" unless $user;
-        my $path = "/var/cron/tabs/$user";
+        die "user undef" unless $sudo;
+        my $path = "/var/cron/tabs/$sudo";
         die "sed fail: $!" if system "sed -i '/mydan_bootstrap_cron_$uuid/d' $path";
         die "install fail:$!" if system "echo '\@reboot $MYDan::PATH/dan/bootstrap/bin/bootstrap --start > /dev/null 2>&1' >> $path"
     }
     else
     {
-        die "insall fail:$!" if system "echo '\@reboot root $MYDan::PATH/dan/bootstrap/bin/bootstrap --start >/dev/null 2>&1' > /etc/cron.d/mydan_bootstrap_cron_$uuid";
+        die "insall fail:$!" if system "echo '\@reboot $sudo $MYDan::PATH/dan/bootstrap/bin/bootstrap --start >/dev/null 2>&1' > /etc/cron.d/mydan_bootstrap_cron_$uuid";
     }
     exit;
 }
@@ -74,8 +78,8 @@ if( $o{uninstall} )
 {
     if( $os =~ /CYGWIN/ )
     {
-        die "user undef" unless $user;
-        die "sed fail: $!" if system "sed -i '/mydan_bootstrap_cron_$uuid/d' '/var/cron/tabs/$user'";
+        die "user undef" unless $sudo;
+        die "sed fail: $!" if system "sed -i '/mydan_bootstrap_cron_$uuid/d' '/var/cron/tabs/$sudo'";
     }
     else
     {
@@ -96,6 +100,7 @@ if( $o{stop} )
 }
 if( $o{start} )
 {
+    MYDan::Util::Sudo->sudo( $sudo ) if $sudo ne $user;
 
     open(STDOUT, '>/dev/null') || die "STDOUT ERROR $!";
     open(STDERR, '>/dev/null') || die "STDERR ERROR $!";
