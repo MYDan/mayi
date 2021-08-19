@@ -70,7 +70,8 @@ if( $o{install} )
     }
     else
     {
-        die "insall fail:$!" if system "echo '\@reboot $sudo $MYDan::PATH/dan/bootstrap/bin/bootstrap --start >/dev/null 2>&1' > /etc/cron.d/mydan_bootstrap_cron_$uuid";
+        my $su = @ARGV ? $ARGV[0] : '';
+        die "insall fail:$!" if system "echo '\@reboot root $MYDan::PATH/dan/bootstrap/bin/bootstrap --start $su >/dev/null 2>&1' > /etc/cron.d/mydan_bootstrap_cron_$uuid";
     }
     exit;
 }
@@ -100,7 +101,7 @@ if( $o{stop} )
 }
 if( $o{start} )
 {
-    MYDan::Util::Sudo->sudo( $sudo ) if $sudo ne $user;
+    exec( "bash -c 'ulimit -n 655350;ulimit -u 102400;ulimit -s 10240;sudo -u $sudo $0 --start'" ) if $sudo ne $user;
 
     open(STDOUT, '>/dev/null') || die "STDOUT ERROR $!";
     open(STDERR, '>/dev/null') || die "STDERR ERROR $!";
