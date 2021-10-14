@@ -1,0 +1,21 @@
+#!/usr/bin/env perl
+
+=head1 SYNOPSIS
+
+ $0 [--port num]
+
+=cut
+use strict;
+use warnings;
+
+use MYDan::MonitorV3::NodeExporter;
+use MYDan::Util::OptConf;
+
+$| ++;
+
+my $option = MYDan::Util::OptConf->load();
+my %o = $option->set( port => 65110 )->get( qw( port=i ) )->dump();
+
+$0 = 'mydan.node_exporter.'.$o{port};
+
+MYDan::MonitorV3::NodeExporter->new( %o )->run();
